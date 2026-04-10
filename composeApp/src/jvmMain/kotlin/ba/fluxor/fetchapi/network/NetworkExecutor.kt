@@ -1,4 +1,4 @@
-package ba.fluxor.fetchapi
+package ba.fluxor.fetchapi.network
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
