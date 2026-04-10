@@ -39,6 +39,8 @@ kotlin {
       implementation(libs.grpc.kotlin.stub)
       implementation(libs.protobuf.java)
       implementation(libs.protobuf.java.util)
+      implementation(libs.liquibase.core)
+      implementation(libs.sqlite)
     }
   }
 }

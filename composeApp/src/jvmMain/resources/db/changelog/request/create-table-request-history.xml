@@ -1,0 +1,41 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet author="mjovicic" id="1775836204000-1">
+    <createTable tableName="request_history">
+      <column name="id" type="INTEGER" autoIncrement="true">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <!-- nullable: history can be saved from a saved request or from a one-off request -->
+      <column name="request_id" type="INTEGER">
+        <constraints
+          nullable="true"
+          foreignKeyName="fk_history_request"
+          references="request(id)"/>
+      </column>
+
+      <!-- snapshot of the request at the time it was sent -->
+      <column name="method" type="VARCHAR(10)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="url" type="TEXT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="request_headers" type="TEXT"/>
+      <column name="request_body" type="TEXT"/>
+
+      <!-- response -->
+      <column name="response_status" type="INTEGER"/>
+      <column name="response_headers" type="TEXT"/>
+      <column name="response_body" type="TEXT"/>
+      <column name="response_time_ms" type="INTEGER"/>
+
+      <column name="sent_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+</databaseChangeLog>
