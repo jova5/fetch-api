@@ -1,4 +1,4 @@
-package ba.fluxor.fetchapi.network
+package ba.fluxor.fetchapi.network.http
 
 data class HttpResponse(
   val statusCode: Int,

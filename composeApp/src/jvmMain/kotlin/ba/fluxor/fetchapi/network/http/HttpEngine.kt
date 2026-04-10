@@ -1,5 +1,6 @@
-package ba.fluxor.fetchapi.network
+package ba.fluxor.fetchapi.network.http
 
+import ba.fluxor.fetchapi.network.NetworkExecutor
 import kotlinx.coroutines.future.await
 import java.net.URI
 import java.net.http.HttpClient
