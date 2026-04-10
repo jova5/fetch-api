@@ -33,6 +33,12 @@ kotlin {
       implementation(compose.desktop.currentOs)
       implementation(libs.kotlinx.coroutinesSwing)
       implementation(libs.kotlinx.serializationJson)
+      implementation(libs.grpc.netty.shaded)
+      implementation(libs.grpc.protobuf)
+      implementation(libs.grpc.stub)
+      implementation(libs.grpc.kotlin.stub)
+      implementation(libs.protobuf.java)
+      implementation(libs.protobuf.java.util)
     }
   }
 }
