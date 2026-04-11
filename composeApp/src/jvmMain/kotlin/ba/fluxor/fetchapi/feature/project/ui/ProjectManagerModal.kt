@@ -1,50 +1,22 @@
-package ba.fluxor.fetchapi.ui.shell
+package ba.fluxor.fetchapi.feature.project.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogWindow
-import androidx.compose.ui.window.rememberDialogState
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.feature.project.data.Project
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
-import fetchapi.composeapp.generated.resources.Res
-import fetchapi.composeapp.generated.resources.delete
-import fetchapi.composeapp.generated.resources.edit_project
-import fetchapi.composeapp.generated.resources.name
-import fetchapi.composeapp.generated.resources.new
-import fetchapi.composeapp.generated.resources.new_project
-import fetchapi.composeapp.generated.resources.projects
-import fetchapi.composeapp.generated.resources.save
+import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -60,15 +32,14 @@ fun ProjectManagerModal(
     nameInput = state.selected?.name ?: ""
   }
 
-  DialogWindow(
-    onCloseRequest = {
+  Dialog(
+    onDismissRequest = {
       projectVm.clearSelection()
       onDismiss()
     },
-    state = rememberDialogState(size = DpSize(720.dp, 480.dp)),
-    title = stringResource(Res.string.projects),
+    properties = DialogProperties(usePlatformDefaultWidth = false),
   ) {
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Surface(modifier = Modifier.size(720.dp, 480.dp)) {
       Row(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Column(modifier = Modifier.width(260.dp).fillMaxHeight()) {
           Text(stringResource(Res.string.projects), style = MaterialTheme.typography.titleMedium)

@@ -1,4 +1,4 @@
-package ba.fluxor.fetchapi.ui.i18n
+package ba.fluxor.fetchapi.localization
 
 enum class AppLanguage(val tag: String) {
   ENGLISH("en"),

@@ -3,14 +3,18 @@ package ba.fluxor.fetchapi.feature.settings.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsUiState
-import ba.fluxor.fetchapi.ui.i18n.AppLanguage
+import ba.fluxor.fetchapi.localization.AppLanguage
 import ba.fluxor.fetchapi.ui.theme.AppColorScheme
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
 import fetchapi.composeapp.generated.resources.*
@@ -25,52 +29,58 @@ fun SettingsDialog(
   onLanguageChange: (AppLanguage) -> Unit,
   onDismiss: () -> Unit,
 ) {
-  AlertDialog(
+
+  Dialog(
     onDismissRequest = onDismiss,
-    title = { Text(stringResource(Res.string.settings)) },
-    text = {
-      Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Section(Res.string.theme_mode) {
-          ThemeMode.entries.forEach { mode ->
-            RadioRow(
-              selected = state.themeMode == mode,
-              label = stringResource(mode.labelRes()),
-              onClick = { onThemeModeChange(mode) },
-            )
+  ) {
+    Surface {
+      Column(modifier = Modifier.padding(24.dp)) {
+        Text(
+          text = stringResource(Res.string.settings),
+          style = MaterialTheme.typography.headlineSmall,
+          modifier = Modifier.padding(bottom = 16.dp),
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+          Section(Res.string.theme_mode) {
+            ThemeMode.entries.forEach { mode ->
+              RadioRow(
+                selected = state.themeMode == mode,
+                label = stringResource(mode.labelRes()),
+                onClick = { onThemeModeChange(mode) },
+              )
+            }
           }
-        }
-        Section(Res.string.color_scheme) {
-          AppColorScheme.entries.forEach { scheme ->
-            RadioRow(
-              selected = state.colorScheme == scheme,
-              label = stringResource(scheme.labelRes()),
-              onClick = { onColorSchemeChange(scheme) },
-              leading = {
-                Box(
-                  Modifier
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(scheme.seed),
-                )
-              },
-            )
+          Section(Res.string.color_scheme) {
+            AppColorScheme.entries.forEach { scheme ->
+              RadioRow(
+                selected = state.colorScheme == scheme,
+                label = stringResource(scheme.labelRes()),
+                onClick = { onColorSchemeChange(scheme) },
+                leading = {
+                  Box(
+                    Modifier
+                      .size(16.dp)
+                      .clip(CircleShape)
+                      .background(scheme.seed),
+                  )
+                },
+              )
+            }
           }
-        }
-        Section(Res.string.language) {
-          AppLanguage.entries.forEach { lang ->
-            RadioRow(
-              selected = state.language == lang,
-              label = stringResource(lang.labelRes()),
-              onClick = { onLanguageChange(lang) },
-            )
+          Section(Res.string.language) {
+            AppLanguage.entries.forEach { lang ->
+              RadioRow(
+                selected = state.language == lang,
+                label = stringResource(lang.labelRes()),
+                onClick = { onLanguageChange(lang) },
+              )
+            }
           }
         }
       }
-    },
-    confirmButton = {
-      TextButton(onClick = onDismiss) { Text(stringResource(Res.string.close)) }
-    },
-  )
+    }
+  }
 }
 
 @Composable

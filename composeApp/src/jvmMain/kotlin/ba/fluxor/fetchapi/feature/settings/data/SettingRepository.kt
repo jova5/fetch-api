@@ -1,6 +1,6 @@
 package ba.fluxor.fetchapi.feature.settings.data
 
-import ba.fluxor.fetchapi.ui.i18n.AppLanguage
+import ba.fluxor.fetchapi.localization.AppLanguage
 import ba.fluxor.fetchapi.ui.theme.AppColorScheme
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
 import kotlinx.coroutines.Dispatchers

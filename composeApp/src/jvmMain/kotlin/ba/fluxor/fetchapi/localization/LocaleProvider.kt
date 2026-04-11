@@ -1,4 +1,4 @@
-package ba.fluxor.fetchapi.ui.i18n
+package ba.fluxor.fetchapi.localization
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider

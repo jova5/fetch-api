@@ -3,7 +3,7 @@ package ba.fluxor.fetchapi.feature.settings.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.settings.data.SettingRepository
-import ba.fluxor.fetchapi.ui.i18n.AppLanguage
+import ba.fluxor.fetchapi.localization.AppLanguage
 import ba.fluxor.fetchapi.ui.theme.AppColorScheme
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
