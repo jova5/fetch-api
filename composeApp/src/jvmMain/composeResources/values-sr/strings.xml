@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_title">fetch-api</string>
+  <string name="projects">Projekti</string>
+  <string name="new_project">Novi projekat</string>
+  <string name="edit_project">Izmena projekta #%1$s</string>
+  <string name="name">Naziv</string>
+  <string name="save">Sačuvaj</string>
+  <string name="new">Novi</string>
+  <string name="delete">Obriši</string>
+  <string name="settings">Podešavanja</string>
+  <string name="theme_mode">Tema</string>
+  <string name="theme_light">Svetla</string>
+  <string name="theme_dark">Tamna</string>
+  <string name="theme_system">Sistemska</string>
+  <string name="color_scheme">Šema boja</string>
+  <string name="color_green">Zelena</string>
+  <string name="color_blue">Plava</string>
+  <string name="color_red">Crvena</string>
+  <string name="color_orange">Narandžasta</string>
+  <string name="language">Jezik</string>
+  <string name="language_english">Engleski</string>
+  <string name="language_serbian">Srpski</string>
+  <string name="close">Zatvori</string>
+  <string name="error_name_empty">Naziv ne sme biti prazan</string>
+  <string name="error_name_exists">Naziv već postoji</string>
+</resources>

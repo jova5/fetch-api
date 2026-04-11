@@ -34,6 +34,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.feature.project.data.Project
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.delete
+import fetchapi.composeapp.generated.resources.edit_project
+import fetchapi.composeapp.generated.resources.name
+import fetchapi.composeapp.generated.resources.new
+import fetchapi.composeapp.generated.resources.new_project
+import fetchapi.composeapp.generated.resources.projects
+import fetchapi.composeapp.generated.resources.save
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -48,9 +57,8 @@ fun ProjectScreen(vm: ProjectViewModel = koinViewModel()) {
 
   Surface(modifier = Modifier.fillMaxSize()) {
     Row(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-      // Left: list
       Column(modifier = Modifier.width(260.dp).fillMaxHeight()) {
-        Text("Projects", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(Res.string.projects), style = MaterialTheme.typography.titleMedium)
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         LazyColumn(modifier = Modifier.fillMaxSize()) {
           items(state.projects, key = { it.id ?: -1L }) { project ->
@@ -65,20 +73,23 @@ fun ProjectScreen(vm: ProjectViewModel = koinViewModel()) {
 
       VerticalDivider(modifier = Modifier.fillMaxHeight().padding(horizontal = 8.dp))
 
-      // Right: editor
       Column(
         modifier = Modifier.fillMaxSize().padding(start = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
         Text(
-          if (state.selected == null) "New project" else "Edit project #${state.selected?.id}",
+          text = if (state.selected == null) {
+            stringResource(Res.string.new_project)
+          } else {
+            stringResource(Res.string.edit_project, state.selected?.id.toString())
+          },
           style = MaterialTheme.typography.titleMedium,
         )
 
         OutlinedTextField(
           value = nameInput,
           onValueChange = { nameInput = it },
-          label = { Text("Name") },
+          label = { Text(stringResource(Res.string.name)) },
           singleLine = true,
           modifier = Modifier.fillMaxWidth(),
         )
@@ -90,17 +101,19 @@ fun ProjectScreen(vm: ProjectViewModel = koinViewModel()) {
               if (selectedId == null) vm.create(nameInput)
               else vm.update(selectedId, nameInput)
             },
-          ) { Text("Save") }
+          ) { Text(stringResource(Res.string.save)) }
 
           OutlinedButton(
             onClick = {
               vm.clearSelection()
               nameInput = ""
             },
-          ) { Text("New") }
+          ) { Text(stringResource(Res.string.new)) }
 
           state.selected?.id?.let { id ->
-            OutlinedButton(onClick = { vm.delete(id) }) { Text("Delete") }
+            OutlinedButton(onClick = { vm.delete(id) }) {
+              Text(stringResource(Res.string.delete))
+            }
           }
         }
 

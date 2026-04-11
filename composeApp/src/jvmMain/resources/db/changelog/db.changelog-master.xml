@@ -9,5 +9,6 @@
   <include file="./sub_project/.db.changelog-sub-project.xml" relativeToChangelogFile="true"/>
   <include file="./folder/.db.changelog-folder.xml" relativeToChangelogFile="true"/>
   <include file="./request/.db.changelog-request.xml" relativeToChangelogFile="true"/>
+  <include file="./setting/.db.changelog-setting.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
