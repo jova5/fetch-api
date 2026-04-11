@@ -27,4 +27,12 @@ class ProjectRepository(private val dao: ProjectDao) {
   suspend fun delete(id: Long): Boolean = withContext(Dispatchers.IO) {
     dao.delete(id) > 0
   }
+
+  suspend fun existsByName(name: String): Boolean = withContext(Dispatchers.IO) {
+    dao.existsByName(name)
+  }
+
+  suspend fun existsByNameAndIdNot(name: String, id: Long): Boolean = withContext(Dispatchers.IO) {
+    dao.existsByNameAndIdNot(name, id)
+  }
 }

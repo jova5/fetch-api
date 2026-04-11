@@ -57,4 +57,23 @@ class ProjectDao(private val connection: Connection) {
 
   private fun ResultSet.toProject(): Project =
     Project(id = getLong("id"), name = getString("name"))
+
+  fun existsByName(name: String): Boolean {
+    connection.prepareStatement("SELECT 1 FROM project WHERE name=?").use { stmt ->
+      stmt.setString(1, name)
+      stmt.executeQuery().use { rs ->
+        return rs.next()
+      }
+    }
+  }
+
+  fun existsByNameAndIdNot(name: String, id: Long): Boolean {
+    connection.prepareStatement("SELECT 1 FROM project WHERE name=? AND id!=?").use { stmt ->
+      stmt.setString(1, name)
+      stmt.setLong(2, id)
+      stmt.executeQuery().use { rs ->
+        return rs.next()
+      }
+    }
+  }
 }
