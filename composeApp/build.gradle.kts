@@ -41,6 +41,9 @@ kotlin {
       implementation(libs.protobuf.java.util)
       implementation(libs.liquibase.core)
       implementation(libs.sqlite)
+      implementation(libs.ktor.client.core)
+      implementation(libs.ktor.client.java)
+      implementation(libs.ktor.client.logging)
     }
   }
 }

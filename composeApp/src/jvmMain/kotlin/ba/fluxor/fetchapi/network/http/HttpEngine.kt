@@ -1,46 +1,48 @@
 package ba.fluxor.fetchapi.network.http
 
+import ba.fluxor.fetchapi.network.NetworkEngine
 import ba.fluxor.fetchapi.network.NetworkExecutor
-import kotlinx.coroutines.future.await
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest as JdkHttpRequest
-import java.net.http.HttpResponse.BodyHandlers
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.java.Java
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.header
+import io.ktor.client.request.request
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpMethod as KtorHttpMethod
 
-object HttpEngine {
+object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
 
-    private val client: HttpClient = HttpClient.newBuilder()
-        .executor(NetworkExecutor.executor)
-        .followRedirects(HttpClient.Redirect.NORMAL)
-        .build()
+    private val client: HttpClient = HttpClient(Java) {
+        expectSuccess = false
+        engine {
+            config {
+                executor(NetworkExecutor.executor)
+                followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+            }
+        }
+        install(Logging) {
+            level = LogLevel.NONE
+        }
+    }
 
-    suspend fun execute(request: HttpRequest): HttpResponse {
-        val jdkRequest = request.toJdkRequest()
-        val jdkResponse = client.sendAsync(jdkRequest, BodyHandlers.ofString()).await()
+    override suspend fun execute(request: HttpRequest): HttpResponse {
+        val response = client.request(request.url) {
+            method = KtorHttpMethod.parse(request.method.name)
+            request.headers.forEach { (name, value) -> header(name, value) }
+            if (request.body != null) {
+                setBody(request.body)
+            }
+        }
+
         return HttpResponse(
-            statusCode = jdkResponse.statusCode(),
-            headers = jdkResponse.headers().map(),
-            body = jdkResponse.body(),
+            statusCode = response.status.value,
+            headers = response.headers.entries().associate { it.key to it.value },
+            body = response.bodyAsText(),
         )
     }
 }
-
-private fun HttpRequest.toJdkRequest(): JdkHttpRequest {
-    val builder = JdkHttpRequest.newBuilder()
-        .uri(URI.create(url))
-        .method(method.name, bodyPublisher())
-
-    headers.forEach { (name, value) -> builder.header(name, value) }
-
-    return builder.build()
-}
-
-private fun HttpRequest.bodyPublisher(): JdkHttpRequest.BodyPublisher =
-    if (body != null) {
-        JdkHttpRequest.BodyPublishers.ofString(body)
-    } else {
-        JdkHttpRequest.BodyPublishers.noBody()
-    }
 
 suspend fun httpGet(url: String, headers: Map<String, String> = emptyMap()): HttpResponse =
     HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.GET, headers = headers))

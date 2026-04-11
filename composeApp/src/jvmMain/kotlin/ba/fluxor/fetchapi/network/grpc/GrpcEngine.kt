@@ -1,5 +1,6 @@
 package ba.fluxor.fetchapi.network.grpc
 
+import ba.fluxor.fetchapi.network.NetworkEngine
 import ba.fluxor.fetchapi.network.NetworkExecutor
 import ba.fluxor.fetchapi.network.grpc.proto.ProtoFile
 import ba.fluxor.fetchapi.network.grpc.proto.ProtoRpcType
@@ -16,9 +17,9 @@ import io.grpc.stub.ClientCalls
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-object GrpcEngine {
+object GrpcEngine : NetworkEngine<GrpcRequest, GrpcResponse> {
 
-    suspend fun execute(request: GrpcRequest): GrpcResponse {
+    override suspend fun execute(request: GrpcRequest): GrpcResponse {
         val fileDescriptor = request.protoFile.toFileDescriptor()
 
         val serviceDescriptor = fileDescriptor.services
