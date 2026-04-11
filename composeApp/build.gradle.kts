@@ -34,6 +34,7 @@ kotlin {
     }
     jvmMain.dependencies {
       implementation(compose.desktop.currentOs)
+      implementation(compose.materialIconsExtended)
       implementation(libs.kotlinx.coroutinesSwing)
       implementation(libs.kotlinx.serializationJson)
       implementation(libs.grpc.netty.shaded)
