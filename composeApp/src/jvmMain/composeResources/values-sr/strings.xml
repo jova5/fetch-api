@@ -24,4 +24,16 @@
   <string name="close">Zatvori</string>
   <string name="error_name_empty">Naziv ne sme biti prazan</string>
   <string name="error_name_exists">Naziv već postoji</string>
+  <string name="sub_projects">Podprojekti</string>
+  <string name="new_sub_project">Novi podprojekat</string>
+  <string name="edit_sub_project">Izmena podprojekta #%1$s</string>
+  <string name="folders">Folderi</string>
+  <string name="new_folder">Novi folder</string>
+  <string name="edit_folder">Izmena foldera #%1$s</string>
+  <string name="requests">Zahtevi</string>
+  <string name="new_request">Novi zahtev</string>
+  <string name="edit_request">Izmena zahteva #%1$s</string>
+  <string name="method">Metoda</string>
+  <string name="url">URL</string>
+  <string name="search">Pretraga</string>
 </resources>

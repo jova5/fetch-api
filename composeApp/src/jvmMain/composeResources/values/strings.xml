@@ -24,4 +24,16 @@
   <string name="close">Close</string>
   <string name="error_name_empty">Name cannot be empty</string>
   <string name="error_name_exists">Name already exists</string>
+  <string name="sub_projects">Sub-projects</string>
+  <string name="new_sub_project">New sub-project</string>
+  <string name="edit_sub_project">Edit sub-project #%1$s</string>
+  <string name="folders">Folders</string>
+  <string name="new_folder">New folder</string>
+  <string name="edit_folder">Edit folder #%1$s</string>
+  <string name="requests">Requests</string>
+  <string name="new_request">New request</string>
+  <string name="edit_request">Edit request #%1$s</string>
+  <string name="method">Method</string>
+  <string name="url">URL</string>
+  <string name="search">Search</string>
 </resources>
