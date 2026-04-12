@@ -1,11 +1,15 @@
 package ba.fluxor.fetchapi
 
-import androidx.compose.ui.window.Window
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import ba.fluxor.fetchapi.configuration.DatabaseConnectionProvider
 import ba.fluxor.fetchapi.configuration.DatabaseMigrator
+import ba.fluxor.fetchapi.di.AppLifecycleOwner
 import ba.fluxor.fetchapi.di.appModule
+import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 import org.koin.core.context.startKoin
 
 fun main() {
@@ -19,17 +23,18 @@ fun main() {
 
   application {
 
-    val windowState = rememberWindowState()
-
-    Window(
-      onCloseRequest = {
-        DatabaseConnectionProvider.close()
-        exitApplication()
-      },
-      state = windowState,
-      title = "FetchAPI",
+    val appOwner = remember { AppLifecycleOwner() }
+    CompositionLocalProvider(
+      LocalLifecycleOwner provides appOwner,
+      LocalViewModelStoreOwner provides appOwner
     ) {
-      App()
+      IntUiTheme {
+        App(onCloseRequest = {
+          DatabaseConnectionProvider.close()
+          exitApplication()
+        })
+      }
     }
   }
 }
+
