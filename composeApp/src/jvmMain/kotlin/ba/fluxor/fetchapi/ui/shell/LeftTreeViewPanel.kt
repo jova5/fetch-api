@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ba.fluxor.fetchapi.feature.project.ui.ProjectDropdown
 import ba.fluxor.fetchapi.ui.shell.viewmodel.AppShellViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -18,6 +19,7 @@ fun LeftTreePanel(shellVm: AppShellViewModel = koinViewModel()) {
   var query by remember { mutableStateOf("") }
 
   Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+    Box { ProjectDropdown() }
     Row(
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(4.dp),
