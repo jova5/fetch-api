@@ -14,6 +14,7 @@ import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project_tree.ui.ProjectTree
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.feature.request.ui.RequestDialog
+import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectDialog
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import ba.fluxor.fetchapi.ui.shell.viewmodel.AppShellViewModel
@@ -25,11 +26,13 @@ fun LeftTreePanel(
   treeVm: ProjectTreeViewModel = koinViewModel(),
   subProjectVm: SubProjectViewModel = koinViewModel(),
   folderVm: FolderViewModel = koinViewModel(),
+  requestVm: RequestViewModel = koinViewModel()
 ) {
   val shellState by shellVm.state.collectAsStateWithLifecycle()
   val treeState by treeVm.state.collectAsStateWithLifecycle()
   val subProjectState by subProjectVm.state.collectAsStateWithLifecycle()
   val folderState by folderVm.state.collectAsStateWithLifecycle()
+  val requestState by requestVm.state.collectAsStateWithLifecycle()
   var query by remember { mutableStateOf("") }
 
   LaunchedEffect(shellState.activeProjectId) {
@@ -76,6 +79,7 @@ fun LeftTreePanel(
           treeVm = treeVm,
           subProjectVm = subProjectVm,
           folderVm = folderVm,
+          requestVm = requestVm,
         )
       }
     }
@@ -113,22 +117,23 @@ fun LeftTreePanel(
     )
   }
 
-  if (treeState.showRequestDialog) {
+  if (requestState.showRequestDialog) {
     RequestDialog(
-      editing = treeState.editingRequest,
-      error = treeState.error,
+      editing = requestState.editingRequest,
+      error = requestState.error,
       onSave = { name, method, url ->
-        val editing = treeState.editingRequest
+        val editing = requestState.editingRequest
         if (editing?.id != null) {
-          treeVm.updateRequest(editing.id, editing.folderId, name, method, url, editing.headers, editing.body)
+          requestVm.updateRequest(editing.id, editing.folderId, name, method, url, editing.headers,
+            editing.body)
         } else {
-          val spId = treeState.dialogParentSubProjectId
+          val spId = requestState.dialogParentSubProjectId
           if (spId != null) {
-            treeVm.createRequest(spId, treeState.dialogParentFolderId, name, method, url)
+            requestVm.createRequest(spId, requestState.dialogParentFolderId, name, method, url)
           }
         }
       },
-      onDismiss = treeVm::dismissDialogs,
+      onDismiss = requestVm::dismissDialogs,
     )
   }
 }

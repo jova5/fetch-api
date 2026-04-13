@@ -16,6 +16,8 @@ import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.feature.request.data.Request
+import ba.fluxor.fetchapi.feature.request.ui.RequestItem
+import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectItem
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
@@ -33,6 +35,7 @@ fun ProjectTree(
   treeVm: ProjectTreeViewModel,
   subProjectVm: SubProjectViewModel,
   folderVm: FolderViewModel,
+  requestVm: RequestViewModel,
 ) {
   val filtered = if (query.isBlank()) nodes else filterTree(nodes, query.trim())
 
@@ -63,7 +66,7 @@ fun ProjectTree(
           onEdit = { subProjectVm.showEditSubProjectDialog(item.node.subProject) },
           onDelete = { item.node.subProject.id?.let(subProjectVm::deleteSubProject) },
           onAddFolder = { item.node.subProject.id?.let(folderVm::showNewFolderDialog) },
-          onAddRequest = { item.node.subProject.id?.let { treeVm.showNewRequestDialog(it, null) } },
+          onAddRequest = { item.node.subProject.id?.let { requestVm.showNewRequestDialog(it, null) } },
         )
         is TreeItem.FolderHeader -> FolderItem(
           node = item.node,
@@ -71,14 +74,14 @@ fun ProjectTree(
           onEdit = { folderVm.showEditFolderDialog(item.node.folder) },
           onDelete = { item.node.folder.id?.let(folderVm::deleteFolder) },
           onAddRequest = {
-            treeVm.showNewRequestDialog(item.subProjectId, item.node.folder.id)
+            requestVm.showNewRequestDialog(item.subProjectId, item.node.folder.id)
           },
         )
         is TreeItem.RequestLeaf -> RequestItem(
           request = item.request,
           indent = item.indent,
-          onEdit = { treeVm.showEditRequestDialog(item.request) },
-          onDelete = { item.request.id?.let(treeVm::deleteRequest) },
+          onEdit = { requestVm.showEditRequestDialog(item.request) },
+          onDelete = { item.request.id?.let(requestVm::deleteRequest) },
         )
       }
     }

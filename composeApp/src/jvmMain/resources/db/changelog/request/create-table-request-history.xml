@@ -17,12 +17,8 @@
       </column>
 
       <!-- snapshot of the request at the time it was sent -->
-      <column name="method" type="VARCHAR(10)">
-        <constraints nullable="false"/>
-      </column>
-      <column name="url" type="TEXT">
-        <constraints nullable="false"/>
-      </column>
+      <column name="method" type="VARCHAR(10)"/>
+      <column name="url" type="TEXT"/>
       <column name="request_headers" type="TEXT"/>
       <column name="request_body" type="TEXT"/>
 

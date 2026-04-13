@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
-import ba.fluxor.fetchapi.feature.request.data.Request
 import ba.fluxor.fetchapi.feature.request.data.RequestRepository
+import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
@@ -22,7 +22,8 @@ class ProjectTreeViewModel(
   private val _state = MutableStateFlow(ProjectTreeUiState())
   val state: StateFlow<ProjectTreeUiState> = _state.asStateFlow()
 
-  private val _refreshEvents = merge(SubProjectEvents.refreshEvent, FolderEvents.refreshEvent)
+  private val _refreshEvents =
+    merge(SubProjectEvents.refreshEvent, FolderEvents.refreshEvent, RequestEvents.refreshEvent)
 
   init {
     launchCatching {
@@ -67,60 +68,6 @@ class ProjectTreeViewModel(
     _state.update { ProjectTreeUiState() }
   }
 
-  // --- Request CRUD ---
-
-  fun showNewRequestDialog(subProjectId: Long, folderId: Long?) {
-    _state.update {
-      it.copy(
-        showRequestDialog = true,
-        editingRequest = null,
-        dialogParentSubProjectId = subProjectId,
-        dialogParentFolderId = folderId,
-        error = null,
-      )
-    }
-  }
-
-  fun showEditRequestDialog(request: Request) {
-    _state.update { it.copy(showRequestDialog = true, editingRequest = request, error = null) }
-  }
-
-  fun createRequest(subProjectId: Long, folderId: Long?, name: String, method: String, url: String) {
-    val trimmed = name.trim()
-    if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
-      return
-    }
-
-    launchCatching {
-      requestRepository.create(subProjectId, folderId, trimmed, method, url)
-      _state.update { it.copy(showRequestDialog = false, editingRequest = null, error = null) }
-      _state.value.projectId?.let { loadTree(it) }
-    }
-  }
-
-  fun updateRequest(id: Long, folderId: Long?, name: String, method: String, url: String, headers: String?, body: String?) {
-    val trimmed = name.trim()
-    if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
-      return
-    }
-
-    launchCatching {
-      requestRepository.update(id, folderId, trimmed, method, url, headers, body)
-      _state.update { it.copy(showRequestDialog = false, editingRequest = null, error = null) }
-      _state.value.projectId?.let { loadTree(it) }
-    }
-  }
-
-  fun deleteRequest(id: Long) {
-    launchCatching {
-      requestRepository.delete(id)
-      _state.update { it.copy(error = null) }
-      _state.value.projectId?.let { loadTree(it) }
-    }
-  }
-
   // --- UI state ---
 
   fun toggleSubProjectExpanded(id: Long) {
@@ -143,16 +90,6 @@ class ProjectTreeViewModel(
             }
           )
         }
-      )
-    }
-  }
-
-  fun dismissDialogs() {
-    _state.update {
-      it.copy(
-        showRequestDialog = false,
-        editingRequest = null,
-        error = null,
       )
     }
   }

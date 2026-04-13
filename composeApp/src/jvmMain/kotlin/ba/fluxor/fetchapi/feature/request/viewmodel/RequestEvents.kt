@@ -1,9 +1,9 @@
-package ba.fluxor.fetchapi.feature.folder.viewmodel
+package ba.fluxor.fetchapi.feature.request.viewmodel
 
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-object FolderEvents {
+object RequestEvents {
 
   private val _refreshEvent = MutableSharedFlow<Unit>(replay = 0)
   val refreshEvent = _refreshEvent.asSharedFlow()

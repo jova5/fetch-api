@@ -35,7 +35,7 @@ object DatabaseConnectionProvider {
 
     File(dir).mkdirs()
 
-    return "$dir/app.db"
+    return "$dir/fetch-api.db"
   }
 
   fun close() {

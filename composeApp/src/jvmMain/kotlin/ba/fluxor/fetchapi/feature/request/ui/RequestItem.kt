@@ -1,4 +1,4 @@
-package ba.fluxor.fetchapi.feature.project_tree.ui
+package ba.fluxor.fetchapi.feature.request.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

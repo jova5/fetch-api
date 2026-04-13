@@ -10,6 +10,7 @@ import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.feature.request.data.RequestRepository
 import ba.fluxor.fetchapi.feature.request.data.dao.RequestDao
+import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.settings.data.SettingDao
 import ba.fluxor.fetchapi.feature.settings.data.SettingRepository
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
@@ -34,6 +35,7 @@ val appModule = module {
   single { FolderViewModel(get()) }
   single { RequestDao(get()) }
   single { RequestRepository(get()) }
+  single { RequestViewModel(get()) }
   viewModel { ProjectTreeViewModel(get(), get(), get()) }
   single { SettingDao(get()) }
   single { SettingRepository(get()) }
