@@ -59,27 +59,6 @@ class FolderDao(private val connection: Connection) {
     }
   }
 
-  fun existsByNameAndSubProjectId(name: String, subProjectId: Long): Boolean {
-    connection.prepareStatement("SELECT 1 FROM folder WHERE name=? AND sub_project_id=?").use { stmt ->
-      stmt.setString(1, name)
-      stmt.setLong(2, subProjectId)
-      stmt.executeQuery().use { rs ->
-        return rs.next()
-      }
-    }
-  }
-
-  fun existsByNameAndSubProjectIdAndIdNot(name: String, subProjectId: Long, id: Long): Boolean {
-    connection.prepareStatement("SELECT 1 FROM folder WHERE name=? AND sub_project_id=? AND id!=?").use { stmt ->
-      stmt.setString(1, name)
-      stmt.setLong(2, subProjectId)
-      stmt.setLong(3, id)
-      stmt.executeQuery().use { rs ->
-        return rs.next()
-      }
-    }
-  }
-
   private fun ResultSet.toFolder(): Folder =
     Folder(
       id = getLong("id"),

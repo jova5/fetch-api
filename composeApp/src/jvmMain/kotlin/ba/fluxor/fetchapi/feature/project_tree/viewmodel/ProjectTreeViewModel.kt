@@ -7,12 +7,10 @@ import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.request.data.Request
 import ba.fluxor.fetchapi.feature.request.data.RequestRepository
-import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class ProjectTreeViewModel(
@@ -24,9 +22,11 @@ class ProjectTreeViewModel(
   private val _state = MutableStateFlow(ProjectTreeUiState())
   val state: StateFlow<ProjectTreeUiState> = _state.asStateFlow()
 
+  private val _refreshEvents = merge(SubProjectEvents.refreshEvent, FolderEvents.refreshEvent)
+
   init {
     launchCatching {
-      FolderEvents.refreshEvent.collect {
+      _refreshEvents.collect {
         val projectId = _state.value.projectId ?: return@collect
         loadTree(projectId)
       }
@@ -65,65 +65,6 @@ class ProjectTreeViewModel(
 
   fun clearTree() {
     _state.update { ProjectTreeUiState() }
-  }
-
-  // --- SubProject CRUD ---
-
-  fun showNewSubProjectDialog() {
-    _state.update { it.copy(showSubProjectDialog = true, editingSubProject = null, error = null) }
-  }
-
-  fun showEditSubProjectDialog(subProject: SubProject) {
-    _state.update { it.copy(showSubProjectDialog = true, editingSubProject = subProject, error = null) }
-  }
-
-  fun createSubProject(name: String) {
-    val trimmed = name.trim()
-    if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
-      return
-    }
-    val projectId = _state.value.projectId ?: return
-
-    launchCatching {
-      val exists = subProjectRepository.existsByNameAndProjectId(trimmed, projectId)
-      if (exists) {
-        _state.update { it.copy(error = "Name already exists") }
-        return@launchCatching
-      }
-      subProjectRepository.create(projectId, trimmed)
-      _state.update { it.copy(showSubProjectDialog = false, editingSubProject = null, error = null) }
-      loadTree(projectId)
-    }
-  }
-
-  fun updateSubProject(id: Long, name: String, authType: String, authConfig: String?) {
-    val trimmed = name.trim()
-    if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
-      return
-    }
-    val projectId = _state.value.projectId ?: return
-
-    launchCatching {
-      val exists = subProjectRepository.existsByNameAndProjectIdAndIdNot(trimmed, projectId, id)
-      if (exists) {
-        _state.update { it.copy(error = "Name already exists") }
-        return@launchCatching
-      }
-      subProjectRepository.update(id, trimmed, authType, authConfig)
-      _state.update { it.copy(showSubProjectDialog = false, editingSubProject = null, error = null) }
-      loadTree(projectId)
-    }
-  }
-
-  fun deleteSubProject(id: Long) {
-    val projectId = _state.value.projectId ?: return
-    launchCatching {
-      subProjectRepository.delete(id)
-      _state.update { it.copy(error = null) }
-      loadTree(projectId)
-    }
   }
 
   // --- Request CRUD ---
@@ -209,11 +150,7 @@ class ProjectTreeViewModel(
   fun dismissDialogs() {
     _state.update {
       it.copy(
-        showSubProjectDialog = false,
-        showFolderDialog = false,
         showRequestDialog = false,
-        editingSubProject = null,
-        editingFolder = null,
         editingRequest = null,
         error = null,
       )

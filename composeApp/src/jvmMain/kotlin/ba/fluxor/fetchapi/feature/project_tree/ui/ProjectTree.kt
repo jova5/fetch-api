@@ -15,8 +15,10 @@ import ba.fluxor.fetchapi.feature.folder.ui.FolderItem
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
-import ba.fluxor.fetchapi.feature.project_tree.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.request.data.Request
+import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectItem
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 
 private sealed class TreeItem {
   data class SubProjectHeader(val node: SubProjectNode) : TreeItem()
@@ -29,6 +31,7 @@ fun ProjectTree(
   nodes: List<SubProjectNode>,
   query: String,
   treeVm: ProjectTreeViewModel,
+  subProjectVm: SubProjectViewModel,
   folderVm: FolderViewModel,
 ) {
   val filtered = if (query.isBlank()) nodes else filterTree(nodes, query.trim())
@@ -57,8 +60,8 @@ fun ProjectTree(
         is TreeItem.SubProjectHeader -> SubProjectItem(
           node = item.node,
           onToggle = { item.node.subProject.id?.let(treeVm::toggleSubProjectExpanded) },
-          onEdit = { treeVm.showEditSubProjectDialog(item.node.subProject) },
-          onDelete = { item.node.subProject.id?.let(treeVm::deleteSubProject) },
+          onEdit = { subProjectVm.showEditSubProjectDialog(item.node.subProject) },
+          onDelete = { item.node.subProject.id?.let(subProjectVm::deleteSubProject) },
           onAddFolder = { item.node.subProject.id?.let(folderVm::showNewFolderDialog) },
           onAddRequest = { item.node.subProject.id?.let { treeVm.showNewRequestDialog(it, null) } },
         )

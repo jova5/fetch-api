@@ -43,13 +43,6 @@ class FolderViewModel(
 
     launchCatching {
 
-      val exists = folderRepository.existsByNameAndSubProjectId(trimmed, subProjectId)
-
-      if (exists) {
-        _state.update { it.copy(error = "Name already exists") }
-        return@launchCatching
-      }
-
       folderRepository.create(subProjectId, trimmed)
 
       _state.update { it.copy(showFolderDialog = false, editingFolder = null, error = null) }
@@ -58,7 +51,7 @@ class FolderViewModel(
     }
   }
 
-  fun updateFolder(id: Long, subProjectId: Long, name: String) {
+  fun updateFolder(id: Long, name: String) {
 
     val trimmed = name.trim()
 
@@ -68,13 +61,6 @@ class FolderViewModel(
     }
 
     launchCatching {
-
-      val exists = folderRepository.existsByNameAndSubProjectIdAndIdNot(trimmed, subProjectId, id)
-
-      if (exists) {
-        _state.update { it.copy(error = "Name already exists") }
-        return@launchCatching
-      }
 
       folderRepository.update(id, trimmed)
 

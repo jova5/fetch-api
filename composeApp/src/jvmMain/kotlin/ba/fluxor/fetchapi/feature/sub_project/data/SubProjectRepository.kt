@@ -10,10 +10,6 @@ class SubProjectRepository(private val dao: SubProjectDao) {
     dao.findAllByProjectId(projectId)
   }
 
-  suspend fun getById(id: Long): SubProject? = withContext(Dispatchers.IO) {
-    dao.findById(id)
-  }
-
   suspend fun create(projectId: Long, name: String, authType: String = "NONE", authConfig: String? = null): SubProject =
     withContext(Dispatchers.IO) {
       val id = dao.insert(projectId, name, authType, authConfig)
@@ -29,13 +25,4 @@ class SubProjectRepository(private val dao: SubProjectDao) {
   suspend fun delete(id: Long): Boolean = withContext(Dispatchers.IO) {
     dao.delete(id) > 0
   }
-
-  suspend fun existsByNameAndProjectId(name: String, projectId: Long): Boolean = withContext(Dispatchers.IO) {
-    dao.existsByNameAndProjectId(name, projectId)
-  }
-
-  suspend fun existsByNameAndProjectIdAndIdNot(name: String, projectId: Long, id: Long): Boolean =
-    withContext(Dispatchers.IO) {
-      dao.existsByNameAndProjectIdAndIdNot(name, projectId, id)
-    }
 }

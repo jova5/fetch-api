@@ -15,6 +15,7 @@ import ba.fluxor.fetchapi.feature.project_tree.ui.ProjectTree
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.feature.request.ui.RequestDialog
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectDialog
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import ba.fluxor.fetchapi.ui.shell.viewmodel.AppShellViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -22,10 +23,12 @@ import org.koin.compose.viewmodel.koinViewModel
 fun LeftTreePanel(
   shellVm: AppShellViewModel = koinViewModel(),
   treeVm: ProjectTreeViewModel = koinViewModel(),
+  subProjectVm: SubProjectViewModel = koinViewModel(),
   folderVm: FolderViewModel = koinViewModel(),
 ) {
   val shellState by shellVm.state.collectAsStateWithLifecycle()
   val treeState by treeVm.state.collectAsStateWithLifecycle()
+  val subProjectState by subProjectVm.state.collectAsStateWithLifecycle()
   val folderState by folderVm.state.collectAsStateWithLifecycle()
   var query by remember { mutableStateOf("") }
 
@@ -52,7 +55,7 @@ fun LeftTreePanel(
         modifier = Modifier.weight(1f),
       )
       IconButton(
-        onClick = { treeVm.showNewSubProjectDialog() },
+        onClick = { subProjectVm.showNewSubProjectDialog() },
         enabled = shellState.activeProjectId != null,
       ) {
         Icon(Icons.Default.Add, contentDescription = "Add sub-project")
@@ -71,26 +74,26 @@ fun LeftTreePanel(
           nodes = treeState.subProjectNodes,
           query = query,
           treeVm = treeVm,
+          subProjectVm = subProjectVm,
           folderVm = folderVm,
         )
       }
     }
   }
 
-  // Dialogs
-  if (treeState.showSubProjectDialog) {
+  if (subProjectState.showSubProjectDialog) {
     SubProjectDialog(
-      editing = treeState.editingSubProject,
-      error = treeState.error,
+      editing = subProjectState.editingSubProject,
+      error = subProjectState.error,
       onSave = { name, authType, authConfig ->
-        val editing = treeState.editingSubProject
+        val editing = subProjectState.editingSubProject
         if (editing?.id != null) {
-          treeVm.updateSubProject(editing.id, name, authType, authConfig)
+          subProjectVm.updateSubProject(editing.id, name, authType, authConfig)
         } else {
-          treeVm.createSubProject(name)
+          subProjectVm.createSubProject(name, treeState.projectId)
         }
       },
-      onDismiss = treeVm::dismissDialogs,
+      onDismiss = subProjectVm::dismissDialogs,
     )
   }
 
@@ -101,7 +104,7 @@ fun LeftTreePanel(
       onSave = { name ->
         val editing = folderState.editingFolder
         if (editing?.id != null) {
-          folderVm.updateFolder(editing.id, editing.subProjectId, name)
+          folderVm.updateFolder(editing.id, name)
         } else {
           folderState.dialogParentSubProjectId?.let { folderVm.createFolder(it, name) }
         }

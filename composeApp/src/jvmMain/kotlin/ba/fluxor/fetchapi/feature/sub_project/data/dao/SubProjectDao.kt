@@ -65,27 +65,6 @@ class SubProjectDao(private val connection: Connection) {
     }
   }
 
-  fun existsByNameAndProjectId(name: String, projectId: Long): Boolean {
-    connection.prepareStatement("SELECT 1 FROM sub_project WHERE name=? AND project_id=?").use { stmt ->
-      stmt.setString(1, name)
-      stmt.setLong(2, projectId)
-      stmt.executeQuery().use { rs ->
-        return rs.next()
-      }
-    }
-  }
-
-  fun existsByNameAndProjectIdAndIdNot(name: String, projectId: Long, id: Long): Boolean {
-    connection.prepareStatement("SELECT 1 FROM sub_project WHERE name=? AND project_id=? AND id!=?").use { stmt ->
-      stmt.setString(1, name)
-      stmt.setLong(2, projectId)
-      stmt.setLong(3, id)
-      stmt.executeQuery().use { rs ->
-        return rs.next()
-      }
-    }
-  }
-
   private fun ResultSet.toSubProject(): SubProject =
     SubProject(
       id = getLong("id"),

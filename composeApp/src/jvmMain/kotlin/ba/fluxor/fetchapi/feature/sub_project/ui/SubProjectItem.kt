@@ -1,4 +1,4 @@
-package ba.fluxor.fetchapi.feature.project_tree.ui
+package ba.fluxor.fetchapi.feature.sub_project.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import ba.fluxor.fetchapi.feature.project_tree.viewmodel.SubProjectNode
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
 
 @Composable
 fun SubProjectItem(

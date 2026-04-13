@@ -15,6 +15,7 @@ import ba.fluxor.fetchapi.feature.settings.data.SettingRepository
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
 import ba.fluxor.fetchapi.feature.sub_project.data.dao.SubProjectDao
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import ba.fluxor.fetchapi.ui.shell.viewmodel.AppShellViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -27,6 +28,7 @@ val appModule = module {
   viewModel { ProjectViewModel(get()) }
   single { SubProjectDao(get()) }
   single { SubProjectRepository(get()) }
+  single { SubProjectViewModel(get()) }
   single { FolderDao(get()) }
   single { FolderRepository(get()) }
   single { FolderViewModel(get()) }

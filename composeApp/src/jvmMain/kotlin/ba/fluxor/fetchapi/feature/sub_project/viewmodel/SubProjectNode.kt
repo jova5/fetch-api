@@ -1,4 +1,4 @@
-package ba.fluxor.fetchapi.feature.project_tree.viewmodel
+package ba.fluxor.fetchapi.feature.sub_project.viewmodel
 
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.request.data.Request
