@@ -9,13 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import ba.fluxor.fetchapi.feature.project.ui.ProjectDropdown
 import ba.fluxor.fetchapi.feature.folder.ui.FolderDialog
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project_tree.ui.ProjectTree
+import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.feature.request.ui.RequestDialog
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectDialog
-import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.ui.shell.viewmodel.AppShellViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -40,7 +39,6 @@ fun LeftTreePanel(
   }
 
   Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-    Box { ProjectDropdown() }
     Row(
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -73,6 +71,7 @@ fun LeftTreePanel(
           nodes = treeState.subProjectNodes,
           query = query,
           treeVm = treeVm,
+          folderVm = folderVm,
         )
       }
     }
@@ -102,12 +101,12 @@ fun LeftTreePanel(
       onSave = { name ->
         val editing = folderState.editingFolder
         if (editing?.id != null) {
-          treeVm.updateFolder(editing.id, editing.subProjectId, name)
+          folderVm.updateFolder(editing.id, editing.subProjectId, name)
         } else {
-          folderState.dialogParentSubProjectId?.let { treeVm.createFolder(it, name) }
+          folderState.dialogParentSubProjectId?.let { folderVm.createFolder(it, name) }
         }
       },
-      onDismiss = treeVm::dismissDialogs,
+      onDismiss = folderVm::dismissDialogs,
     )
   }
 

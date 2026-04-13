@@ -53,6 +53,8 @@ class FolderViewModel(
       folderRepository.create(subProjectId, trimmed)
 
       _state.update { it.copy(showFolderDialog = false, editingFolder = null, error = null) }
+
+      FolderEvents.triggerRefresh()
     }
   }
 
@@ -77,6 +79,8 @@ class FolderViewModel(
       folderRepository.update(id, trimmed)
 
       _state.update { it.copy(showFolderDialog = false, editingFolder = null, error = null) }
+
+      FolderEvents.triggerRefresh()
     }
   }
 
@@ -86,6 +90,8 @@ class FolderViewModel(
       folderRepository.delete(id)
 
       _state.update { it.copy(error = null) }
+
+      FolderEvents.triggerRefresh()
     }
   }
 
@@ -96,6 +102,16 @@ class FolderViewModel(
       } catch (t: Throwable) {
         _state.update { it.copy(isLoading = false, error = t.message ?: t::class.simpleName) }
       }
+    }
+  }
+
+  fun dismissDialogs() {
+    _state.update {
+      it.copy(
+        showFolderDialog = false,
+        editingFolder = null,
+        error = null,
+      )
     }
   }
 }

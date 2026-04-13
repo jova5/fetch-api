@@ -1,27 +1,26 @@
 package ba.fluxor.fetchapi.feature.project_tree.ui
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ba.fluxor.fetchapi.feature.folder.ui.FolderItem
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.request.data.Request
 
 private sealed class TreeItem {
   data class SubProjectHeader(val node: SubProjectNode) : TreeItem()
-  data class FolderHeader(val node: ba.fluxor.fetchapi.feature.project_tree.viewmodel.FolderNode, val subProjectId: Long) : TreeItem()
+  data class FolderHeader(val node: FolderNode, val subProjectId: Long) : TreeItem()
   data class RequestLeaf(val request: Request, val indent: Dp) : TreeItem()
 }
 
@@ -30,6 +29,7 @@ fun ProjectTree(
   nodes: List<SubProjectNode>,
   query: String,
   treeVm: ProjectTreeViewModel,
+  folderVm: FolderViewModel,
 ) {
   val filtered = if (query.isBlank()) nodes else filterTree(nodes, query.trim())
 
@@ -59,14 +59,14 @@ fun ProjectTree(
           onToggle = { item.node.subProject.id?.let(treeVm::toggleSubProjectExpanded) },
           onEdit = { treeVm.showEditSubProjectDialog(item.node.subProject) },
           onDelete = { item.node.subProject.id?.let(treeVm::deleteSubProject) },
-          onAddFolder = { item.node.subProject.id?.let(treeVm::showNewFolderDialog) },
+          onAddFolder = { item.node.subProject.id?.let(folderVm::showNewFolderDialog) },
           onAddRequest = { item.node.subProject.id?.let { treeVm.showNewRequestDialog(it, null) } },
         )
         is TreeItem.FolderHeader -> FolderItem(
           node = item.node,
           onToggle = { item.node.folder.id?.let(treeVm::toggleFolderExpanded) },
-          onEdit = { treeVm.showEditFolderDialog(item.node.folder) },
-          onDelete = { item.node.folder.id?.let(treeVm::deleteFolder) },
+          onEdit = { folderVm.showEditFolderDialog(item.node.folder) },
+          onDelete = { item.node.folder.id?.let(folderVm::deleteFolder) },
           onAddRequest = {
             treeVm.showNewRequestDialog(item.subProjectId, item.node.folder.id)
           },
@@ -101,142 +101,6 @@ private fun flattenTree(nodes: List<SubProjectNode>): List<TreeItem> {
     }
   }
   return result
-}
-
-@Composable
-private fun SubProjectItem(
-  node: SubProjectNode,
-  onToggle: () -> Unit,
-  onEdit: () -> Unit,
-  onDelete: () -> Unit,
-  onAddFolder: () -> Unit,
-  onAddRequest: () -> Unit,
-) {
-  var showMenu by remember { mutableStateOf(false) }
-
-  Row(
-    verticalAlignment = Alignment.CenterVertically,
-    modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 2.dp),
-  ) {
-    Icon(
-      imageVector = if (node.expanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
-      contentDescription = null,
-      modifier = Modifier.size(20.dp),
-    )
-    Icon(
-      imageVector = Icons.Default.Folder,
-      contentDescription = null,
-      modifier = Modifier.size(16.dp).padding(end = 4.dp),
-      tint = MaterialTheme.colorScheme.primary,
-    )
-    Text(
-      text = node.subProject.name,
-      style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-      modifier = Modifier.weight(1f),
-    )
-    Box {
-      IconButton(onClick = { showMenu = true }, modifier = Modifier.size(20.dp)) {
-        Icon(Icons.Default.MoreVert, contentDescription = "Menu", modifier = Modifier.size(16.dp))
-      }
-      DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-        DropdownMenuItem(text = { Text("Add folder") }, onClick = { showMenu = false; onAddFolder() })
-        DropdownMenuItem(text = { Text("Add request") }, onClick = { showMenu = false; onAddRequest() })
-        DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() })
-        DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() })
-      }
-    }
-  }
-}
-
-@Composable
-private fun FolderItem(
-  node: ba.fluxor.fetchapi.feature.project_tree.viewmodel.FolderNode,
-  onToggle: () -> Unit,
-  onEdit: () -> Unit,
-  onDelete: () -> Unit,
-  onAddRequest: () -> Unit,
-) {
-  var showMenu by remember { mutableStateOf(false) }
-
-  Row(
-    verticalAlignment = Alignment.CenterVertically,
-    modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(start = 24.dp, top = 2.dp, bottom = 2.dp),
-  ) {
-    Icon(
-      imageVector = if (node.expanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
-      contentDescription = null,
-      modifier = Modifier.size(20.dp),
-    )
-    Icon(
-      imageVector = if (node.expanded) Icons.Default.FolderOpen else Icons.Default.Folder,
-      contentDescription = null,
-      modifier = Modifier.size(16.dp).padding(end = 4.dp),
-      tint = MaterialTheme.colorScheme.secondary,
-    )
-    Text(
-      text = node.folder.name,
-      style = MaterialTheme.typography.bodyMedium,
-      modifier = Modifier.weight(1f),
-    )
-    Box {
-      IconButton(onClick = { showMenu = true }, modifier = Modifier.size(20.dp)) {
-        Icon(Icons.Default.MoreVert, contentDescription = "Menu", modifier = Modifier.size(16.dp))
-      }
-      DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-        DropdownMenuItem(text = { Text("Add request") }, onClick = { showMenu = false; onAddRequest() })
-        DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() })
-        DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() })
-      }
-    }
-  }
-}
-
-@Composable
-private fun RequestItem(
-  request: Request,
-  indent: Dp,
-  onEdit: () -> Unit,
-  onDelete: () -> Unit,
-) {
-  var showMenu by remember { mutableStateOf(false) }
-
-  Row(
-    verticalAlignment = Alignment.CenterVertically,
-    modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit).padding(start = indent, top = 2.dp, bottom = 2.dp),
-  ) {
-    Text(
-      text = request.method,
-      style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-      color = methodColor(request.method),
-      modifier = Modifier.width(40.dp),
-    )
-    Text(
-      text = request.name,
-      style = MaterialTheme.typography.bodySmall,
-      modifier = Modifier.weight(1f),
-    )
-    Box {
-      IconButton(onClick = { showMenu = true }, modifier = Modifier.size(20.dp)) {
-        Icon(Icons.Default.MoreVert, contentDescription = "Menu", modifier = Modifier.size(16.dp))
-      }
-      DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-        DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() })
-        DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() })
-      }
-    }
-  }
-}
-
-@Composable
-private fun methodColor(method: String): Color = when (method.uppercase()) {
-  "GET" -> Color(0xFF4CAF50)
-  "POST" -> Color(0xFFFF9800)
-  "PUT" -> Color(0xFF2196F3)
-  "PATCH" -> Color(0xFF9C27B0)
-  "DELETE" -> Color(0xFFF44336)
-  "HEAD" -> Color(0xFF607D8B)
-  "OPTIONS" -> Color(0xFF795548)
-  else -> MaterialTheme.colorScheme.onSurface
 }
 
 private fun filterTree(nodes: List<SubProjectNode>, query: String): List<SubProjectNode> {

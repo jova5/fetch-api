@@ -3,6 +3,7 @@ package ba.fluxor.fetchapi.di
 import ba.fluxor.fetchapi.configuration.DatabaseConnectionProvider
 import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
 import ba.fluxor.fetchapi.feature.folder.data.dao.FolderDao
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project.data.ProjectRepository
 import ba.fluxor.fetchapi.feature.project.data.dao.ProjectDao
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
@@ -28,6 +29,7 @@ val appModule = module {
   single { SubProjectRepository(get()) }
   single { FolderDao(get()) }
   single { FolderRepository(get()) }
+  single { FolderViewModel(get()) }
   single { RequestDao(get()) }
   single { RequestRepository(get()) }
   viewModel { ProjectTreeViewModel(get(), get(), get()) }

@@ -2,9 +2,9 @@ package ba.fluxor.fetchapi.feature.project_tree.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import ba.fluxor.fetchapi.feature.folder.data.Folder
 import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
-import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.request.data.Request
 import ba.fluxor.fetchapi.feature.request.data.RequestRepository
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
@@ -18,12 +18,20 @@ import kotlinx.coroutines.launch
 class ProjectTreeViewModel(
   private val subProjectRepository: SubProjectRepository,
   private val folderRepository: FolderRepository,
-  private val folderViewModel: FolderViewModel,
   private val requestRepository: RequestRepository,
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(ProjectTreeUiState())
   val state: StateFlow<ProjectTreeUiState> = _state.asStateFlow()
+
+  init {
+    launchCatching {
+      FolderEvents.refreshEvent.collect {
+        val projectId = _state.value.projectId ?: return@collect
+        loadTree(projectId)
+      }
+    }
+  }
 
   fun loadTree(projectId: Long) {
     launchCatching {
@@ -116,34 +124,6 @@ class ProjectTreeViewModel(
       _state.update { it.copy(error = null) }
       loadTree(projectId)
     }
-  }
-
-  // --- Folder CRUD ---
-
-  fun showNewFolderDialog(subProjectId: Long) {
-    folderViewModel.showNewFolderDialog(subProjectId)
-  }
-
-  fun showEditFolderDialog(folder: Folder) {
-    folderViewModel.showEditFolderDialog(folder)
-  }
-
-  fun createFolder(subProjectId: Long, name: String) {
-    folderViewModel.createFolder(subProjectId, name)
-    //todo: should reload tree when success create folder
-    _state.value.projectId?.let { loadTree(it) }
-  }
-
-  fun updateFolder(id: Long, subProjectId: Long, name: String) {
-    folderViewModel.updateFolder(id, subProjectId, name)
-    //todo: should reload tree when success update folder
-    _state.value.projectId?.let { loadTree(it) }
-  }
-
-  fun deleteFolder(id: Long) {
-    folderViewModel.deleteFolder(id)
-    //todo: should reload tree when success delete folder
-    _state.value.projectId?.let { loadTree(it) }
   }
 
   // --- Request CRUD ---

@@ -2,18 +2,19 @@ package ba.fluxor.fetchapi
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ba.fluxor.fetchapi.feature.project.ui.ProjectDropdown
+import ba.fluxor.fetchapi.feature.settings.ui.SettingsModal
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.localization.LocaleProvider
 import ba.fluxor.fetchapi.ui.shell.AppLayout
@@ -32,6 +33,7 @@ fun App(
 ) {
   val settingsVm: SettingsViewModel = koinViewModel()
   val state by settingsVm.state.collectAsStateWithLifecycle()
+  var showSettings by remember { mutableStateOf(false) }
 
   val isDark = when (state.themeMode) {
     ThemeMode.LIGHT -> false
@@ -40,10 +42,8 @@ fun App(
   }
   val windowStyle = if (isDark) DecoratedWindowStyle.dark() else DecoratedWindowStyle.light()
 
-  // Prilagođavamo boju TitleBar-a za svaku temu
   val baseStyle = if (isDark) TitleBarStyle.dark() else TitleBarStyle.light()
 
-// Direktno instanciramo implementaciju boja
   val customColors = TitleBarColors(
     background = if (isDark) Color(0xFF1E1E1E) else Color(0xFFF5F5F5), // TVOJA BOJA
     inactiveBackground = baseStyle.colors.inactiveBackground,
@@ -79,11 +79,13 @@ fun App(
     ) {
       Column(Modifier.fillMaxSize()) {
 
-        // Ovo je komponenta koja magično rešava tvoj problem
         TitleBar(Modifier.fillMaxWidth().background(Color.White)) {
           Row(Modifier.align(Alignment.Start)) {
-            Text(" Tab 1 ", Modifier.background(Color.LightGray))
-            Text(" Tab 2 ", Modifier.background(Color.LightGray))
+            Text(" FetchAPI ", Modifier.background(Color.LightGray))
+            IconButton(onClick = { showSettings = true }) {
+              Icon(Icons.Default.Settings, contentDescription = "Settings")
+            }
+            Box { ProjectDropdown() }
           }
         }
         LocaleProvider(state.language) {
@@ -91,6 +93,10 @@ fun App(
             AppLayout()
           }
         }
+      }
+
+      if (showSettings) {
+        SettingsModal(onDismiss = { showSettings = false })
       }
     }
   }

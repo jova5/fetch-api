@@ -4,19 +4,6 @@ import ba.fluxor.fetchapi.feature.folder.data.Folder
 import ba.fluxor.fetchapi.feature.request.data.Request
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
 
-data class SubProjectNode(
-  val subProject: SubProject,
-  val folders: List<FolderNode> = emptyList(),
-  val looseRequests: List<Request> = emptyList(),
-  val expanded: Boolean = true,
-)
-
-data class FolderNode(
-  val folder: Folder,
-  val requests: List<Request> = emptyList(),
-  val expanded: Boolean = true,
-)
-
 data class ProjectTreeUiState(
   val projectId: Long? = null,
   val subProjectNodes: List<SubProjectNode> = emptyList(),
