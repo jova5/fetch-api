@@ -1,4 +1,4 @@
-package ba.fluxor.fetchapi.ui.shell
+package ba.fluxor.fetchapi.feature.project_tree.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -12,7 +12,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.feature.folder.ui.FolderDialog
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
-import ba.fluxor.fetchapi.feature.project_tree.ui.ProjectTree
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.feature.request.ui.RequestDialog
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
@@ -94,7 +93,7 @@ fun LeftTreePanel(
         if (editing?.id != null) {
           subProjectVm.updateSubProject(editing.id, name, authType, authConfig)
         } else {
-          subProjectVm.createSubProject(name, treeState.projectId)
+          subProjectVm.createSubProject(name, projectState.active?.id)
         }
       },
       onDismiss = subProjectVm::dismissDialogs,

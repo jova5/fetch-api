@@ -13,6 +13,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import ba.fluxor.fetchapi.feature.project_tree.ui.LeftTreePanel
 import java.awt.Cursor
 
 private val MinLeftWidth = 200.dp
