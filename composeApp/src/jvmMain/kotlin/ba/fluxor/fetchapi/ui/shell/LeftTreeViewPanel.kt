@@ -11,32 +11,32 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.feature.folder.ui.FolderDialog
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
+import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
 import ba.fluxor.fetchapi.feature.project_tree.ui.ProjectTree
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
 import ba.fluxor.fetchapi.feature.request.ui.RequestDialog
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectDialog
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
-import ba.fluxor.fetchapi.ui.shell.viewmodel.AppShellViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LeftTreePanel(
-  shellVm: AppShellViewModel = koinViewModel(),
   treeVm: ProjectTreeViewModel = koinViewModel(),
+  projectVm: ProjectViewModel = koinViewModel(),
   subProjectVm: SubProjectViewModel = koinViewModel(),
   folderVm: FolderViewModel = koinViewModel(),
   requestVm: RequestViewModel = koinViewModel()
 ) {
-  val shellState by shellVm.state.collectAsStateWithLifecycle()
   val treeState by treeVm.state.collectAsStateWithLifecycle()
+  val projectState by projectVm.state.collectAsStateWithLifecycle()
   val subProjectState by subProjectVm.state.collectAsStateWithLifecycle()
   val folderState by folderVm.state.collectAsStateWithLifecycle()
   val requestState by requestVm.state.collectAsStateWithLifecycle()
   var query by remember { mutableStateOf("") }
 
-  LaunchedEffect(shellState.activeProjectId) {
-    val projectId = shellState.activeProjectId
+  LaunchedEffect(projectState.active) {
+    val projectId = projectState.active?.id
     if (projectId != null) {
       treeVm.loadTree(projectId)
     } else {
@@ -59,14 +59,14 @@ fun LeftTreePanel(
       )
       IconButton(
         onClick = { subProjectVm.showNewSubProjectDialog() },
-        enabled = shellState.activeProjectId != null,
+        enabled = projectState.active != null,
       ) {
         Icon(Icons.Default.Add, contentDescription = "Add sub-project")
       }
     }
 
     Box(modifier = Modifier.fillMaxSize().padding(top = 12.dp)) {
-      if (shellState.activeProjectId == null) {
+      if (projectState.active == null) {
         Text(
           text = "Select a project",
           style = MaterialTheme.typography.bodyMedium,

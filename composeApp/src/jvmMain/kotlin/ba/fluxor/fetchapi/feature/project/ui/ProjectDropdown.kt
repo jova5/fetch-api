@@ -13,16 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
-import ba.fluxor.fetchapi.ui.shell.viewmodel.AppShellViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ProjectDropdown(
-  projectVm: ProjectViewModel = koinViewModel(),
-  shellVm: AppShellViewModel = koinViewModel(),
+  projectVm: ProjectViewModel = koinViewModel()
 ) {
   val projectState by projectVm.state.collectAsStateWithLifecycle()
-  val shellState by shellVm.state.collectAsStateWithLifecycle()
 
   var expanded by remember { mutableStateOf(false) }
   var showManager by remember { mutableStateOf(false) }
@@ -35,20 +32,9 @@ fun ProjectDropdown(
     }
   }
 
-  // Keep the active project name in sync if projects change.
-  LaunchedEffect(projectState.projects, shellState.activeProjectId) {
-    val id = shellState.activeProjectId ?: return@LaunchedEffect
-    val current = projectState.projects.firstOrNull { it.id == id }
-    if (current == null) {
-      shellVm.onProjectDeleted(id)
-    } else if (current.name != shellState.activeProjectName) {
-      shellVm.onProjectRenamed(id, current.name)
-    }
-  }
-
   Box {
     TextButton(onClick = { expanded = true }) {
-      Text(shellState.activeProjectName ?: "Select project")
+      Text(projectState.active?.name ?: "Select project")
       Icon(Icons.Default.ArrowDropDown, contentDescription = null)
     }
 
@@ -99,7 +85,7 @@ fun ProjectDropdown(
             DropdownMenuItem(
               text = { Text(project.name) },
               onClick = {
-                shellVm.setActiveProject(project)
+                projectVm.setActiveProject(project)
                 expanded = false
               },
             )

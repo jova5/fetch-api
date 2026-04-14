@@ -2,6 +2,7 @@ package ba.fluxor.fetchapi.feature.project.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import ba.fluxor.fetchapi.feature.project.data.Project
 import ba.fluxor.fetchapi.feature.project.data.ProjectRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -120,6 +121,12 @@ class ProjectViewModel(
       } catch (t: Throwable) {
         _state.update { it.copy(isLoading = false, error = t.message ?: t::class.simpleName) }
       }
+    }
+  }
+
+  fun setActiveProject(project: Project) {
+    launchCatching {
+      _state.update { it.copy(isLoading = false, active = project, error = null) }
     }
   }
 }
