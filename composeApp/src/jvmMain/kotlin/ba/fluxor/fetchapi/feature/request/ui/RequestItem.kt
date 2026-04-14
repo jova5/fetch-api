@@ -13,6 +13,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ba.fluxor.fetchapi.feature.request.data.Request
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.delete
+import fetchapi.composeapp.generated.resources.edit
+import fetchapi.composeapp.generated.resources.menu
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun RequestItem(
@@ -40,11 +45,11 @@ fun RequestItem(
     )
     Box {
       IconButton(onClick = { showMenu = true }, modifier = Modifier.size(20.dp)) {
-        Icon(Icons.Default.MoreVert, contentDescription = "Menu", modifier = Modifier.size(16.dp))
+        Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.menu), modifier = Modifier.size(16.dp))
       }
       DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-        DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() })
-        DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() })
+        DropdownMenuItem(text = { Text(stringResource(Res.string.edit)) }, onClick = { showMenu = false; onEdit() })
+        DropdownMenuItem(text = { Text(stringResource(Res.string.delete)) }, onClick = { showMenu = false; onDelete() })
       }
     }
   }

@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.folder.data.Folder
 import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.name_can_not_be_empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +39,7 @@ class FolderViewModel(
     val trimmed = name.trim()
 
     if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
+      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
 
@@ -56,7 +58,7 @@ class FolderViewModel(
     val trimmed = name.trim()
 
     if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
+      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
 
@@ -86,7 +88,9 @@ class FolderViewModel(
       try {
         block()
       } catch (t: Throwable) {
-        _state.update { it.copy(isLoading = false, error = t.message ?: t::class.simpleName) }
+        _state.update {
+          it.copy(isLoading = false, errorMessage = t.message ?: t::class.simpleName)
+        }
       }
     }
   }

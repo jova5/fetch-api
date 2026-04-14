@@ -103,7 +103,7 @@ fun ProjectManagerModal(
 
           state.error?.let { err ->
             Text(
-              text = err,
+              text = stringResource(err),
               color = MaterialTheme.colorScheme.error,
               style = MaterialTheme.typography.bodyMedium,
             )

@@ -21,6 +21,10 @@ import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectItem
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.no_matches
+import fetchapi.composeapp.generated.resources.no_sub_projects
+import org.jetbrains.compose.resources.stringResource
 
 private sealed class TreeItem {
   data class SubProjectHeader(val node: SubProjectNode) : TreeItem()
@@ -41,7 +45,8 @@ fun ProjectTree(
 
   if (filtered.isEmpty()) {
     Text(
-      text = if (nodes.isEmpty()) "No sub-projects yet" else "No matches",
+      text = if (nodes.isEmpty()) stringResource(Res.string.no_sub_projects) else stringResource(
+        Res.string.no_matches),
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
       modifier = Modifier.padding(8.dp),
@@ -66,8 +71,13 @@ fun ProjectTree(
           onEdit = { subProjectVm.showEditSubProjectDialog(item.node.subProject) },
           onDelete = { item.node.subProject.id?.let(subProjectVm::deleteSubProject) },
           onAddFolder = { item.node.subProject.id?.let(folderVm::showNewFolderDialog) },
-          onAddRequest = { item.node.subProject.id?.let { requestVm.showNewRequestDialog(it, null) } },
+          onAddRequest = {
+            item.node.subProject.id?.let {
+              requestVm.showNewRequestDialog(it, null)
+            }
+          },
         )
+
         is TreeItem.FolderHeader -> FolderItem(
           node = item.node,
           onToggle = { item.node.folder.id?.let(treeVm::toggleFolderExpanded) },
@@ -77,6 +87,7 @@ fun ProjectTree(
             requestVm.showNewRequestDialog(item.subProjectId, item.node.folder.id)
           },
         )
+
         is TreeItem.RequestLeaf -> RequestItem(
           request = item.request,
           indent = item.indent,
@@ -131,6 +142,7 @@ private fun filterTree(nodes: List<SubProjectNode>, query: String): List<SubProj
       matchesSp -> spNode
       filteredFolders.isNotEmpty() || filteredLoose.isNotEmpty() ->
         spNode.copy(folders = filteredFolders, looseRequests = filteredLoose, expanded = true)
+
       else -> null
     }
   }

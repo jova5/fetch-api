@@ -17,7 +17,6 @@ import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
 import ba.fluxor.fetchapi.feature.sub_project.data.dao.SubProjectDao
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
-import ba.fluxor.fetchapi.ui.shell.viewmodel.AppShellViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import java.sql.Connection
@@ -40,5 +39,4 @@ val appModule = module {
   single { SettingDao(get()) }
   single { SettingRepository(get()) }
   viewModel { SettingsViewModel(get()) }
-  viewModel { AppShellViewModel() }
 }

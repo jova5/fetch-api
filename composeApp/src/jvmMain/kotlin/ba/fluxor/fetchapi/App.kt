@@ -20,6 +20,9 @@ import ba.fluxor.fetchapi.localization.LocaleProvider
 import ba.fluxor.fetchapi.ui.shell.AppLayout
 import ba.fluxor.fetchapi.ui.theme.AppTheme
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.settings
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.light
 import org.jetbrains.jewel.window.DecoratedWindow
@@ -81,9 +84,9 @@ fun App(
 
         TitleBar(Modifier.fillMaxWidth().background(Color.White)) {
           Row(Modifier.align(Alignment.Start)) {
-            Text(" FetchAPI ", Modifier.background(Color.LightGray))
+            Text("FetchAPI", Modifier.background(Color.LightGray))
             IconButton(onClick = { showSettings = true }) {
-              Icon(Icons.Default.Settings, contentDescription = "Settings")
+              Icon(Icons.Default.Settings, contentDescription = stringResource(Res.string.settings))
             }
             Box { ProjectDropdown() }
           }

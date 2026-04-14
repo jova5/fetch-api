@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.project.data.Project
 import ba.fluxor.fetchapi.feature.project.data.ProjectRepository
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.name_already_exists
+import fetchapi.composeapp.generated.resources.name_can_not_be_empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,7 +48,7 @@ class ProjectViewModel(
     val trimmed = name.trim()
 
     if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
+      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
 
@@ -54,7 +57,7 @@ class ProjectViewModel(
       val exists = repository.existsByName(name)
 
       if (exists) {
-        _state.update { it.copy(error = "Name already exists") }
+        _state.update { it.copy(error = Res.string.name_already_exists) }
         return@launchCatching
       }
 
@@ -75,7 +78,7 @@ class ProjectViewModel(
     val trimmed = name.trim()
 
     if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
+      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
 
@@ -84,7 +87,7 @@ class ProjectViewModel(
       val exists = repository.existsByNameAndIdNot(name, id)
 
       if (exists) {
-        _state.update { it.copy(error = "Name already exists") }
+        _state.update { it.copy(error = Res.string.name_already_exists) }
         return@launchCatching
       }
 
@@ -119,7 +122,7 @@ class ProjectViewModel(
       try {
         block()
       } catch (t: Throwable) {
-        _state.update { it.copy(isLoading = false, error = t.message ?: t::class.simpleName) }
+        _state.update { it.copy(isLoading = false, errorMessage = t.message ?: t::class.simpleName) }
       }
     }
   }

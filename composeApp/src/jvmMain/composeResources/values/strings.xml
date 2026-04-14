@@ -38,5 +38,13 @@
   <string name="search">Search</string>
   <string name="select_project">Select project</string>
   <string name="manage_projects">Manage projects</string>
-  <string name="no_projects">"No projects"</string>
+  <string name="no_projects">No projects</string>
+  <string name="no_sub_projects">No sub-projects</string>
+  <string name="no_matches">No matches</string>
+  <string name="add_sub_project">Add sub-project</string>
+  <string name="menu">Menu</string>
+  <string name="add_request">Add request</string>
+  <string name="edit">Edit</string>
+  <string name="name_can_not_be_empty">Name cannot be empty</string>
+  <string name="name_already_exists">Name already exists</string>
 </resources>

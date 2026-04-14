@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.name_can_not_be_empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +36,7 @@ class SubProjectViewModel(
     val trimmed = name.trim()
 
     if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
+      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
 
@@ -53,7 +55,7 @@ class SubProjectViewModel(
     val trimmed = name.trim()
 
     if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
+      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
 
@@ -84,7 +86,7 @@ class SubProjectViewModel(
       try {
         block()
       } catch (t: Throwable) {
-        _state.update { it.copy(isLoading = false, error = t.message ?: t::class.simpleName) }
+        _state.update { it.copy(isLoading = false, errorMessage = t.message ?: t::class.simpleName) }
       }
     }
   }

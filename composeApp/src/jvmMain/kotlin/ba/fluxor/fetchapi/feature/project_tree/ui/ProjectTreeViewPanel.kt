@@ -17,6 +17,11 @@ import ba.fluxor.fetchapi.feature.request.ui.RequestDialog
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectDialog
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.add_sub_project
+import fetchapi.composeapp.generated.resources.search
+import fetchapi.composeapp.generated.resources.select_project
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -52,7 +57,7 @@ fun LeftTreePanel(
       OutlinedTextField(
         value = query,
         onValueChange = { query = it },
-        placeholder = { Text("Search") },
+        placeholder = { Text(stringResource(Res.string.search)) },
         singleLine = true,
         modifier = Modifier.weight(1f),
       )
@@ -60,14 +65,14 @@ fun LeftTreePanel(
         onClick = { subProjectVm.showNewSubProjectDialog() },
         enabled = projectState.active != null,
       ) {
-        Icon(Icons.Default.Add, contentDescription = "Add sub-project")
+        Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.add_sub_project))
       }
     }
 
     Box(modifier = Modifier.fillMaxSize().padding(top = 12.dp)) {
       if (projectState.active == null) {
         Text(
-          text = "Select a project",
+          text = stringResource(Res.string.select_project),
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -87,7 +92,7 @@ fun LeftTreePanel(
   if (subProjectState.showSubProjectDialog) {
     SubProjectDialog(
       editing = subProjectState.editingSubProject,
-      error = subProjectState.error,
+      error = subProjectState.error?.let { stringResource(it) },
       onSave = { name, authType, authConfig ->
         val editing = subProjectState.editingSubProject
         if (editing?.id != null) {
@@ -103,7 +108,7 @@ fun LeftTreePanel(
   if (folderState.showFolderDialog) {
     FolderDialog(
       editing = folderState.editingFolder,
-      error = folderState.error,
+      error = folderState.error?.let { stringResource(it) },
       onSave = { name ->
         val editing = folderState.editingFolder
         if (editing?.id != null) {
@@ -119,7 +124,7 @@ fun LeftTreePanel(
   if (requestState.showRequestDialog) {
     RequestDialog(
       editing = requestState.editingRequest,
-      error = requestState.error,
+      error = requestState.error?.let { stringResource(it) },
       onSave = { name, method, url ->
         val editing = requestState.editingRequest
         if (editing?.id != null) {

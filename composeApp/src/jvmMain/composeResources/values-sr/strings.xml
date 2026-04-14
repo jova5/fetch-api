@@ -38,5 +38,13 @@
   <string name="search">Pretraga</string>
   <string name="select_project">Izaberi projekat</string>
   <string name="manage_projects">Upravljanje projektima</string>
-  <string name="no_projects">"Nema projekata"</string>
+  <string name="no_projects">Nema projekata</string>
+  <string name="no_sub_projects">Nema podprojekata</string>
+  <string name="no_matches">Nema poklapanja</string>
+  <string name="add_sub_project">Dodaj podprojekat</string>
+  <string name="menu">Meni</string>
+  <string name="add_request">Dodaj zahtijev</string>
+  <string name="edit">Izmjeni</string>
+  <string name="name_can_not_be_empty">Ima ne može biti prazno</string>
+  <string name="name_already_exists">Ime već postoji</string>
 </resources>

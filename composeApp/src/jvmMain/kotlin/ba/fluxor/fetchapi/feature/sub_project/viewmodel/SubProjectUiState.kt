@@ -1,10 +1,12 @@
 package ba.fluxor.fetchapi.feature.sub_project.viewmodel
 
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
+import org.jetbrains.compose.resources.StringResource
 
 data class SubProjectUiState(
+  val error: StringResource? = null,
+  val errorMessage: String? = null,
+  val isLoading: Boolean = false,
   val showSubProjectDialog: Boolean = false,
-  val editingSubProject: SubProject? = null,
-  val error: String? = null,
-  val isLoading: Boolean = false
-  )
+  val editingSubProject: SubProject? = null
+)

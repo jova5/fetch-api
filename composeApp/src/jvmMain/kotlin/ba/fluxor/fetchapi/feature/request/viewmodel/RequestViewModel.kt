@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.request.data.Request
 import ba.fluxor.fetchapi.feature.request.data.RequestRepository
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.name_can_not_be_empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +41,7 @@ class RequestViewModel(
     val trimmed = name.trim()
 
     if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
+      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
 
@@ -56,7 +58,7 @@ class RequestViewModel(
     val trimmed = name.trim()
 
     if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = "Name cannot be empty") }
+      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
 
@@ -80,7 +82,7 @@ class RequestViewModel(
       try {
         block()
       } catch (t: Throwable) {
-        _state.update { it.copy(isLoading = false, error = t.message ?: t::class.simpleName) }
+        _state.update { it.copy(isLoading = false, errorMessage = t.message ?: t::class.simpleName) }
       }
     }
   }
