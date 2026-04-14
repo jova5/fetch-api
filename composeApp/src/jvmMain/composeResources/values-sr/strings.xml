@@ -36,4 +36,7 @@
   <string name="method">Metoda</string>
   <string name="url">URL</string>
   <string name="search">Pretraga</string>
+  <string name="select_project">Izaberi projekat</string>
+  <string name="manage_projects">Upravljanje projektima</string>
+  <string name="no_projects">"Nema projekata"</string>
 </resources>

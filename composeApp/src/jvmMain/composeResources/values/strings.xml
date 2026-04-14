@@ -36,4 +36,7 @@
   <string name="method">Method</string>
   <string name="url">URL</string>
   <string name="search">Search</string>
+  <string name="select_project">Select project</string>
+  <string name="manage_projects">Manage projects</string>
+  <string name="no_projects">"No projects"</string>
 </resources>

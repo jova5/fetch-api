@@ -13,6 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.manage_projects
+import fetchapi.composeapp.generated.resources.search
+import fetchapi.composeapp.generated.resources.select_project
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -34,7 +39,7 @@ fun ProjectDropdown(
 
   Box {
     TextButton(onClick = { expanded = true }) {
-      Text(projectState.active?.name ?: "Select project")
+      Text(projectState.active?.name ?: stringResource(Res.string.select_project))
       Icon(Icons.Default.ArrowDropDown, contentDescription = null)
     }
 
@@ -51,7 +56,7 @@ fun ProjectDropdown(
         OutlinedTextField(
           value = query,
           onValueChange = { query = it },
-          placeholder = { Text("Search") },
+          placeholder = { Text(stringResource(Res.string.search)) },
           singleLine = true,
           modifier = Modifier.weight(1f),
         )
@@ -59,7 +64,7 @@ fun ProjectDropdown(
           showManager = true
           expanded = false
         }) {
-          Icon(Icons.Default.Edit, contentDescription = "Manage projects")
+          Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.manage_projects))
         }
       }
 
@@ -70,7 +75,10 @@ fun ProjectDropdown(
 
       if (filtered.isEmpty()) {
         DropdownMenuItem(
-          text = { Text("No projects", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+          text = {
+            Text(stringResource(Res.string.manage_projects),
+              color = MaterialTheme.colorScheme.onSurfaceVariant)
+          },
           onClick = {},
           enabled = false,
         )
