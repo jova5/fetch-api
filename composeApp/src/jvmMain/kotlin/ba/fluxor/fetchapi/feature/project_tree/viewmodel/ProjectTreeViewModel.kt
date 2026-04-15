@@ -2,21 +2,21 @@ package ba.fluxor.fetchapi.feature.project_tree.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
-import ba.fluxor.fetchapi.feature.request.data.RequestRepository
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
-import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
+import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class ProjectTreeViewModel(
-  private val subProjectRepository: SubProjectRepository,
-  private val folderRepository: FolderRepository,
-  private val requestRepository: RequestRepository,
+  private val subProjectViewModel: SubProjectViewModel,
+  private val folderViewModel: FolderViewModel,
+  private val requestViewModel: RequestViewModel
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(ProjectTreeUiState())
@@ -38,15 +38,15 @@ class ProjectTreeViewModel(
     launchCatching {
       _state.update { it.copy(projectId = projectId, isLoading = true, error = null) }
 
-      val subProjects = subProjectRepository.getAllByProjectId(projectId)
+      val subProjects = subProjectViewModel.getAllByProjectId(projectId)
       val nodes = subProjects.map { sp ->
         val spId = sp.id!!
-        val folders = folderRepository.getAllBySubProjectId(spId)
+        val folders = folderViewModel.getAllBySubProjectId(spId)
         val folderNodes = folders.map { folder ->
-          val requests = requestRepository.getAllByFolderId(folder.id!!)
+          val requests = requestViewModel.getAllByFolderId(folder.id!!)
           FolderNode(folder = folder, requests = requests)
         }
-        val looseRequests = requestRepository.getAllLooseBySubProjectId(spId)
+        val looseRequests = requestViewModel.getAllLooseBySubProjectId(spId)
 
         val existing = _state.value.subProjectNodes.find { it.subProject.id == spId }
         SubProjectNode(

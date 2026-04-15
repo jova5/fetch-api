@@ -82,7 +82,9 @@ class RequestViewModel(
       try {
         block()
       } catch (t: Throwable) {
-        _state.update { it.copy(isLoading = false, errorMessage = t.message ?: t::class.simpleName) }
+        _state.update {
+          it.copy(isLoading = false, errorMessage = t.message ?: t::class.simpleName)
+        }
       }
     }
   }
@@ -95,5 +97,13 @@ class RequestViewModel(
         error = null,
       )
     }
+  }
+
+  suspend fun getAllByFolderId(id: Long): List<Request> {
+    return requestRepository.getAllByFolderId(id)
+  }
+
+  suspend fun getAllLooseBySubProjectId(subProjectId: Long): List<Request> {
+    return requestRepository.getAllLooseBySubProjectId(subProjectId)
   }
 }

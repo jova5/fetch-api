@@ -104,4 +104,8 @@ class FolderViewModel(
       )
     }
   }
+
+  suspend fun getAllBySubProjectId(subProjectId: Long): List<Folder> {
+    return folderRepository.getAllBySubProjectId(subProjectId)
+  }
 }

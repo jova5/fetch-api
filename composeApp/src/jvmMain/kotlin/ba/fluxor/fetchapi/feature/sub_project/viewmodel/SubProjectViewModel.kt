@@ -24,7 +24,9 @@ class SubProjectViewModel(
   }
 
   fun showEditSubProjectDialog(subProject: SubProject) {
-    _state.update { it.copy(showSubProjectDialog = true, editingSubProject = subProject, error = null) }
+    _state.update {
+      it.copy(showSubProjectDialog = true, editingSubProject = subProject, error = null)
+    }
   }
 
   fun createSubProject(name: String, projectId: Long?) {
@@ -44,7 +46,9 @@ class SubProjectViewModel(
 
       subProjectRepository.create(projectId, trimmed)
 
-      _state.update { it.copy(showSubProjectDialog = false, editingSubProject = null, error = null) }
+      _state.update {
+        it.copy(showSubProjectDialog = false, editingSubProject = null, error = null)
+      }
 
       SubProjectEvents.triggerRefresh()
     }
@@ -64,7 +68,9 @@ class SubProjectViewModel(
 
       subProjectRepository.update(id, trimmed, authType, authConfig)
 
-      _state.update { it.copy(showSubProjectDialog = false, editingSubProject = null, error = null) }
+      _state.update {
+        it.copy(showSubProjectDialog = false, editingSubProject = null, error = null)
+      }
 
       SubProjectEvents.triggerRefresh()
     }
@@ -86,7 +92,9 @@ class SubProjectViewModel(
       try {
         block()
       } catch (t: Throwable) {
-        _state.update { it.copy(isLoading = false, errorMessage = t.message ?: t::class.simpleName) }
+        _state.update {
+          it.copy(isLoading = false, errorMessage = t.message ?: t::class.simpleName)
+        }
       }
     }
   }
@@ -99,5 +107,9 @@ class SubProjectViewModel(
         error = null,
       )
     }
+  }
+
+  suspend fun getAllByProjectId(projectId: Long): List<SubProject> {
+    return subProjectRepository.getAllByProjectId(projectId)
   }
 }
