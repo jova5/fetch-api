@@ -34,4 +34,13 @@ class SettingRepository(private val dao: SettingDao) {
   suspend fun setLanguage(language: AppLanguage) = withContext(Dispatchers.IO) {
     dao.upsert(SettingKey.LANGUAGE.tag, language.name)
   }
+
+  suspend fun getFontScale() : Float? = withContext(Dispatchers.IO) {
+    dao.get(SettingKey.FONT_SCALE.tag)
+      ?.let { runCatching { it.toFloat() }.getOrNull() }
+  }
+
+  suspend fun setFontScale(fontScale: Float) = withContext(Dispatchers.IO) {
+    dao.upsert(SettingKey.FONT_SCALE.tag, fontScale.toString())
+  }
 }

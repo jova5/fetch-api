@@ -8,5 +8,6 @@ data class SettingsUiState(
   val themeMode: ThemeMode = ThemeMode.SYSTEM,
   val colorScheme: AppColorScheme = AppColorScheme.BLUE,
   val language: AppLanguage = AppLanguage.ENGLISH,
+  val fontScale: Float = 1f,
   val loaded: Boolean = false,
 )

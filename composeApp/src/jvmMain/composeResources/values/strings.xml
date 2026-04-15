@@ -47,4 +47,6 @@
   <string name="edit">Edit</string>
   <string name="name_can_not_be_empty">Name cannot be empty</string>
   <string name="name_already_exists">Name already exists</string>
+  <string name="font_size">Font size</string>
+  <string name="font_size_format">Font size: %1$s x</string>
 </resources>

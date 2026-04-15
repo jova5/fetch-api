@@ -24,11 +24,13 @@ class SettingsViewModel(
       val mode = repository.getThemeMode()
       val scheme = repository.getColorScheme()
       val language = repository.getLanguage()
+      val fontScale = repository.getFontScale()
       _state.update {
         it.copy(
           themeMode = mode ?: ThemeMode.SYSTEM,
           colorScheme = scheme ?: AppColorScheme.BLUE,
           language = language ?: AppLanguage.ENGLISH,
+          fontScale = fontScale ?: 1f,
           loaded = true,
         )
       }
@@ -48,5 +50,10 @@ class SettingsViewModel(
   fun setLanguage(language: AppLanguage) {
     _state.update { it.copy(language = language) }
     viewModelScope.launch { repository.setLanguage(language) }
+  }
+
+  fun setFontScale(fontScale: Float) {
+    _state.update { it.copy(fontScale = fontScale) }
+    viewModelScope.launch { repository.setFontScale(fontScale) }
   }
 }

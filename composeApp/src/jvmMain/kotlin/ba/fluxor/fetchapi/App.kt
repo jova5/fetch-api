@@ -8,15 +8,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.feature.project.ui.ProjectDropdown
 import ba.fluxor.fetchapi.feature.settings.ui.SettingsModal
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.localization.LocaleProvider
+import ba.fluxor.fetchapi.ui.getScaledTypography
 import ba.fluxor.fetchapi.ui.shell.AppLayout
 import ba.fluxor.fetchapi.ui.theme.AppTheme
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
@@ -73,33 +77,45 @@ fun App(
     paneCloseButtonStyle = baseStyle.paneCloseButtonStyle
   )
 
-  CompositionLocalProvider(
-    LocalDecoratedWindowStyle provides windowStyle,
-    LocalTitleBarStyle provides titleBarStyle
-  ) {
-    DecoratedWindow(
-      onCloseRequest = onCloseRequest
-    ) {
-      Column(Modifier.fillMaxSize()) {
+  val defaultTypography = Typography()
+  val scaledTypography = getScaledTypography(defaultTypography, state.fontScale)
 
-        TitleBar(Modifier.fillMaxWidth().background(Color.White)) {
-          Row(Modifier.align(Alignment.Start)) {
-            Text("FetchAPI", Modifier.background(Color.LightGray))
-            IconButton(onClick = { showSettings = true }) {
-              Icon(Icons.Default.Settings, contentDescription = stringResource(Res.string.settings))
+  AppTheme(
+    mode = state.themeMode,
+    scheme = state.colorScheme,
+    typography = scaledTypography
+  ) {
+    CompositionLocalProvider(
+      LocalDecoratedWindowStyle provides windowStyle,
+      LocalTitleBarStyle provides titleBarStyle,
+      LocalDensity provides Density(
+        density = LocalDensity.current.density,
+        fontScale = state.fontScale
+      )
+    ) {
+      DecoratedWindow(
+        onCloseRequest = onCloseRequest
+      ) {
+        Column(Modifier.fillMaxSize()) {
+
+          TitleBar(Modifier.fillMaxWidth().background(Color.White)) {
+            Row(Modifier.align(Alignment.Start)) {
+              Text("FetchAPI", Modifier.background(Color.LightGray))
+              IconButton(onClick = { showSettings = true }) {
+                Icon(Icons.Default.Settings,
+                  contentDescription = stringResource(Res.string.settings))
+              }
+              Box { ProjectDropdown() }
             }
-            Box { ProjectDropdown() }
           }
-        }
-        LocaleProvider(state.language) {
-          AppTheme(mode = state.themeMode, scheme = state.colorScheme) {
+          LocaleProvider(state.language) {
             AppLayout()
           }
         }
-      }
 
-      if (showSettings) {
-        SettingsModal(onDismiss = { showSettings = false })
+        if (showSettings) {
+          SettingsModal(onDismiss = { showSettings = false })
+        }
       }
     }
   }

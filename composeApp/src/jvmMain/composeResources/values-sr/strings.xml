@@ -47,4 +47,6 @@
   <string name="edit">Izmjeni</string>
   <string name="name_can_not_be_empty">Ima ne može biti prazno</string>
   <string name="name_already_exists">Ime već postoji</string>
+  <string name="font_size">Veličina fonta</string>
+  <string name="font_size_format">Veličina fonta: %1$s x</string>
 </resources>
