@@ -20,6 +20,7 @@ import ba.fluxor.fetchapi.feature.project.ui.ProjectDropdown
 import ba.fluxor.fetchapi.feature.settings.ui.SettingsModal
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.localization.LocaleProvider
+import ba.fluxor.fetchapi.ui.getRobotoFontFamily
 import ba.fluxor.fetchapi.ui.getScaledTypography
 import ba.fluxor.fetchapi.ui.shell.AppLayout
 import ba.fluxor.fetchapi.ui.theme.AppTheme
@@ -77,8 +78,9 @@ fun App(
     paneCloseButtonStyle = baseStyle.paneCloseButtonStyle
   )
 
+  val fontFamily = getRobotoFontFamily()
   val defaultTypography = Typography()
-  val scaledTypography = getScaledTypography(defaultTypography, state.fontScale)
+  val scaledTypography = getScaledTypography(defaultTypography, state.fontScale, fontFamily)
 
   AppTheme(
     mode = state.themeMode,
