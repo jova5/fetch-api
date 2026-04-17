@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS request (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  sub_project_id INTEGER,
+  folder_id INTEGER,
+  name TEXT,
+  method TEXT,
+  url TEXT,
+  headers TEXT,
+  body TEXT
+);

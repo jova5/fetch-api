@@ -5,8 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.window.application
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import ba.fluxor.fetchapi.configuration.DatabaseConnectionProvider
-import ba.fluxor.fetchapi.configuration.DatabaseMigrator
+import ba.fluxor.fetchapi.configuration.DatabaseFactory
 import ba.fluxor.fetchapi.di.AppLifecycleOwner
 import ba.fluxor.fetchapi.di.appModule
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
@@ -14,8 +13,7 @@ import org.koin.core.context.startKoin
 
 fun main() {
 
-  DatabaseConnectionProvider.init()
-  DatabaseMigrator.migrate()
+  DatabaseFactory.init()
 
   startKoin {
     modules(appModule)
@@ -30,7 +28,7 @@ fun main() {
     ) {
       IntUiTheme {
         App(onCloseRequest = {
-          DatabaseConnectionProvider.close()
+          DatabaseFactory.close()
           exitApplication()
         })
       }

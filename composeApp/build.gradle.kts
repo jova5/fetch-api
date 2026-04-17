@@ -6,6 +6,7 @@ plugins {
   alias(libs.plugins.composeCompiler)
   alias(libs.plugins.composeHotReload)
   alias(libs.plugins.kotlinSerialization)
+  alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -43,7 +44,7 @@ kotlin {
       implementation(libs.grpc.kotlin.stub)
       implementation(libs.protobuf.java)
       implementation(libs.protobuf.java.util)
-      implementation(libs.liquibase.core)
+      implementation(libs.sqldelight.sqlite.driver)
       implementation(libs.sqlite)
       implementation(libs.ktor.client.core)
       implementation(libs.ktor.client.java)
@@ -58,6 +59,17 @@ kotlin {
 java {
   sourceCompatibility = JavaVersion.VERSION_25
   targetCompatibility = JavaVersion.VERSION_25
+}
+
+sqldelight {
+  databases {
+    create("FetchApiDatabase") {
+      packageName.set("ba.fluxor.fetchapi.db")
+      dialect(libs.sqldelight.sqlite.dialect)
+      deriveSchemaFromMigrations.set(false)
+      srcDirs("src/jvmMain/sqldelight")
+    }
+  }
 }
 
 compose.desktop {

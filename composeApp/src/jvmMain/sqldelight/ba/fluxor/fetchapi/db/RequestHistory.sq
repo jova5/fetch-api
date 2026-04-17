@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS request_history (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  request_id INTEGER,
+  method TEXT,
+  url TEXT,
+  request_headers TEXT,
+  request_body TEXT,
+  response_status INTEGER,
+  response_headers TEXT,
+  response_body TEXT,
+  response_time_ms INTEGER,
+  sent_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

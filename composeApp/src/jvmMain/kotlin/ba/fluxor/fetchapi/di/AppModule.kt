@@ -1,6 +1,6 @@
 package ba.fluxor.fetchapi.di
 
-import ba.fluxor.fetchapi.configuration.DatabaseConnectionProvider
+import ba.fluxor.fetchapi.configuration.DatabaseFactory
 import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
 import ba.fluxor.fetchapi.feature.folder.data.dao.FolderDao
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
@@ -22,7 +22,7 @@ import org.koin.dsl.module
 import java.sql.Connection
 
 val appModule = module {
-  single<Connection> { DatabaseConnectionProvider.connection }
+  single<Connection> { DatabaseFactory.connection }
   single { ProjectDao(get()) }
   single { ProjectRepository(get()) }
   viewModel { ProjectViewModel(get()) }
