@@ -45,8 +45,15 @@
   <string name="menu">Meni</string>
   <string name="add_request">Dodaj zahtijev</string>
   <string name="edit">Izmjeni</string>
-  <string name="name_can_not_be_empty">Ima ne može biti prazno</string>
+  <string name="name_can_not_be_empty">Ime ne može biti prazno</string>
   <string name="name_already_exists">Ime već postoji</string>
   <string name="font_size">Veličina fonta</string>
   <string name="font_size_format">Veličina fonta: %1$s x</string>
+  <string name="no_open_tabs">Nema otvorenih kartica</string>
+  <string name="close_tab">Zatvori karticu</string>
+  <string name="headers">Zaglavlja</string>
+  <string name="body">Tijelo</string>
+  <string name="auth_type">Tip autorizacije</string>
+  <string name="auth_config">Konfiguracija autorizacije</string>
+  <string name="add_folder">Dodaj folder</string>
 </resources>

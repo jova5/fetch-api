@@ -19,52 +19,16 @@ class RequestViewModel(
   private val _state = MutableStateFlow(RequestUiState())
   val state: StateFlow<RequestUiState> = _state.asStateFlow()
 
-  fun showNewRequestDialog(subProjectId: Long, folderId: Long?) {
-    _state.update {
-      it.copy(
-        showRequestDialog = true,
-        editingRequest = null,
-        dialogParentSubProjectId = subProjectId,
-        dialogParentFolderId = folderId,
-        error = null,
-      )
-    }
-  }
-
-  fun showEditRequestDialog(request: Request) {
-    _state.update { it.copy(showRequestDialog = true, editingRequest = request, error = null) }
-  }
-
-  fun createRequest(subProjectId: Long, folderId: Long?, name: String, method: String,
-    url: String) {
-
-    val trimmed = name.trim()
-
-    if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
-      return
-    }
-
-    launchCatching {
-      requestRepository.create(subProjectId, folderId, trimmed, method, url)
-      _state.update { it.copy(showRequestDialog = false, editingRequest = null, error = null) }
-      RequestEvents.triggerRefresh()
-    }
-  }
-
   fun updateRequest(id: Long, folderId: Long?, name: String, method: String, url: String,
     headers: String?, body: String?) {
-
     val trimmed = name.trim()
-
     if (trimmed.isEmpty()) {
       _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
-
     launchCatching {
       requestRepository.update(id, folderId, trimmed, method, url, headers, body)
-      _state.update { it.copy(showRequestDialog = false, editingRequest = null, error = null) }
+      _state.update { it.copy(error = null) }
       RequestEvents.triggerRefresh()
     }
   }
@@ -75,6 +39,18 @@ class RequestViewModel(
       _state.update { it.copy(error = null) }
       RequestEvents.triggerRefresh()
     }
+  }
+
+  suspend fun createRequestWithDefaultName(subProjectId: Long, folderId: Long?): Request {
+    val existing = if (folderId != null) {
+      requestRepository.getAllByFolderId(folderId).map { it.name }
+    } else {
+      requestRepository.getAllLooseBySubProjectId(subProjectId).map { it.name }
+    }
+    val name = uniqueName("New Request", existing)
+    val created = requestRepository.create(subProjectId, folderId, name, "GET", "")
+    RequestEvents.triggerRefresh()
+    return created
   }
 
   private fun launchCatching(block: suspend () -> Unit) {
@@ -89,16 +65,6 @@ class RequestViewModel(
     }
   }
 
-  fun dismissDialogs() {
-    _state.update {
-      it.copy(
-        showRequestDialog = false,
-        editingRequest = null,
-        error = null,
-      )
-    }
-  }
-
   suspend fun getAllByFolderId(id: Long): List<Request> {
     return requestRepository.getAllByFolderId(id)
   }
@@ -106,4 +72,11 @@ class RequestViewModel(
   suspend fun getAllLooseBySubProjectId(subProjectId: Long): List<Request> {
     return requestRepository.getAllLooseBySubProjectId(subProjectId)
   }
+}
+
+private fun uniqueName(base: String, existing: Collection<String>): String {
+  if (base !in existing) return base
+  var i = 2
+  while ("$base $i" in existing) i++
+  return "$base $i"
 }

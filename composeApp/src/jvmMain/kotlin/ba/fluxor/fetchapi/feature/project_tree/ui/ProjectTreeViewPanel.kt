@@ -9,18 +9,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import ba.fluxor.fetchapi.feature.folder.ui.FolderDialog
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
-import ba.fluxor.fetchapi.feature.request.ui.RequestDialog
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
-import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectDialog
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
+import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabsViewModel
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.add_sub_project
 import fetchapi.composeapp.generated.resources.search
 import fetchapi.composeapp.generated.resources.select_project
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -30,21 +29,22 @@ fun LeftTreePanel(
   projectVm: ProjectViewModel = koinViewModel(),
   subProjectVm: SubProjectViewModel = koinViewModel(),
   folderVm: FolderViewModel = koinViewModel(),
-  requestVm: RequestViewModel = koinViewModel()
+  requestVm: RequestViewModel = koinViewModel(),
+  tabsVm: TabsViewModel = koinViewModel(),
 ) {
   val treeState by treeVm.state.collectAsStateWithLifecycle()
   val projectState by projectVm.state.collectAsStateWithLifecycle()
-  val subProjectState by subProjectVm.state.collectAsStateWithLifecycle()
-  val folderState by folderVm.state.collectAsStateWithLifecycle()
-  val requestState by requestVm.state.collectAsStateWithLifecycle()
   var query by remember { mutableStateOf("") }
+  val scope = rememberCoroutineScope()
 
   LaunchedEffect(projectState.active) {
     val projectId = projectState.active?.id
     if (projectId != null) {
       treeVm.loadTree(projectId)
+      tabsVm.loadTabsForProject(projectId)
     } else {
       treeVm.clearTree()
+      tabsVm.clear()
     }
   }
 
@@ -62,7 +62,13 @@ fun LeftTreePanel(
         modifier = Modifier.weight(1f),
       )
       IconButton(
-        onClick = { subProjectVm.showNewSubProjectDialog() },
+        onClick = {
+          val projectId = projectState.active?.id ?: return@IconButton
+          scope.launch {
+            val sp = subProjectVm.createSubProjectWithDefaultName(projectId)
+            tabsVm.openSubProjectTab(sp)
+          }
+        },
         enabled = projectState.active != null,
       ) {
         Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.add_sub_project))
@@ -84,60 +90,9 @@ fun LeftTreePanel(
           subProjectVm = subProjectVm,
           folderVm = folderVm,
           requestVm = requestVm,
+          tabsVm = tabsVm,
         )
       }
     }
-  }
-
-  if (subProjectState.showSubProjectDialog) {
-    SubProjectDialog(
-      editing = subProjectState.editingSubProject,
-      error = subProjectState.error?.let { stringResource(it) },
-      onSave = { name, authType, authConfig ->
-        val editing = subProjectState.editingSubProject
-        if (editing?.id != null) {
-          subProjectVm.updateSubProject(editing.id, name, authType, authConfig)
-        } else {
-          subProjectVm.createSubProject(name, projectState.active?.id)
-        }
-      },
-      onDismiss = subProjectVm::dismissDialogs,
-    )
-  }
-
-  if (folderState.showFolderDialog) {
-    FolderDialog(
-      editing = folderState.editingFolder,
-      error = folderState.error?.let { stringResource(it) },
-      onSave = { name ->
-        val editing = folderState.editingFolder
-        if (editing?.id != null) {
-          folderVm.updateFolder(editing.id, name)
-        } else {
-          folderState.dialogParentSubProjectId?.let { folderVm.createFolder(it, name) }
-        }
-      },
-      onDismiss = folderVm::dismissDialogs,
-    )
-  }
-
-  if (requestState.showRequestDialog) {
-    RequestDialog(
-      editing = requestState.editingRequest,
-      error = requestState.error?.let { stringResource(it) },
-      onSave = { name, method, url ->
-        val editing = requestState.editingRequest
-        if (editing?.id != null) {
-          requestVm.updateRequest(editing.id, editing.folderId, name, method, url, editing.headers,
-            editing.body)
-        } else {
-          val spId = requestState.dialogParentSubProjectId
-          if (spId != null) {
-            requestVm.createRequest(spId, requestState.dialogParentFolderId, name, method, url)
-          }
-        }
-      },
-      onDismiss = requestVm::dismissDialogs,
-    )
   }
 }

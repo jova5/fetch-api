@@ -19,68 +19,33 @@ class FolderViewModel(
   private val _state = MutableStateFlow(FolderUiState())
   val state: StateFlow<FolderUiState> = _state.asStateFlow()
 
-  fun showNewFolderDialog(subProjectId: Long) {
-    _state.update {
-      it.copy(
-        showFolderDialog = true,
-        editingFolder = null,
-        dialogParentSubProjectId = subProjectId,
-        error = null
-      )
-    }
-  }
-
-  fun showEditFolderDialog(folder: Folder) {
-    _state.update { it.copy(showFolderDialog = true, editingFolder = folder, error = null) }
-  }
-
-  fun createFolder(subProjectId: Long, name: String) {
-
-    val trimmed = name.trim()
-
-    if (trimmed.isEmpty()) {
-      _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
-      return
-    }
-
-    launchCatching {
-
-      folderRepository.create(subProjectId, trimmed)
-
-      _state.update { it.copy(showFolderDialog = false, editingFolder = null, error = null) }
-
-      FolderEvents.triggerRefresh()
-    }
-  }
-
   fun updateFolder(id: Long, name: String) {
-
     val trimmed = name.trim()
-
     if (trimmed.isEmpty()) {
       _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return
     }
-
     launchCatching {
-
       folderRepository.update(id, trimmed)
-
-      _state.update { it.copy(showFolderDialog = false, editingFolder = null, error = null) }
-
+      _state.update { it.copy(error = null) }
       FolderEvents.triggerRefresh()
     }
   }
 
   fun deleteFolder(id: Long) {
     launchCatching {
-
       folderRepository.delete(id)
-
       _state.update { it.copy(error = null) }
-
       FolderEvents.triggerRefresh()
     }
+  }
+
+  suspend fun createFolderWithDefaultName(subProjectId: Long): Folder {
+    val existing = folderRepository.getAllBySubProjectId(subProjectId).map { it.name }
+    val name = uniqueName("New Folder", existing)
+    val created = folderRepository.create(subProjectId, name)
+    FolderEvents.triggerRefresh()
+    return created
   }
 
   private fun launchCatching(block: suspend () -> Unit) {
@@ -95,17 +60,14 @@ class FolderViewModel(
     }
   }
 
-  fun dismissDialogs() {
-    _state.update {
-      it.copy(
-        showFolderDialog = false,
-        editingFolder = null,
-        error = null,
-      )
-    }
-  }
-
   suspend fun getAllBySubProjectId(subProjectId: Long): List<Folder> {
     return folderRepository.getAllBySubProjectId(subProjectId)
   }
+}
+
+private fun uniqueName(base: String, existing: Collection<String>): String {
+  if (base !in existing) return base
+  var i = 2
+  while ("$base $i" in existing) i++
+  return "$base $i"
 }

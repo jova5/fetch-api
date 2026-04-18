@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -21,9 +22,11 @@ import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectItem
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
+import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabsViewModel
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.no_matches
 import fetchapi.composeapp.generated.resources.no_sub_projects
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 private sealed class TreeItem {
@@ -40,8 +43,10 @@ fun ProjectTree(
   subProjectVm: SubProjectViewModel,
   folderVm: FolderViewModel,
   requestVm: RequestViewModel,
+  tabsVm: TabsViewModel,
 ) {
   val filtered = if (query.isBlank()) nodes else filterTree(nodes, query.trim())
+  val scope = rememberCoroutineScope()
 
   if (filtered.isEmpty()) {
     Text(
@@ -67,31 +72,49 @@ fun ProjectTree(
       when (item) {
         is TreeItem.SubProjectHeader -> SubProjectItem(
           node = item.node,
-          onToggle = { item.node.subProject.id?.let(treeVm::toggleSubProjectExpanded) },
-          onEdit = { subProjectVm.showEditSubProjectDialog(item.node.subProject) },
+          onToggle = {
+            item.node.subProject.id?.let(treeVm::toggleSubProjectExpanded)
+            tabsVm.openSubProjectTab(item.node.subProject)
+          },
+          onEdit = { tabsVm.openSubProjectTab(item.node.subProject) },
           onDelete = { item.node.subProject.id?.let(subProjectVm::deleteSubProject) },
-          onAddFolder = { item.node.subProject.id?.let(folderVm::showNewFolderDialog) },
+          onAddFolder = {
+            val spId = item.node.subProject.id ?: return@SubProjectItem
+            scope.launch {
+              val folder = folderVm.createFolderWithDefaultName(spId)
+              tabsVm.openFolderTab(folder)
+            }
+          },
           onAddRequest = {
-            item.node.subProject.id?.let {
-              requestVm.showNewRequestDialog(it, null)
+            val spId = item.node.subProject.id ?: return@SubProjectItem
+            scope.launch {
+              val request = requestVm.createRequestWithDefaultName(spId, null)
+              tabsVm.openRequestTab(request)
             }
           },
         )
 
         is TreeItem.FolderHeader -> FolderItem(
           node = item.node,
-          onToggle = { item.node.folder.id?.let(treeVm::toggleFolderExpanded) },
-          onEdit = { folderVm.showEditFolderDialog(item.node.folder) },
+          onToggle = {
+            item.node.folder.id?.let(treeVm::toggleFolderExpanded)
+            tabsVm.openFolderTab(item.node.folder)
+          },
+          onEdit = { tabsVm.openFolderTab(item.node.folder) },
           onDelete = { item.node.folder.id?.let(folderVm::deleteFolder) },
           onAddRequest = {
-            requestVm.showNewRequestDialog(item.subProjectId, item.node.folder.id)
+            val folderId = item.node.folder.id ?: return@FolderItem
+            scope.launch {
+              val request = requestVm.createRequestWithDefaultName(item.subProjectId, folderId)
+              tabsVm.openRequestTab(request)
+            }
           },
         )
 
         is TreeItem.RequestLeaf -> RequestItem(
           request = item.request,
           indent = item.indent,
-          onEdit = { requestVm.showEditRequestDialog(item.request) },
+          onEdit = { tabsVm.openRequestTab(item.request) },
           onDelete = { item.request.id?.let(requestVm::deleteRequest) },
         )
       }

@@ -31,10 +31,15 @@ object DatabaseFactory {
       when {
         currentVersion == 0L && !tablesExist -> {
           FetchApiDatabase.Schema.create(driver)
-          setVersion(driver, 1)
+          setVersion(driver, 2)
         }
         currentVersion == 0L && tablesExist -> {
-          setVersion(driver, 1)
+          migrateToV2(driver)
+          setVersion(driver, 2)
+        }
+        currentVersion == 1L -> {
+          migrateToV2(driver)
+          setVersion(driver, 2)
         }
       }
     } finally {
@@ -66,6 +71,23 @@ object DatabaseFactory {
 
   private fun setVersion(driver: SqlDriver, version: Int) {
     driver.execute(null, "PRAGMA user_version = $version;", 0)
+  }
+
+  private fun migrateToV2(driver: SqlDriver) {
+    driver.execute(
+      null,
+      """
+      CREATE TABLE IF NOT EXISTS tab (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        entity_id INTEGER NOT NULL,
+        position INTEGER NOT NULL,
+        UNIQUE(project_id, type, entity_id)
+      );
+      """.trimIndent(),
+      0,
+    )
   }
 
   private fun tablesExist(driver: SqlDriver): Boolean {

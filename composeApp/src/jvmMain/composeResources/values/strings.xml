@@ -49,4 +49,11 @@
   <string name="name_already_exists">Name already exists</string>
   <string name="font_size">Font size</string>
   <string name="font_size_format">Font size: %1$s x</string>
+  <string name="no_open_tabs">No open tabs</string>
+  <string name="close_tab">Close tab</string>
+  <string name="headers">Headers</string>
+  <string name="body">Body</string>
+  <string name="auth_type">Auth type</string>
+  <string name="auth_config">Auth config</string>
+  <string name="add_folder">Add folder</string>
 </resources>
