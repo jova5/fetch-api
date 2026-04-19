@@ -25,21 +25,22 @@ object DatabaseFactory {
     // Phase 1: SQLDelight driver for schema management
     val driver: SqlDriver = JdbcSqliteDriver(url, Properties())
     try {
-      val currentVersion = getVersion(driver)
-      val tablesExist = tablesExist(driver)
+      val current = getVersion(driver)
+      val target = FetchApiDatabase.Schema.version
 
       when {
-        currentVersion == 0L && !tablesExist -> {
+        current == 0L && !tablesExist(driver) -> {
           FetchApiDatabase.Schema.create(driver)
-          setVersion(driver, 2)
+          setVersion(driver, target)
         }
-        currentVersion == 0L && tablesExist -> {
-          migrateToV2(driver)
-          setVersion(driver, 2)
+        current == 0L -> {
+          // Legacy DB from before user_version was stamped — treat as v1.
+          FetchApiDatabase.Schema.migrate(driver, 1L, target)
+          setVersion(driver, target)
         }
-        currentVersion == 1L -> {
-          migrateToV2(driver)
-          setVersion(driver, 2)
+        current < target -> {
+          FetchApiDatabase.Schema.migrate(driver, current, target)
+          setVersion(driver, target)
         }
       }
     } finally {
@@ -69,25 +70,8 @@ object DatabaseFactory {
     ).value
   }
 
-  private fun setVersion(driver: SqlDriver, version: Int) {
+  private fun setVersion(driver: SqlDriver, version: Long) {
     driver.execute(null, "PRAGMA user_version = $version;", 0)
-  }
-
-  private fun migrateToV2(driver: SqlDriver) {
-    driver.execute(
-      null,
-      """
-      CREATE TABLE IF NOT EXISTS tab (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        project_id INTEGER NOT NULL,
-        type TEXT NOT NULL,
-        entity_id INTEGER NOT NULL,
-        position INTEGER NOT NULL,
-        UNIQUE(project_id, type, entity_id)
-      );
-      """.trimIndent(),
-      0,
-    )
   }
 
   private fun tablesExist(driver: SqlDriver): Boolean {
