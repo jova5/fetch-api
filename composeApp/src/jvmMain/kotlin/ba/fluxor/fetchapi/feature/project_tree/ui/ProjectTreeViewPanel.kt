@@ -19,7 +19,6 @@ import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.add_sub_project
 import fetchapi.composeapp.generated.resources.search
 import fetchapi.composeapp.generated.resources.select_project
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -35,16 +34,13 @@ fun LeftTreePanel(
   val treeState by treeVm.state.collectAsStateWithLifecycle()
   val projectState by projectVm.state.collectAsStateWithLifecycle()
   var query by remember { mutableStateOf("") }
-  val scope = rememberCoroutineScope()
 
   LaunchedEffect(projectState.active) {
     val projectId = projectState.active?.id
     if (projectId != null) {
       treeVm.loadTree(projectId)
-      tabsVm.loadTabsForProject(projectId)
     } else {
       treeVm.clearTree()
-      tabsVm.clear()
     }
   }
 
@@ -64,10 +60,7 @@ fun LeftTreePanel(
       IconButton(
         onClick = {
           val projectId = projectState.active?.id ?: return@IconButton
-          scope.launch {
-            val sp = subProjectVm.createSubProjectWithDefaultName(projectId)
-            tabsVm.openSubProjectTab(sp)
-          }
+          subProjectVm.createSubProject(projectId)
         },
         enabled = projectState.active != null,
       ) {

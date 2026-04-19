@@ -10,12 +10,15 @@ import ba.fluxor.fetchapi.feature.request.data.RequestRepository
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvent
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
 import ba.fluxor.fetchapi.feature.tabs.data.TabRepository
 import ba.fluxor.fetchapi.feature.tabs.data.TabType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,11 +36,27 @@ class TabsViewModel(
   init {
     viewModelScope.launch {
       merge(
-        SubProjectEvents.refreshEvent,
+        SubProjectEvents.events
+          .filterIsInstance<SubProjectEvent.Refresh>()
+          .map { },
         FolderEvents.refreshEvent,
         RequestEvents.refreshEvent,
       ).collect {
         syncWithEntities()
+      }
+    }
+
+    viewModelScope.launch {
+      merge(
+        SubProjectEvents.events
+      ).collect { event ->
+        when (event) {
+          is SubProjectEvent.Created -> {
+            val newSubProject = event.subProject
+            openSubProjectTab(newSubProject)
+          }
+          else -> {}
+        }
       }
     }
   }

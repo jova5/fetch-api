@@ -7,6 +7,7 @@ import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvent
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
@@ -23,7 +24,13 @@ class ProjectTreeViewModel(
   val state: StateFlow<ProjectTreeUiState> = _state.asStateFlow()
 
   private val _refreshEvents =
-    merge(SubProjectEvents.refreshEvent, FolderEvents.refreshEvent, RequestEvents.refreshEvent)
+    merge(
+      SubProjectEvents.events
+        .filterIsInstance<SubProjectEvent.Refresh>()
+        .map { },
+      FolderEvents.refreshEvent,
+      RequestEvents.refreshEvent
+    )
 
   init {
     launchCatching {

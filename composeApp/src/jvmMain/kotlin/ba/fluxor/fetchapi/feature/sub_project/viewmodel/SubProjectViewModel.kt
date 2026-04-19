@@ -19,6 +19,26 @@ class SubProjectViewModel(
   private val _state = MutableStateFlow(SubProjectUiState())
   val state: StateFlow<SubProjectUiState> = _state.asStateFlow()
 
+  fun createSubProject(projectId: Long) {
+    launchCatching {
+
+      val existing = subProjectRepository.getAllByProjectId(projectId).map { it.name }
+      val name = uniqueName("New Sub Project", existing)
+
+      val created = subProjectRepository.create(projectId, name)
+
+      SubProjectEvents.triggerRefresh()
+      SubProjectEvents.triggerSubProjectCreated(created)
+    }
+  }
+
+  private fun uniqueName(base: String, existing: Collection<String>): String {
+    if (base !in existing) return base
+    var i = 2
+    while ("$base $i" in existing) i++
+    return "$base $i"
+  }
+
   fun updateSubProject(id: Long, name: String, authType: String, authConfig: String?) {
     val trimmed = name.trim()
     if (trimmed.isEmpty()) {
@@ -40,14 +60,6 @@ class SubProjectViewModel(
     }
   }
 
-  suspend fun createSubProjectWithDefaultName(projectId: Long): SubProject {
-    val existing = subProjectRepository.getAllByProjectId(projectId).map { it.name }
-    val name = uniqueName("New Sub Project", existing)
-    val created = subProjectRepository.create(projectId, name)
-    SubProjectEvents.triggerRefresh()
-    return created
-  }
-
   private fun launchCatching(block: suspend () -> Unit) {
     viewModelScope.launch {
       try {
@@ -63,11 +75,4 @@ class SubProjectViewModel(
   suspend fun getAllByProjectId(projectId: Long): List<SubProject> {
     return subProjectRepository.getAllByProjectId(projectId)
   }
-}
-
-private fun uniqueName(base: String, existing: Collection<String>): String {
-  if (base !in existing) return base
-  var i = 2
-  while ("$base $i" in existing) i++
-  return "$base $i"
 }
