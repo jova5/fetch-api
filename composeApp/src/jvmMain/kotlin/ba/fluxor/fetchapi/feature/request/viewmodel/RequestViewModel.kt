@@ -19,6 +19,22 @@ class RequestViewModel(
   private val _state = MutableStateFlow(RequestUiState())
   val state: StateFlow<RequestUiState> = _state.asStateFlow()
 
+  fun createRequest(subProjectId: Long, folderId: Long?) {
+    launchCatching {
+
+      val existing = if (folderId != null) {
+        requestRepository.getAllByFolderId(folderId).map { it.name }
+      } else {
+        requestRepository.getAllLooseBySubProjectId(subProjectId).map { it.name }
+      }
+
+      val name = uniqueName("New Request", existing)
+      val created = requestRepository.create(subProjectId, folderId, name, "GET", "")
+
+      RequestEvents.triggerRequestCreated(created)
+    }
+  }
+
   fun updateRequest(id: Long, folderId: Long?, name: String, method: String, url: String,
     headers: String?, body: String?) {
     val trimmed = name.trim()
@@ -39,18 +55,6 @@ class RequestViewModel(
       _state.update { it.copy(error = null) }
       RequestEvents.triggerRefresh()
     }
-  }
-
-  suspend fun createRequestWithDefaultName(subProjectId: Long, folderId: Long?): Request {
-    val existing = if (folderId != null) {
-      requestRepository.getAllByFolderId(folderId).map { it.name }
-    } else {
-      requestRepository.getAllLooseBySubProjectId(subProjectId).map { it.name }
-    }
-    val name = uniqueName("New Request", existing)
-    val created = requestRepository.create(subProjectId, folderId, name, "GET", "")
-    RequestEvents.triggerRefresh()
-    return created
   }
 
   private fun launchCatching(block: suspend () -> Unit) {

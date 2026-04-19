@@ -8,7 +8,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -26,7 +25,6 @@ import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabsViewModel
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.no_matches
 import fetchapi.composeapp.generated.resources.no_sub_projects
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 private sealed class TreeItem {
@@ -46,7 +44,6 @@ fun ProjectTree(
   tabsVm: TabsViewModel,
 ) {
   val filtered = if (query.isBlank()) nodes else filterTree(nodes, query.trim())
-  val scope = rememberCoroutineScope()
 
   if (filtered.isEmpty()) {
     Text(
@@ -80,14 +77,11 @@ fun ProjectTree(
           onDelete = { item.node.subProject.id?.let(subProjectVm::deleteSubProject) },
           onAddFolder = {
             val spId = item.node.subProject.id ?: return@SubProjectItem
-            folderVm.createFolderWithDefaultName(spId)
+            folderVm.createFolder(spId)
           },
           onAddRequest = {
             val spId = item.node.subProject.id ?: return@SubProjectItem
-            scope.launch {
-              val request = requestVm.createRequestWithDefaultName(spId, null)
-              tabsVm.openRequestTab(request)
-            }
+            requestVm.createRequest(spId, null)
           },
         )
 
@@ -101,10 +95,7 @@ fun ProjectTree(
           onDelete = { item.node.folder.id?.let(folderVm::deleteFolder) },
           onAddRequest = {
             val folderId = item.node.folder.id ?: return@FolderItem
-            scope.launch {
-              val request = requestVm.createRequestWithDefaultName(item.subProjectId, folderId)
-              tabsVm.openRequestTab(request)
-            }
+            requestVm.createRequest(item.subProjectId, folderId)
           },
         )
 

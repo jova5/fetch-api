@@ -2,13 +2,11 @@ package ba.fluxor.fetchapi.feature.project_tree.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvent
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
-import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvent
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
@@ -26,13 +24,9 @@ class ProjectTreeViewModel(
 
   private val _refreshEvents =
     merge(
-      SubProjectEvents.events
-        .filterIsInstance<SubProjectEvent.Refresh>()
-        .map { },
-      FolderEvents.events
-        .filterIsInstance<FolderEvent.Refresh>()
-        .map { },
-      RequestEvents.refreshEvent
+      SubProjectEvents.events,
+      FolderEvents.events,
+      RequestEvents.events
     )
 
   init {

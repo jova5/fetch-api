@@ -27,7 +27,6 @@ class SubProjectViewModel(
 
       val created = subProjectRepository.create(projectId, name)
 
-      SubProjectEvents.triggerRefresh()
       SubProjectEvents.triggerSubProjectCreated(created)
     }
   }
