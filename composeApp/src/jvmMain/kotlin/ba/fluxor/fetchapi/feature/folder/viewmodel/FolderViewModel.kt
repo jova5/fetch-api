@@ -19,6 +19,26 @@ class FolderViewModel(
   private val _state = MutableStateFlow(FolderUiState())
   val state: StateFlow<FolderUiState> = _state.asStateFlow()
 
+  fun createFolderWithDefaultName(subProjectId: Long) {
+    launchCatching {
+
+      val existing = folderRepository.getAllBySubProjectId(subProjectId).map { it.name }
+      val name = uniqueName("New Folder", existing)
+
+      val created = folderRepository.create(subProjectId, name)
+
+      FolderEvents.triggerRefresh()
+      FolderEvents.triggerFolderCreated(created)
+    }
+  }
+
+  private fun uniqueName(base: String, existing: Collection<String>): String {
+    if (base !in existing) return base
+    var i = 2
+    while ("$base $i" in existing) i++
+    return "$base $i"
+  }
+
   fun updateFolder(id: Long, name: String) {
     val trimmed = name.trim()
     if (trimmed.isEmpty()) {
@@ -40,14 +60,6 @@ class FolderViewModel(
     }
   }
 
-  suspend fun createFolderWithDefaultName(subProjectId: Long): Folder {
-    val existing = folderRepository.getAllBySubProjectId(subProjectId).map { it.name }
-    val name = uniqueName("New Folder", existing)
-    val created = folderRepository.create(subProjectId, name)
-    FolderEvents.triggerRefresh()
-    return created
-  }
-
   private fun launchCatching(block: suspend () -> Unit) {
     viewModelScope.launch {
       try {
@@ -63,11 +75,4 @@ class FolderViewModel(
   suspend fun getAllBySubProjectId(subProjectId: Long): List<Folder> {
     return folderRepository.getAllBySubProjectId(subProjectId)
   }
-}
-
-private fun uniqueName(base: String, existing: Collection<String>): String {
-  if (base !in existing) return base
-  var i = 2
-  while ("$base $i" in existing) i++
-  return "$base $i"
 }

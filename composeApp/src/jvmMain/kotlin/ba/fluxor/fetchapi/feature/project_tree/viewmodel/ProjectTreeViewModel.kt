@@ -2,6 +2,7 @@ package ba.fluxor.fetchapi.feature.project_tree.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvent
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
@@ -28,7 +29,9 @@ class ProjectTreeViewModel(
       SubProjectEvents.events
         .filterIsInstance<SubProjectEvent.Refresh>()
         .map { },
-      FolderEvents.refreshEvent,
+      FolderEvents.events
+        .filterIsInstance<FolderEvent.Refresh>()
+        .map { },
       RequestEvents.refreshEvent
     )
 

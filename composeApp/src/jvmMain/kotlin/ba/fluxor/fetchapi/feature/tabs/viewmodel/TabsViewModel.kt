@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.folder.data.Folder
 import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvent
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.request.data.Request
 import ba.fluxor.fetchapi.feature.request.data.RequestRepository
@@ -39,7 +40,9 @@ class TabsViewModel(
         SubProjectEvents.events
           .filterIsInstance<SubProjectEvent.Refresh>()
           .map { },
-        FolderEvents.refreshEvent,
+        FolderEvents.events
+          .filterIsInstance<FolderEvent.Refresh>()
+          .map { },
         RequestEvents.refreshEvent,
       ).collect {
         syncWithEntities()
@@ -48,12 +51,17 @@ class TabsViewModel(
 
     viewModelScope.launch {
       merge(
-        SubProjectEvents.events
+        SubProjectEvents.events,
+        FolderEvents.events
       ).collect { event ->
         when (event) {
           is SubProjectEvent.Created -> {
             val newSubProject = event.subProject
             openSubProjectTab(newSubProject)
+          }
+          is FolderEvent.Created -> {
+            val newFolder = event.folder
+            openFolderTab(newFolder)
           }
           else -> {}
         }

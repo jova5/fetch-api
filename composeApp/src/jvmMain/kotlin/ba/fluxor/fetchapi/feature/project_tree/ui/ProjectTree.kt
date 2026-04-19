@@ -80,10 +80,7 @@ fun ProjectTree(
           onDelete = { item.node.subProject.id?.let(subProjectVm::deleteSubProject) },
           onAddFolder = {
             val spId = item.node.subProject.id ?: return@SubProjectItem
-            scope.launch {
-              val folder = folderVm.createFolderWithDefaultName(spId)
-              tabsVm.openFolderTab(folder)
-            }
+            folderVm.createFolderWithDefaultName(spId)
           },
           onAddRequest = {
             val spId = item.node.subProject.id ?: return@SubProjectItem
