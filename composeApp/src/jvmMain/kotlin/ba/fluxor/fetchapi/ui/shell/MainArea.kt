@@ -1,6 +1,7 @@
 package ba.fluxor.fetchapi.ui.shell
 
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
@@ -11,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import ba.fluxor.fetchapi.feature.project_tree.ui.LeftTreePanel
+import ba.fluxor.fetchapi.feature.project_tree.ui.ProjectTreeViewPanel
 import java.awt.Cursor
 
 private val MinLeftWidth = 200.dp
@@ -24,10 +27,16 @@ private val DividerWidth = 2.dp
 fun MainArea(modifier: Modifier = Modifier) {
   var leftWidth by remember { mutableStateOf(300.dp) }
   val density = LocalDensity.current
+  val focusManager = LocalFocusManager.current
 
-  Row(modifier = modifier.fillMaxSize()) {
+  Row(modifier = modifier
+    .fillMaxSize()
+    .pointerInput(Unit) {
+      detectTapGestures { focusManager.clearFocus() }
+    }
+  ) {
     Box(modifier = Modifier.width(leftWidth).fillMaxHeight()) {
-      LeftTreePanel()
+      ProjectTreeViewPanel()
     }
 
     val dragState = rememberDraggableState { delta ->
