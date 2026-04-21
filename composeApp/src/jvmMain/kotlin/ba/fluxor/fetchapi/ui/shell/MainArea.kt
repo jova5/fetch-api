@@ -1,5 +1,6 @@
 package ba.fluxor.fetchapi.ui.shell
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable
@@ -35,7 +36,12 @@ fun MainArea(modifier: Modifier = Modifier) {
       detectTapGestures { focusManager.clearFocus() }
     }
   ) {
-    Box(modifier = Modifier.width(leftWidth).fillMaxHeight()) {
+    Box(
+      modifier = Modifier
+        .width(leftWidth)
+        .fillMaxHeight()
+        .background(color = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
       ProjectTreeViewPanel()
     }
 
@@ -63,7 +69,11 @@ fun MainArea(modifier: Modifier = Modifier) {
       ) {}
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+      modifier = Modifier
+        .fillMaxSize()
+        .background(color = MaterialTheme.colorScheme.surface)
+    ) {
       RightTabsPanel()
     }
   }

@@ -60,7 +60,7 @@ fun App(
     typography = scaledTypography
   ) {
 
-    val background = MaterialTheme.colorScheme.surface
+    val background = MaterialTheme.colorScheme.surfaceContainerLow
     val border = MaterialTheme.colorScheme.primary
 
     val darkenedBackground = lerp(background, Color.Black, 0.05f)

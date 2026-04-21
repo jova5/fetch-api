@@ -20,7 +20,7 @@
   <string name="color_orange">Orange</string>
   <string name="language">Language</string>
   <string name="language_english">English</string>
-  <string name="language_serbian">Serbian</string>
+  <string name="language_serbian">Srpski</string>
   <string name="close">Close</string>
   <string name="error_name_empty">Name cannot be empty</string>
   <string name="error_name_exists">Name already exists</string>
