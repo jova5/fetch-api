@@ -17,18 +17,41 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ba.fluxor.fetchapi.LocalWindowWidth
 import ba.fluxor.fetchapi.feature.project_tree.ui.ProjectTreeViewPanel
+import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import java.awt.Cursor
 
-private val MinLeftWidth = 200.dp
-private val MaxLeftWidth = 600.dp
 private val DividerWidth = 2.dp
 
 @Composable
-fun MainArea(modifier: Modifier = Modifier) {
-  var leftWidth by remember { mutableStateOf(300.dp) }
+fun MainArea(
+  modifier: Modifier = Modifier,
+  settingsVm: SettingsViewModel = koinViewModel()
+) {
+  val settingState by settingsVm.state.collectAsStateWithLifecycle()
+
   val density = LocalDensity.current
   val focusManager = LocalFocusManager.current
+  val windowWidth = LocalWindowWidth.current
+
+  val minLeftWidth = 225.dp
+  val maxLeftWidth = windowWidth * 0.50f
+
+  var percentage by remember { mutableStateOf(settingState.dividerPercentage) }
+
+  LaunchedEffect(settingState.dividerPercentage) {
+    percentage = settingState.dividerPercentage
+  }
+
+  val leftWidth by remember(windowWidth, percentage) {
+    derivedStateOf {
+      (minLeftWidth + (maxLeftWidth - minLeftWidth) * percentage)
+        .coerceIn(minLeftWidth, maxLeftWidth)
+    }
+  }
 
   Row(modifier = modifier
     .fillMaxSize()
@@ -44,21 +67,37 @@ fun MainArea(modifier: Modifier = Modifier) {
     ) {
       ProjectTreeViewPanel()
     }
+    var virtualMouseX by remember { mutableStateOf(leftWidth) }
 
     val dragState = rememberDraggableState { delta ->
       val deltaDp = with(density) { delta.toDp() }
-      leftWidth = (leftWidth + deltaDp).coerceIn(MinLeftWidth, MaxLeftWidth)
+
+      virtualMouseX += deltaDp
+
+      if (virtualMouseX in minLeftWidth..maxLeftWidth) {
+        val range = maxLeftWidth - minLeftWidth
+        if (range > 0.dp) {
+          percentage = ((virtualMouseX - minLeftWidth) / range).coerceIn(0f, 1f)
+        }
+      }
     }
 
     Box(
       modifier = Modifier
         .width(10.dp)
         .fillMaxHeight()
+        .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
         .draggable(
           state = dragState,
           orientation = Orientation.Horizontal,
+          onDragStarted = {
+            virtualMouseX = leftWidth
+          },
+          onDragStopped = {
+            settingsVm.setDividerPercentage(percentage)
+            println(percentage)
+          }
         )
-        .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
     ) {
       Surface(
         color = MaterialTheme.colorScheme.outlineVariant,

@@ -43,4 +43,13 @@ class SettingRepository(private val dao: SettingDao) {
   suspend fun setFontScale(fontScale: Float) = withContext(Dispatchers.IO) {
     dao.upsert(SettingKey.FONT_SCALE.tag, fontScale.toString())
   }
+
+  suspend fun getDividerPercentage(): Float? = withContext(Dispatchers.IO) {
+    dao.get(SettingKey.DIVIDER_PERCENTAGE.tag)
+      ?.let { runCatching { it.toFloat() }.getOrNull() }
+  }
+
+  suspend fun setDividerPercentage(dividerPercentage: Float) = withContext(Dispatchers.IO) {
+    dao.upsert(SettingKey.DIVIDER_PERCENTAGE.tag, dividerPercentage.toString())
+  }
 }

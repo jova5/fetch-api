@@ -36,6 +36,8 @@ import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.styling.*
 import org.koin.compose.viewmodel.koinViewModel
 
+val LocalWindowWidth = compositionLocalOf { 0.dp }
+
 @Composable
 fun App(
   onCloseRequest: () -> Unit,
@@ -103,40 +105,47 @@ fun App(
       DecoratedWindow(
         onCloseRequest = onCloseRequest
       ) {
-        Column(Modifier.fillMaxSize()) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+          val windowWidth = maxWidth
 
-          TitleBar(modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-          ) {
-            Row(
-              modifier = Modifier.align(Alignment.Start),
-              horizontalArrangement = Arrangement.Start,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Spacer(Modifier.size(8.dp))
-              Text(
-                text = "FetchAPI",
-                color = MaterialTheme.colorScheme.onBackground
-              )
-              Spacer(Modifier.size(8.dp))
-              CompositionLocalProvider(
-                value = LocalRippleConfiguration provides RippleConfiguration(
-                  color = MaterialTheme.colorScheme.primary)
+          CompositionLocalProvider(LocalWindowWidth provides windowWidth) {
+            Column(Modifier.fillMaxSize()) {
+
+              TitleBar(modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
               ) {
-                SquareIconButton(
-                  onClick = { showSettings = true },
-                  icon = Icons.Outlined.Settings,
-                  borderWidth = 0.dp
-                )
-                Spacer(Modifier.size(8.dp))
-                ProjectDropdown()
+                Row(
+                  modifier = Modifier.align(Alignment.Start),
+                  horizontalArrangement = Arrangement.Start,
+                  verticalAlignment = Alignment.CenterVertically
+                ) {
+                  Spacer(Modifier.size(8.dp))
+                  Text(
+                    text = "FetchAPI",
+                    color = MaterialTheme.colorScheme.onBackground
+                  )
+                  Spacer(Modifier.size(8.dp))
+                  CompositionLocalProvider(
+                    value = LocalRippleConfiguration provides RippleConfiguration(
+                      color = MaterialTheme.colorScheme.primary)
+                  ) {
+                    SquareIconButton(
+                      onClick = { showSettings = true },
+                      icon = Icons.Outlined.Settings,
+                      borderWidth = 0.dp
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    ProjectDropdown()
+                  }
+                }
+              }
+              LocaleProvider(state.language) {
+                AppLayout()
               }
             }
           }
-          LocaleProvider(state.language) {
-            AppLayout()
-          }
+
         }
 
         if (showSettings) {
