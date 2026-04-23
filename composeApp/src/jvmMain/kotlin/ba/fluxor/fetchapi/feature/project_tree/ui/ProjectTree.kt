@@ -1,14 +1,24 @@
 package ba.fluxor.fetchapi.feature.project_tree.ui
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ba.fluxor.fetchapi.feature.folder.ui.FolderItem
@@ -57,55 +67,124 @@ fun ProjectTree(
   }
 
   val flatItems = remember(filtered) { flattenTree(filtered) }
+  val state = rememberLazyListState()
+  var isHoveringTree by remember { mutableStateOf(false) }
 
-  LazyColumn(modifier = Modifier.fillMaxSize()) {
-    items(flatItems, key = { item ->
-      when (item) {
-        is TreeItem.SubProjectHeader -> "sp_${item.node.subProject.id}"
-        is TreeItem.FolderHeader -> "f_${item.node.folder.id}"
-        is TreeItem.RequestLeaf -> "r_${item.request.id}_${item.indent.value}"
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .pointerInput(Unit) {
+        awaitPointerEventScope {
+          while (true) {
+            val event = awaitPointerEvent()
+            when (event.type) {
+              PointerEventType.Enter -> isHoveringTree = true
+              PointerEventType.Exit -> isHoveringTree = false
+            }
+          }
+        }
       }
-    }) { item ->
-      when (item) {
-        is TreeItem.SubProjectHeader -> SubProjectItem(
-          node = item.node,
-          onToggle = {
-            item.node.subProject.id?.let(treeVm::toggleSubProjectExpanded)
-            tabsVm.openSubProjectTab(item.node.subProject)
-          },
-          onEdit = { tabsVm.openSubProjectTab(item.node.subProject) },
-          onDelete = { item.node.subProject.id?.let(subProjectVm::deleteSubProject) },
-          onAddFolder = {
-            val spId = item.node.subProject.id ?: return@SubProjectItem
-            folderVm.createFolder(spId)
-          },
-          onAddRequest = {
-            val spId = item.node.subProject.id ?: return@SubProjectItem
-            requestVm.createRequest(spId, null)
-          },
-        )
+  ) {
 
-        is TreeItem.FolderHeader -> FolderItem(
-          node = item.node,
-          onToggle = {
-            item.node.folder.id?.let(treeVm::toggleFolderExpanded)
-            tabsVm.openFolderTab(item.node.folder)
-          },
-          onEdit = { tabsVm.openFolderTab(item.node.folder) },
-          onDelete = { item.node.folder.id?.let(folderVm::deleteFolder) },
-          onAddRequest = {
-            val folderId = item.node.folder.id ?: return@FolderItem
-            requestVm.createRequest(item.subProjectId, folderId)
-          },
-        )
+    LazyColumn(
+      state = state,
+      modifier = Modifier.fillMaxSize().padding(end = 4.dp),
+    ) {
+      items(
+        items = flatItems,
+        key = { item ->
+          when (item) {
+            is TreeItem.SubProjectHeader -> "sp_${item.node.subProject.id}"
+            is TreeItem.FolderHeader -> "f_${item.node.folder.id}"
+            is TreeItem.RequestLeaf -> "r_${item.request.id}_${item.indent.value}"
+          }
+        }
+      ) { item ->
 
-        is TreeItem.RequestLeaf -> RequestItem(
-          request = item.request,
-          indent = item.indent,
-          onEdit = { tabsVm.openRequestTab(item.request) },
-          onDelete = { item.request.id?.let(requestVm::deleteRequest) },
-        )
+        val interactionSource = remember { MutableInteractionSource() }
+        val isHovered by interactionSource.collectIsHoveredAsState()
+        var isDropdownOpen by remember { mutableStateOf(false) }
+        val shouldShowHoverHighlight = isHovered || isDropdownOpen
+
+        val hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .hoverable(interactionSource = interactionSource)
+            .background(
+              color = if (isDropdownOpen) hoverColor else Color.Transparent,
+              shape = RoundedCornerShape(8.dp)
+            )
+        ) {
+
+          when (item) {
+            is TreeItem.SubProjectHeader -> SubProjectItem(
+              node = item.node,
+              isHovered = shouldShowHoverHighlight,
+              onExpand = {
+                item.node.subProject.id?.let(treeVm::toggleSubProjectExpanded)
+              },
+              onToggle = {
+                item.node.subProject.id?.let(treeVm::toggleSubProjectExpanded)
+                tabsVm.openSubProjectTab(item.node.subProject)
+              },
+              onDropdownOpen = { isDropdownOpen = true },
+              onDropdownClose = { isDropdownOpen = false },
+              onEdit = { tabsVm.openSubProjectTab(item.node.subProject) },
+              onDelete = { item.node.subProject.id?.let(subProjectVm::deleteSubProject) },
+              onAddFolder = {
+                val spId = item.node.subProject.id ?: return@SubProjectItem
+                folderVm.createFolder(spId)
+              },
+              onAddRequest = {
+                val spId = item.node.subProject.id ?: return@SubProjectItem
+                requestVm.createRequest(spId, null)
+              },
+            )
+
+            is TreeItem.FolderHeader -> FolderItem(
+              node = item.node,
+              isHovered = shouldShowHoverHighlight,
+              onExpand = {
+                item.node.folder.id?.let(treeVm::toggleFolderExpanded)
+              },
+              onToggle = {
+                item.node.folder.id?.let(treeVm::toggleFolderExpanded)
+                tabsVm.openFolderTab(item.node.folder)
+              },
+              onDropdownOpen = { isDropdownOpen = true },
+              onDropdownClose = { isDropdownOpen = false },
+              onEdit = { tabsVm.openFolderTab(item.node.folder) },
+              onDelete = { item.node.folder.id?.let(folderVm::deleteFolder) },
+              onAddRequest = {
+                val folderId = item.node.folder.id ?: return@FolderItem
+                requestVm.createRequest(item.subProjectId, folderId)
+              },
+            )
+
+            is TreeItem.RequestLeaf -> RequestItem(
+              isHovered = shouldShowHoverHighlight,
+              request = item.request,
+              indent = item.indent,
+              onDropdownOpen = { isDropdownOpen = true },
+              onDropdownClose = { isDropdownOpen = false },
+              onEdit = { tabsVm.openRequestTab(item.request) },
+              onDelete = { item.request.id?.let(requestVm::deleteRequest) },
+            )
+          }
+        }
       }
+    }
+
+    if (isHoveringTree) {
+      VerticalScrollbar(
+        modifier = Modifier
+          .width(4.dp)
+          .align(Alignment.CenterEnd)
+          .fillMaxHeight(),
+        adapter = rememberScrollbarAdapter(scrollState = state)
+      )
     }
   }
 }
@@ -134,11 +213,15 @@ private fun flattenTree(nodes: List<SubProjectNode>): List<TreeItem> {
 private fun filterTree(nodes: List<SubProjectNode>, query: String): List<SubProjectNode> {
   val lower = query.lowercase()
   return nodes.mapNotNull { spNode ->
-    val matchesSp = spNode.subProject.name.lowercase().contains(lower)
+    val matchesSp = spNode.subProject.name.lowercase()
+      .contains(lower)
     val filteredFolders = spNode.folders.mapNotNull { fNode ->
-      val matchesFolder = fNode.folder.name.lowercase().contains(lower)
+      val matchesFolder = fNode.folder.name.lowercase()
+        .contains(lower)
       val filteredRequests = fNode.requests.filter {
-        it.name.lowercase().contains(lower) || it.method.lowercase().contains(lower)
+        it.name.lowercase()
+          .contains(lower) || it.method.lowercase()
+          .contains(lower)
       }
       when {
         matchesFolder -> fNode
@@ -147,7 +230,9 @@ private fun filterTree(nodes: List<SubProjectNode>, query: String): List<SubProj
       }
     }
     val filteredLoose = spNode.looseRequests.filter {
-      it.name.lowercase().contains(lower) || it.method.lowercase().contains(lower)
+      it.name.lowercase()
+        .contains(lower) || it.method.lowercase()
+        .contains(lower)
     }
     when {
       matchesSp -> spNode
