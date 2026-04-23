@@ -56,6 +56,7 @@ fun SubProjectItem(
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
       modifier = Modifier
+        .padding(start = 2.dp)
         .weight(1f),
     )
     Box {

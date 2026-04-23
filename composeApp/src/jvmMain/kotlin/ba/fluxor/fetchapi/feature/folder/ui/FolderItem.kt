@@ -53,8 +53,8 @@ fun FolderItem(
       imageVector = if (node.expanded) Icons.Default.FolderOpen else Icons.Default.Folder,
       contentDescription = null,
       modifier = Modifier
-        .size(16.dp)
-        .padding(end = 4.dp),
+        .size(20.dp)
+        .padding(start = 2.dp, end = 4.dp),
       tint = MaterialTheme.colorScheme.secondary,
     )
     Text(
