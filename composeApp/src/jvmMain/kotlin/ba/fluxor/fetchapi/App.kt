@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.component.SquareIconButton
+import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.project.ui.ProjectDropdown
 import ba.fluxor.fetchapi.feature.settings.ui.SettingsModal
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
@@ -29,12 +30,16 @@ import ba.fluxor.fetchapi.ui.getScaledTypography
 import ba.fluxor.fetchapi.ui.shell.AppLayout
 import ba.fluxor.fetchapi.ui.theme.AppTheme
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.settings
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.jewel.intui.window.styling.dark
 import org.jetbrains.jewel.intui.window.styling.light
 import org.jetbrains.jewel.window.DecoratedWindow
 import org.jetbrains.jewel.window.TitleBar
 import org.jetbrains.jewel.window.styling.*
 import org.koin.compose.viewmodel.koinViewModel
+import java.awt.Dimension
 
 val LocalWindowWidth = compositionLocalOf { 0.dp }
 
@@ -105,6 +110,9 @@ fun App(
       DecoratedWindow(
         onCloseRequest = onCloseRequest
       ) {
+
+        window.minimumSize = Dimension(800, 600)
+
         BoxWithConstraints(Modifier.fillMaxSize()) {
           val windowWidth = maxWidth
 
@@ -130,11 +138,15 @@ fun App(
                     value = LocalRippleConfiguration provides RippleConfiguration(
                       color = MaterialTheme.colorScheme.primary)
                   ) {
-                    SquareIconButton(
-                      onClick = { showSettings = true },
-                      icon = Icons.Outlined.Settings,
-                      borderWidth = 0.dp
-                    )
+                    TooltipBelow(
+                      text = stringResource(Res.string.settings),
+                    ) {
+                      SquareIconButton(
+                        onClick = { showSettings = true },
+                        icon = Icons.Outlined.Settings,
+                        borderWidth = 0.dp
+                      )
+                    }
                     Spacer(Modifier.size(8.dp))
                     ProjectDropdown()
                   }

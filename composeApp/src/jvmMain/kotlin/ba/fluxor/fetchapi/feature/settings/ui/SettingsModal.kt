@@ -9,9 +9,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.localization.AppLanguage
 import ba.fluxor.fetchapi.ui.theme.AppColorScheme
@@ -21,6 +23,7 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsModal(
   onDismiss: () -> Unit,
@@ -40,34 +43,79 @@ fun SettingsModal(
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-          Section(Res.string.theme_mode) {
-            ThemeMode.entries.forEach { mode ->
-              RadioRow(
-                selected = state.themeMode == mode,
-                label = stringResource(mode.labelRes()),
-                onClick = { settingsVm.setThemeMode(mode) },
-              )
-            }
-          }
-          Section(Res.string.color_scheme) {
-            AppColorScheme.entries.forEach { scheme ->
-              RadioRow(
-                selected = state.colorScheme == scheme,
-                label = stringResource(scheme.labelRes()),
-                onClick = { settingsVm.setColorScheme(scheme) },
-                leading = {
-                  Box(
-                    Modifier
-                      .size(16.dp)
-                      .clip(CircleShape)
-                      .background(scheme.seed),
-                  )
-                },
-              )
+
+          Section(
+            title = stringResource(Res.string.theme_mode)
+          ) {
+            SingleChoiceSegmentedButtonRow {
+              ThemeMode.entries.forEachIndexed { index, mode ->
+                SegmentedButton(
+                  shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = ThemeMode.entries.size
+                  ),
+                  onClick = { settingsVm.setThemeMode(mode) },
+                  selected = state.themeMode == mode,
+                  label = {
+                    TooltipBelow(
+                      text = stringResource(mode.labelRes()),
+                    ) {
+                      Text(
+                        text = stringResource(mode.labelRes()),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                      )
+                    }
+                  }
+                )
+              }
             }
           }
 
-          Section(Res.string.font_size) {
+          Section(
+            title = stringResource(Res.string.color_scheme)
+          ) {
+            SingleChoiceSegmentedButtonRow {
+              AppColorScheme.entries.forEachIndexed { index, scheme ->
+                SegmentedButton(
+                  shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = AppColorScheme.entries.size
+                  ),
+                  onClick = { settingsVm.setColorScheme(scheme) },
+                  selected = state.colorScheme == scheme,
+                  label = {
+                    Row(
+                      verticalAlignment = Alignment.CenterVertically
+                    ) {
+                      if (state.colorScheme != scheme) {
+                        Box(
+                          Modifier
+                            .size(16.dp)
+                            .clip(CircleShape)
+                            .background(scheme.seed),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                      }
+                      TooltipBelow(
+                        text = stringResource(scheme.labelRes()),
+                      ) {
+                        Text(
+                          text = stringResource(scheme.labelRes()),
+                          maxLines = 1,
+                          overflow = TextOverflow.Ellipsis,
+                        )
+                      }
+                    }
+                  }
+                )
+              }
+            }
+          }
+
+          Section(
+            title = stringResource(Res.string.font_size)
+          ) {
             Slider(
               value = state.fontScale,
               onValueChange = { newValue ->
@@ -84,7 +132,9 @@ fun SettingsModal(
             )
           }
 
-          Section(Res.string.language) {
+          Section(
+            title = stringResource(Res.string.language)
+          ) {
             AppLanguage.entries.forEach { lang ->
               RadioRow(
                 selected = state.language == lang,
@@ -100,9 +150,9 @@ fun SettingsModal(
 }
 
 @Composable
-private fun Section(title: StringResource, content: @Composable () -> Unit) {
+private fun Section(title: String, content: @Composable () -> Unit) {
   Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-    Text(stringResource(title), style = MaterialTheme.typography.titleSmall)
+    Text(text = title, style = MaterialTheme.typography.titleSmall)
     content()
   }
 }
@@ -115,7 +165,8 @@ private fun RadioRow(
   leading: (@Composable () -> Unit)? = null,
 ) {
   Row(
-    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+    modifier = Modifier.fillMaxWidth()
+      .padding(vertical = 2.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {

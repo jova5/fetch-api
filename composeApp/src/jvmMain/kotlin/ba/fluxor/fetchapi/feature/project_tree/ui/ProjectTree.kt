@@ -114,7 +114,7 @@ fun ProjectTree(
             .hoverable(interactionSource = interactionSource)
             .background(
               color = if (isDropdownOpen) hoverColor else Color.Transparent,
-              shape = RoundedCornerShape(8.dp)
+              shape = RoundedCornerShape(4.dp)
             )
         ) {
 

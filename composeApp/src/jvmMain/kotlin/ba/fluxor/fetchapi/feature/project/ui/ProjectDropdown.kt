@@ -15,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.component.CompactInput
 import ba.fluxor.fetchapi.component.SquareIconButton
+import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.manage_projects
@@ -50,6 +52,7 @@ fun ProjectDropdown(
   ) {
     OutlinedButton(
       onClick = { expanded = true },
+      modifier = Modifier.widthIn(max = 150.dp),
       shape = RoundedCornerShape(4.dp),
       contentPadding = PaddingValues(
         start = 12.dp,
@@ -62,14 +65,26 @@ fun ProjectDropdown(
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
       )
     ) {
-      Text(
+      TooltipBelow(
         text = projectState.active?.name ?: stringResource(Res.string.select_project)
-      )
-      Icon(
-        imageVector = Icons.Default.ArrowDropDown,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-      )
+      ) {
+        Row (
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Text(
+            text = projectState.active?.name ?: stringResource(Res.string.select_project),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+              .weight(1f),
+          )
+          Icon(
+            imageVector = Icons.Default.ArrowDropDown,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+          )
+        }
+      }
     }
 
     DropdownMenu(

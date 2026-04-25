@@ -14,11 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.request.data.Request
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.delete
 import fetchapi.composeapp.generated.resources.edit
 import fetchapi.composeapp.generated.resources.menu
+import fetchapi.composeapp.generated.resources.more_actions
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -37,7 +39,7 @@ fun RequestItem(
     verticalAlignment = Alignment.CenterVertically,
     modifier = Modifier
       .fillMaxWidth()
-      .clip(RoundedCornerShape(8.dp))
+      .clip(RoundedCornerShape(4.dp))
       .clickable(onClick = onEdit)
       .padding(start = indent, top = 4.dp, bottom = 4.dp, end = 2.dp),
   ) {
@@ -58,17 +60,21 @@ fun RequestItem(
     )
     Box {
       if (isHovered) {
-        IconButton(
-          onClick = {
-            showMenu = true
-            onDropdownOpen()
-          },
-          modifier = Modifier.size(20.dp)
+        TooltipBelow(
+          text = stringResource(Res.string.more_actions)
         ) {
-          Icon(
-            imageVector = Icons.Default.MoreVert,
-            contentDescription = stringResource(Res.string.menu),
-            modifier = Modifier.size(16.dp))
+          IconButton(
+            onClick = {
+              showMenu = true
+              onDropdownOpen()
+            },
+            modifier = Modifier.size(20.dp)
+          ) {
+            Icon(
+              imageVector = Icons.Default.MoreVert,
+              contentDescription = stringResource(Res.string.menu),
+              modifier = Modifier.size(16.dp))
+          }
         }
       }
       DropdownMenu(

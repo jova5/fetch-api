@@ -22,6 +22,7 @@ fun main() {
   application {
 
     val appOwner = remember { AppLifecycleOwner() }
+
     CompositionLocalProvider(
       LocalLifecycleOwner provides appOwner,
       LocalViewModelStoreOwner provides appOwner

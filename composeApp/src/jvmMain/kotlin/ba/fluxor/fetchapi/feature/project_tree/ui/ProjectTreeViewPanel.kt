@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.component.CompactInput
 import ba.fluxor.fetchapi.component.SquareIconButton
+import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
 import ba.fluxor.fetchapi.feature.project_tree.viewmodel.ProjectTreeViewModel
@@ -19,6 +20,7 @@ import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabsViewModel
 import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.add_sub_project
 import fetchapi.composeapp.generated.resources.search
 import fetchapi.composeapp.generated.resources.select_project
 import org.jetbrains.compose.resources.stringResource
@@ -59,14 +61,18 @@ fun ProjectTreeViewPanel(
         modifier = Modifier.weight(1f),
         enabled = projectState.active != null,
       )
-      SquareIconButton(
-        icon = Icons.Default.Add,
-        onClick = {
-          val projectId = projectState.active?.id ?: return@SquareIconButton
-          subProjectVm.createSubProject(projectId)
-        },
-        enabled = projectState.active != null,
-      )
+      TooltipBelow(
+        text = stringResource(Res.string.add_sub_project),
+      ) {
+        SquareIconButton(
+          icon = Icons.Default.Add,
+          onClick = {
+            val projectId = projectState.active?.id ?: return@SquareIconButton
+            subProjectVm.createSubProject(projectId)
+          },
+          enabled = projectState.active != null,
+        )
+      }
     }
 
     Box(modifier = Modifier.fillMaxSize().padding(top = 12.dp)) {

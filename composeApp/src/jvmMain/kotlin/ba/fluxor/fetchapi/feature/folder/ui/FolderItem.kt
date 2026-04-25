@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -38,7 +39,7 @@ fun FolderItem(
     verticalAlignment = Alignment.CenterVertically,
     modifier = Modifier
       .fillMaxWidth()
-      .clip(RoundedCornerShape(8.dp))
+      .clip(RoundedCornerShape(4.dp))
       .clickable(onClick = onToggle)
       .padding(start = 24.dp, top = 4.dp, bottom = 4.dp, end = 2.dp),
   ) {
@@ -67,18 +68,22 @@ fun FolderItem(
     )
     Box {
       if (isHovered) {
-        IconButton(
-          onClick = {
-            showMenu = true
-            onDropdownOpen()
-          },
-          modifier = Modifier.size(20.dp)
+        TooltipBelow(
+          text = stringResource(Res.string.more_actions)
         ) {
-          Icon(
-            imageVector = Icons.Default.MoreVert,
-            contentDescription = stringResource(Res.string.menu),
-            modifier = Modifier.size(16.dp)
-          )
+          IconButton(
+            onClick = {
+              showMenu = true
+              onDropdownOpen()
+            },
+            modifier = Modifier.size(20.dp)
+          ) {
+            Icon(
+              imageVector = Icons.Default.MoreVert,
+              contentDescription = stringResource(Res.string.menu),
+              modifier = Modifier.size(16.dp)
+            )
+          }
         }
       }
       DropdownMenu(
