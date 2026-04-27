@@ -1,13 +1,13 @@
 package ba.fluxor.fetchapi.feature.project.ui
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -68,7 +68,7 @@ fun ProjectDropdown(
       TooltipBelow(
         text = projectState.active?.name ?: stringResource(Res.string.select_project)
       ) {
-        Row (
+        Row(
           verticalAlignment = Alignment.CenterVertically,
         ) {
           Text(
@@ -120,12 +120,14 @@ fun ProjectDropdown(
         )
       }
 
-      val filtered = remember(projectState.projects, query) {
+      Divider(modifier = Modifier.fillMaxSize())
+
+      val filteredProjects = remember(projectState.projects, query) {
         if (query.isBlank()) projectState.projects
         else projectState.projects.filter { it.name.contains(query, ignoreCase = true) }
       }
 
-      if (filtered.isEmpty()) {
+      if (filteredProjects.isEmpty()) {
         DropdownMenuItem(
           text = {
             Text(stringResource(Res.string.manage_projects),
@@ -135,21 +137,41 @@ fun ProjectDropdown(
           enabled = false,
         )
       } else {
-        Column(
-          modifier = Modifier
-            .heightIn(max = 400.dp)
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
-        ) {
-          filtered.forEach { project ->
-            DropdownMenuItem(
-              text = { Text(project.name) },
-              onClick = {
-                projectVm.setActiveProject(project)
-                expanded = false
-              },
-            )
+        Box(modifier = Modifier.height(400.dp).widthIn(350.dp)) {
+          val scrollState = rememberScrollState()
+          Column (
+            modifier = Modifier
+              .fillMaxWidth()
+              .verticalScroll(scrollState),
+          ) {
+            filteredProjects.forEach { project ->
+              DropdownMenuItem(
+                text = {
+                  Text(
+                    text = project.name,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                  )
+                },
+                onClick = {
+                  projectVm.setActiveProject(project)
+                  expanded = false
+                },
+                leadingIcon = {
+                  if (projectState.active?.id == project.id) {
+                    Icon(imageVector = Icons.Default.Check, contentDescription = "Selected", )
+                  }
+                }
+              )
+            }
           }
+          VerticalScrollbar(
+            modifier = Modifier
+              .width(4.dp)
+              .align(Alignment.CenterEnd)
+              .fillMaxHeight(),
+            adapter = rememberScrollbarAdapter(scrollState = scrollState)
+          )
         }
       }
     }
