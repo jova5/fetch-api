@@ -6,11 +6,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ba.fluxor.fetchapi.component.CompactInput
+import ba.fluxor.fetchapi.component.SquareButton
+import ba.fluxor.fetchapi.component.SquareOutlineButton
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabBuffer
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.auth_config
 import fetchapi.composeapp.generated.resources.auth_type
-import fetchapi.composeapp.generated.resources.name
 import fetchapi.composeapp.generated.resources.save
 import org.jetbrains.compose.resources.stringResource
 
@@ -23,21 +25,43 @@ fun SubProjectTabEditor(
   onChange: (TabBuffer) -> Unit,
   onSave: () -> Unit,
 ) {
-  Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+  Column(modifier = Modifier.fillMaxSize()
+    .padding(16.dp)) {
+    Row(
+      verticalAlignment = Alignment.CenterVertically,
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      CompactInput(
+        value = buffer.name,
+        onValueChange = { onChange(buffer.copy(name = it)) },
+        placeholder = ""
+      )
       Spacer(Modifier.weight(1f))
-      Button(onClick = onSave, enabled = isDirty) {
-        Text(stringResource(Res.string.save))
-      }
+      SquareButton(
+        text = stringResource(Res.string.save),
+        onClick = onSave,
+        enabled = isDirty,
+        modifier = Modifier
+          .padding(horizontal = 16.dp, vertical = 6.dp)
+      )
     }
     Spacer(Modifier.height(12.dp))
-    OutlinedTextField(
-      value = buffer.name,
-      onValueChange = { onChange(buffer.copy(name = it)) },
-      label = { Text(stringResource(Res.string.name)) },
-      singleLine = true,
-      modifier = Modifier.fillMaxWidth(),
-    )
+
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+
+      SquareOutlineButton(
+        text = buffer.name,
+        onClick = {},
+        modifier = Modifier.padding(horizontal = 16.dp),
+        borderWidth = 0.dp
+      )
+      SquareOutlineButton(
+        text = buffer.name,
+        onClick = {},
+        modifier = Modifier.padding(horizontal = 16.dp),
+        borderWidth = 0.dp
+      )
+    }
     Spacer(Modifier.height(12.dp))
     AuthTypeDropdown(
       selected = buffer.authType,
@@ -48,7 +72,8 @@ fun SubProjectTabEditor(
       value = buffer.authConfig.orEmpty(),
       onValueChange = { onChange(buffer.copy(authConfig = it.ifBlank { null })) },
       label = { Text(stringResource(Res.string.auth_config)) },
-      modifier = Modifier.fillMaxWidth().height(160.dp),
+      modifier = Modifier.fillMaxWidth()
+        .height(160.dp),
     )
   }
 }
@@ -65,7 +90,8 @@ private fun AuthTypeDropdown(selected: String, onSelect: (String) -> Unit) {
       modifier = Modifier.fillMaxWidth(),
     )
     Box(
-      modifier = Modifier.matchParentSize().padding(top = 8.dp),
+      modifier = Modifier.matchParentSize()
+        .padding(top = 8.dp),
     ) {
       TextButton(
         onClick = { expanded = true },

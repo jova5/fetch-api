@@ -1,7 +1,6 @@
 package ba.fluxor.fetchapi.feature.tabs.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -14,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabItem
@@ -29,7 +29,8 @@ fun TabBar(
   onClose: (Long) -> Unit,
 ) {
   LazyRow(
-    modifier = Modifier.fillMaxWidth().height(36.dp),
+    modifier = Modifier.fillMaxWidth()
+      .height(36.dp),
   ) {
     items(tabs, key = { it.id }) { tab ->
       TabChip(
@@ -42,6 +43,7 @@ fun TabBar(
   }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TabChip(
   tab: TabItem,
@@ -49,13 +51,18 @@ private fun TabChip(
   onSelect: () -> Unit,
   onClose: () -> Unit,
 ) {
-  val bg = if (selected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
+  val bg =
+    if (selected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
   Row(
     verticalAlignment = Alignment.CenterVertically,
     modifier = Modifier
       .fillMaxHeight()
       .background(bg)
       .clickable(onClick = onSelect)
+      .onClick(
+        matcher = PointerMatcher.mouse(PointerButton(2)),
+        onClick = onClose
+      )
       .padding(start = 12.dp, end = 4.dp),
   ) {
     if (tab.isDirty) {
