@@ -12,6 +12,8 @@ import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvent
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
+import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectVariable
+import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectVariableRepository
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvent
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
 import ba.fluxor.fetchapi.feature.tabs.data.TabRepository
@@ -28,6 +30,7 @@ import kotlinx.coroutines.launch
 class TabsViewModel(
   private val tabRepository: TabRepository,
   private val subProjectRepository: SubProjectRepository,
+  private val subProjectVariableRepository: SubProjectVariableRepository,
   private val folderRepository: FolderRepository,
   private val requestRepository: RequestRepository,
 ) : ViewModel() {
@@ -107,7 +110,10 @@ class TabsViewModel(
   fun openSubProjectTab(sp: SubProject) {
     val id = sp.id ?: return
     openTab(TabType.SUB_PROJECT, id) { tabId ->
-      val buffer = TabBuffer.SubProject(sp.name, sp.authType, sp.authConfig)
+      val variables = subProjectVariableRepository.getAllBySubProjectId(id).map {
+        TabBuffer.VariableEntry(it.key, it.value.orEmpty())
+      }
+      val buffer = TabBuffer.SubProject(sp.name, sp.authType, sp.authConfig, variables)
       TabItem(tabId, TabType.SUB_PROJECT, id, sp.name, buffer, buffer)
     }
   }
@@ -134,7 +140,7 @@ class TabsViewModel(
     }
   }
 
-  private fun openTab(type: TabType, entityId: Long, buildItem: (Long) -> TabItem) {
+  private fun openTab(type: TabType, entityId: Long, buildItem: suspend (Long) -> TabItem) {
     val existing = _state.value.tabs.find { it.type == type && it.entityId == entityId }
     if (existing != null) {
       _state.update { it.copy(selectedTabId = existing.id) }
@@ -145,11 +151,12 @@ class TabsViewModel(
       val persisted = tabRepository.findByEntity(projectId, type, entityId)
         ?: tabRepository.create(projectId, type, entityId)
       val tabId = persisted.id ?: return@launch
+      val item = buildItem(tabId)
       _state.update { s ->
         if (s.tabs.any { it.id == tabId }) {
           s.copy(selectedTabId = tabId)
         } else {
-          s.copy(tabs = s.tabs + buildItem(tabId), selectedTabId = tabId)
+          s.copy(tabs = s.tabs + item, selectedTabId = tabId)
         }
       }
     }
@@ -189,8 +196,13 @@ class TabsViewModel(
       val savedBuffer: TabBuffer = when (val buffer = tab.buffer) {
         is TabBuffer.SubProject -> {
           val updated = subProjectRepository.update(tab.entityId, buffer.name, buffer.authType, buffer.authConfig)
+          val cleanedVariables = buffer.variables.filter { it.key.isNotBlank() }
+          subProjectVariableRepository.replaceAll(
+            tab.entityId,
+            cleanedVariables.map { SubProjectVariable(subProjectId = tab.entityId, key = it.key, value = it.value) },
+          )
           SubProjectEvents.triggerRefresh()
-          TabBuffer.SubProject(updated.name, updated.authType, updated.authConfig)
+          TabBuffer.SubProject(updated.name, updated.authType, updated.authConfig, cleanedVariables)
         }
         is TabBuffer.Folder -> {
           val updated = folderRepository.update(tab.entityId, buffer.name)
@@ -261,7 +273,10 @@ class TabsViewModel(
       TabType.SUB_PROJECT -> {
         val sp = subProjectRepository.getAllByProjectId(_state.value.projectId ?: return null)
           .find { it.id == entityId } ?: return null
-        val buffer = TabBuffer.SubProject(sp.name, sp.authType, sp.authConfig)
+        val variables = subProjectVariableRepository.getAllBySubProjectId(entityId).map {
+          TabBuffer.VariableEntry(it.key, it.value.orEmpty())
+        }
+        val buffer = TabBuffer.SubProject(sp.name, sp.authType, sp.authConfig, variables)
         TabItem(tabId, type, entityId, sp.name, buffer, buffer)
       }
       TabType.FOLDER -> {
