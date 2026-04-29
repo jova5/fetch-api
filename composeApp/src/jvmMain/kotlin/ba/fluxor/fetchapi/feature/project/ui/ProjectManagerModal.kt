@@ -1,5 +1,6 @@
 package ba.fluxor.fetchapi.feature.project.ui
 
+import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -94,7 +95,11 @@ fun ProjectManagerModal(
                 .width(4.dp)
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight(),
-              adapter = rememberScrollbarAdapter(scrollState = scrollState)
+              adapter = rememberScrollbarAdapter(scrollState = scrollState),
+              style = LocalScrollbarStyle.current.copy(
+                unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+                hoverColor = MaterialTheme.colorScheme.primary
+              ),
             )
           }
         }

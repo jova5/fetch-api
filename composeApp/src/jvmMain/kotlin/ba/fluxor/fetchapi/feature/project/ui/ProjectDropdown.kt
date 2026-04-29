@@ -170,7 +170,11 @@ fun ProjectDropdown(
               .width(4.dp)
               .align(Alignment.CenterEnd)
               .fillMaxHeight(),
-            adapter = rememberScrollbarAdapter(scrollState = scrollState)
+            adapter = rememberScrollbarAdapter(scrollState = scrollState),
+            style = LocalScrollbarStyle.current.copy(
+              unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+              hoverColor = MaterialTheme.colorScheme.primary
+            ),
           )
         }
       }

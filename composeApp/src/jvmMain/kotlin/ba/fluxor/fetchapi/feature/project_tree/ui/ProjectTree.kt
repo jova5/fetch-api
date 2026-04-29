@@ -1,5 +1,6 @@
 package ba.fluxor.fetchapi.feature.project_tree.ui
 
+import androidx.compose.foundation.LocalScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.hoverable
@@ -183,7 +184,11 @@ fun ProjectTree(
           .width(4.dp)
           .align(Alignment.CenterEnd)
           .fillMaxHeight(),
-        adapter = rememberScrollbarAdapter(scrollState = state)
+        adapter = rememberScrollbarAdapter(scrollState = state),
+        style = LocalScrollbarStyle.current.copy(
+          unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+          hoverColor = MaterialTheme.colorScheme.primary
+        ),
       )
     }
   }

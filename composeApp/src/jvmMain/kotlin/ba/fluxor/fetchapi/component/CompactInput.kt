@@ -24,7 +24,7 @@ fun CompactInput(
   value: String,
   onValueChange: (String) -> Unit,
   modifier: Modifier = Modifier,
-  placeholder: String,
+  placeholder: String = "",
   enabled: Boolean = true
 ) {
   val interactionSource = remember { MutableInteractionSource() }
