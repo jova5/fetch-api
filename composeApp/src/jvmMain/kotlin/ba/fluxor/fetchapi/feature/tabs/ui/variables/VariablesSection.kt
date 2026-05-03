@@ -1,5 +1,6 @@
 package ba.fluxor.fetchapi.feature.tabs.ui.variables
 
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -24,27 +25,48 @@ fun VariablesSection(
 ) {
   val rows = variables + TabBuffer.VariableEntry("", "")
 
-  Column(modifier = Modifier.fillMaxWidth()) {
-    HeaderRow()
+  Box {
 
-    rows.forEachIndexed { index, entry ->
-      val isTrailing = index == rows.lastIndex
-      VariableRow(
-        entry = entry,
-        showDelete = !isTrailing,
-        onKeyChange = { newKey ->
-          onChange(updateAt(variables, index, isTrailing, key = newKey, value = entry.value))
-        },
-        onValueChange = { newValue ->
-          onChange(updateAt(variables, index, isTrailing, key = entry.key, value = newValue))
-        },
-        onDelete = {
-          if (!isTrailing) {
-            onChange(variables.toMutableList().also { it.removeAt(index) })
-          }
-        },
-      )
+    val scrollState = rememberScrollState()
+
+    Column(modifier = Modifier
+      .fillMaxWidth()
+      .verticalScroll(state = scrollState)
+    ) {
+
+      HeaderRow()
+
+      rows.forEachIndexed { index, entry ->
+        val isTrailing = index == rows.lastIndex
+        VariableRow(
+          entry = entry,
+          showDelete = !isTrailing,
+          onKeyChange = { newKey ->
+            onChange(updateAt(variables, index, isTrailing, key = newKey, value = entry.value))
+          },
+          onValueChange = { newValue ->
+            onChange(updateAt(variables, index, isTrailing, key = entry.key, value = newValue))
+          },
+          onDelete = {
+            if (!isTrailing) {
+              onChange(variables.toMutableList()
+                .also { it.removeAt(index) })
+            }
+          },
+        )
+      }
     }
+    VerticalScrollbar(
+      modifier = Modifier
+        .width(4.dp)
+        .align(Alignment.CenterEnd)
+        .fillMaxHeight(),
+      adapter = rememberScrollbarAdapter(scrollState = scrollState),
+      style = LocalScrollbarStyle.current.copy(
+        unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+        hoverColor = MaterialTheme.colorScheme.primary
+      ),
+    )
   }
 }
 
@@ -60,24 +82,28 @@ private fun updateAt(
     if (key.isBlank() && value.isBlank()) return current
     return current + next
   }
-  return current.toMutableList().also { it[index] = next }
+  return current.toMutableList()
+    .also { it[index] = next }
 }
 
 @Composable
 private fun HeaderRow() {
   Row(
     verticalAlignment = Alignment.CenterVertically,
-    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+    modifier = Modifier.fillMaxWidth()
+      .padding(vertical = 6.dp),
   ) {
     Text(
       text = stringResource(Res.string.variables_key),
       style = MaterialTheme.typography.labelLarge,
-      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      modifier = Modifier.weight(1f)
+        .padding(horizontal = 4.dp),
     )
     Text(
       text = stringResource(Res.string.variables_value),
       style = MaterialTheme.typography.labelLarge,
-      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      modifier = Modifier.weight(1f)
+        .padding(horizontal = 4.dp),
     )
     Spacer(Modifier.width(40.dp))
   }
@@ -93,18 +119,21 @@ private fun VariableRow(
 ) {
   Row(
     verticalAlignment = Alignment.CenterVertically,
-    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+    modifier = Modifier.fillMaxWidth()
+      .padding(vertical = 4.dp),
   ) {
     CompactInput(
       value = entry.key,
       onValueChange = onKeyChange,
-      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      modifier = Modifier.weight(1f)
+        .padding(horizontal = 4.dp),
       placeholder = stringResource(Res.string.variables_key),
     )
     CompactInput(
       value = entry.value,
       onValueChange = onValueChange,
-      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      modifier = Modifier.weight(1f)
+        .padding(horizontal = 4.dp),
       placeholder = stringResource(Res.string.variables_value),
     )
     Box(modifier = Modifier.width(40.dp), contentAlignment = Alignment.Center) {

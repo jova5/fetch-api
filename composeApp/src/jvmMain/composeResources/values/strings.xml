@@ -110,4 +110,7 @@
   <string name="variables_key">Key</string>
   <string name="variables_value">Value</string>
   <string name="delete_variable">Delete variable</string>
+  <string name="error_updating_subproject">Error updating sub-project</string>
+  <string name="error_updating_folder">Error updating folder</string>
+  <string name="error_updating_request">Error updating request</string>
 </resources>

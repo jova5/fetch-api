@@ -110,4 +110,7 @@
   <string name="variables_key">Ključ</string>
   <string name="variables_value">Vrednost</string>
   <string name="delete_variable">Obriši varijablu</string>
+  <string name="error_updating_subproject">Greška prilikom ažuriranja podprojekta</string>
+  <string name="error_updating_folder">Greška prilikom ažuriranja foldera</string>
+  <string name="error_updating_request">Greška prilikom ažuriranja zahtijeva</string>
 </resources>

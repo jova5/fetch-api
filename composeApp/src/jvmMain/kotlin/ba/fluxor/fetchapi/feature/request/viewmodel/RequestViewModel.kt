@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.request.data.Request
 import ba.fluxor.fetchapi.feature.request.data.RequestRepository
 import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.error_updating_request
 import fetchapi.composeapp.generated.resources.name_can_not_be_empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,17 +36,22 @@ class RequestViewModel(
     }
   }
 
-  fun updateRequest(id: Long, folderId: Long?, name: String, method: String, url: String,
-    headers: String?, body: String?) {
+  suspend fun updateRequest(id: Long, folderId: Long?, name: String, method: String, url: String,
+    headers: String?, body: String?): Request? {
     val trimmed = name.trim()
     if (trimmed.isEmpty()) {
       _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
-      return
+      return null
     }
-    launchCatching {
-      requestRepository.update(id, folderId, trimmed, method, url, headers, body)
+
+    try {
+      val updated = requestRepository.update(id, folderId, trimmed, method, url, headers, body)
       _state.update { it.copy(error = null) }
       RequestEvents.triggerRefresh()
+      return updated
+    } catch (e: Exception) {
+      _state.update { it.copy(error = Res.string.error_updating_request) }
+      return null
     }
   }
 
@@ -75,6 +81,10 @@ class RequestViewModel(
 
   suspend fun getAllLooseBySubProjectId(subProjectId: Long): List<Request> {
     return requestRepository.getAllLooseBySubProjectId(subProjectId)
+  }
+
+  suspend fun getById(id: Long): Request? {
+    return requestRepository.getById(id)
   }
 }
 

@@ -35,7 +35,7 @@ val appModule = module {
   single { SubProjectRepository(get()) }
   single { SubProjectVariableDao(get()) }
   single { SubProjectVariableRepository(get()) }
-  single { SubProjectViewModel(get()) }
+  single { SubProjectViewModel(get(), get()) }
   single { FolderDao(get()) }
   single { FolderRepository(get()) }
   single { FolderViewModel(get()) }
@@ -45,7 +45,7 @@ val appModule = module {
   viewModel { ProjectTreeViewModel(get(), get(), get()) }
   single { TabDao(get()) }
   single { TabRepository(get()) }
-  single { TabsViewModel(get(), get(), get(), get(), get()) }
+  single { TabsViewModel(get(), get(), get(), get()) }
   single { SettingDao(get()) }
   single { SettingRepository(get()) }
   viewModel { SettingsViewModel(get()) }
