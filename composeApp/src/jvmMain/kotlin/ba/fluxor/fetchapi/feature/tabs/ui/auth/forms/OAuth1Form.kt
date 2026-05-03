@@ -1,14 +1,14 @@
 package ba.fluxor.fetchapi.feature.tabs.ui.auth.forms
 
 import androidx.compose.runtime.Composable
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuth
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.Auth
 import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 private val oauth1SignatureMethods = listOf("HMAC-SHA1", "HMAC-SHA256", "HMAC-SHA512", "RSA-SHA1", "PLAINTEXT")
 
 @Composable
-fun OAuth1Form(auth: SubProjectAuth.OAuth1, emit: (SubProjectAuth) -> Unit) {
+fun OAuth1Form(auth: Auth.OAuth1, emit: (Auth) -> Unit) {
   FieldText(stringResource(Res.string.consumer_key), auth.consumerKey) { emit(auth.copy(consumerKey = it)) }
   FieldText(stringResource(Res.string.consumer_secret), auth.consumerSecret) { emit(auth.copy(consumerSecret = it)) }
   FieldText(stringResource(Res.string.access_token), auth.token) { emit(auth.copy(token = it)) }

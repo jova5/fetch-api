@@ -9,9 +9,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuth
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuthCodec
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuthTypes
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.Auth
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.AuthCodec
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.AuthTypes
 import ba.fluxor.fetchapi.feature.tabs.ui.auth.forms.*
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.auth_none_description
@@ -23,19 +23,19 @@ fun AuthorizationSection(
   authConfig: String?,
   onChange: (authType: String, authConfig: String?) -> Unit,
 ) {
-  val auth = remember(authType, authConfig) { SubProjectAuthCodec.decode(authType, authConfig) }
+  val auth = remember(authType, authConfig) { AuthCodec.decode(authType, authConfig) }
 
-  fun emit(newAuth: SubProjectAuth) {
-    val (type, config) = SubProjectAuthCodec.encode(newAuth)
+  fun emit(newAuth: Auth) {
+    val (type, config) = AuthCodec.encode(newAuth)
     onChange(type, config)
   }
 
   Column(modifier = Modifier.fillMaxWidth()) {
     AuthTypeDropdown(
-      selected = authType.ifBlank { SubProjectAuthTypes.NONE },
+      selected = authType.ifBlank { AuthTypes.NONE },
       onSelect = { newType ->
         if (newType != authType) {
-          val (type, config) = SubProjectAuthCodec.encode(SubProjectAuthCodec.decode(newType, null))
+          val (type, config) = AuthCodec.encode(AuthCodec.decode(newType, null))
           onChange(type, config)
         }
       },
@@ -50,15 +50,15 @@ fun AuthorizationSection(
       Column(modifier = Modifier.verticalScroll(scrollState)) {
 
         when (auth) {
-          SubProjectAuth.None -> NoneEmptyState()
-          is SubProjectAuth.Basic -> BasicAuthForm(auth, ::emit)
-          is SubProjectAuth.Bearer -> BearerForm(auth, ::emit)
-          is SubProjectAuth.ApiKey -> ApiKeyForm(auth, ::emit)
-          is SubProjectAuth.Jwt -> JwtForm(auth, ::emit)
-          is SubProjectAuth.Digest -> DigestForm(auth, ::emit)
-          is SubProjectAuth.OAuth1 -> OAuth1Form(auth, ::emit)
-          is SubProjectAuth.OAuth2 -> OAuth2Form(auth, ::emit)
-          is SubProjectAuth.Custom -> CustomForm(auth, ::emit)
+          Auth.None -> NoneEmptyState()
+          is Auth.Basic -> BasicAuthForm(auth, ::emit)
+          is Auth.Bearer -> BearerForm(auth, ::emit)
+          is Auth.ApiKey -> ApiKeyForm(auth, ::emit)
+          is Auth.Jwt -> JwtForm(auth, ::emit)
+          is Auth.Digest -> DigestForm(auth, ::emit)
+          is Auth.OAuth1 -> OAuth1Form(auth, ::emit)
+          is Auth.OAuth2 -> OAuth2Form(auth, ::emit)
+          is Auth.Custom -> CustomForm(auth, ::emit)
         }
       }
       VerticalScrollbar(

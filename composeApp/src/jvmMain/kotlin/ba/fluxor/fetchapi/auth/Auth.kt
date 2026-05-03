@@ -4,27 +4,27 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class SubProjectAuth {
+sealed class Auth {
 
   @Serializable
   enum class AddTo { HEADER, QUERY }
 
   @Serializable
   @SerialName("NONE")
-  data object None : SubProjectAuth()
+  data object None : Auth()
 
   @Serializable
   @SerialName("BASIC")
   data class Basic(
     val username: String = "",
     val password: String = "",
-  ) : SubProjectAuth()
+  ) : Auth()
 
   @Serializable
   @SerialName("BEARER")
   data class Bearer(
     val token: String = "",
-  ) : SubProjectAuth()
+  ) : Auth()
 
   @Serializable
   @SerialName("JWT")
@@ -36,7 +36,7 @@ sealed class SubProjectAuth {
     val headerPrefix: String = "Bearer",
     val addTo: AddTo = AddTo.HEADER,
     val queryParamKey: String = "token",
-  ) : SubProjectAuth()
+  ) : Auth()
 
   @Serializable
   @SerialName("DIGEST")
@@ -50,7 +50,7 @@ sealed class SubProjectAuth {
     val nonceCount: String = "",
     val clientNonce: String = "",
     val opaque: String = "",
-  ) : SubProjectAuth()
+  ) : Auth()
 
   @Serializable
   @SerialName("OAUTH1")
@@ -69,7 +69,7 @@ sealed class SubProjectAuth {
     val includeBodyHash: Boolean = false,
     val addEmptyParamsToSignature: Boolean = false,
     val addTo: AddTo = AddTo.HEADER,
-  ) : SubProjectAuth()
+  ) : Auth()
 
   @Serializable
   @SerialName("OAUTH2")
@@ -88,7 +88,7 @@ sealed class SubProjectAuth {
     val username: String = "",
     val password: String = "",
     val addTo: AddTo = AddTo.HEADER,
-  ) : SubProjectAuth()
+  ) : Auth()
 
   @Serializable
   @SerialName("API_KEY")
@@ -96,11 +96,11 @@ sealed class SubProjectAuth {
     val key: String = "",
     val value: String = "",
     val addTo: AddTo = AddTo.HEADER,
-  ) : SubProjectAuth()
+  ) : Auth()
 
   @Serializable
   @SerialName("CUSTOM")
   data class Custom(
     val raw: String = "",
-  ) : SubProjectAuth()
+  ) : Auth()
 }

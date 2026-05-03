@@ -13,8 +13,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ba.fluxor.fetchapi.component.SquareOutlineButton
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuth
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuthTypes
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.Auth
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.AuthTypes
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.add_to
 import fetchapi.composeapp.generated.resources.add_to_header
@@ -63,7 +63,7 @@ fun AuthTypeDropdown(selected: String, onSelect: (String) -> Unit) {
         Column(
           modifier = Modifier.fillMaxWidth().verticalScroll(scrollState),
         ) {
-          SubProjectAuthTypes.ALL.forEach { type ->
+          AuthTypes.ALL.forEach { type ->
             DropdownMenuItem(
               text = {
                 Text(text = type, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -147,10 +147,10 @@ fun <T> EnumDropdown(
 }
 
 @Composable
-fun AddToDropdown(selected: SubProjectAuth.AddTo, onSelect: (SubProjectAuth.AddTo) -> Unit) {
+fun AddToDropdown(selected: Auth.AddTo, onSelect: (Auth.AddTo) -> Unit) {
   EnumDropdown(
     label = stringResource(Res.string.add_to),
-    options = listOf(SubProjectAuth.AddTo.HEADER, SubProjectAuth.AddTo.QUERY),
+    options = listOf(Auth.AddTo.HEADER, Auth.AddTo.QUERY),
     selected = selected,
     onSelect = onSelect,
     optionLabel = { addToLabel(it) },
@@ -158,9 +158,9 @@ fun AddToDropdown(selected: SubProjectAuth.AddTo, onSelect: (SubProjectAuth.AddT
 }
 
 @Composable
-private fun addToLabel(value: SubProjectAuth.AddTo): String = when (value) {
-  SubProjectAuth.AddTo.HEADER -> stringResource(Res.string.add_to_header)
-  SubProjectAuth.AddTo.QUERY -> stringResource(Res.string.add_to_query)
+private fun addToLabel(value: Auth.AddTo): String = when (value) {
+  Auth.AddTo.HEADER -> stringResource(Res.string.add_to_header)
+  Auth.AddTo.QUERY -> stringResource(Res.string.add_to_query)
 }
 
 @Composable

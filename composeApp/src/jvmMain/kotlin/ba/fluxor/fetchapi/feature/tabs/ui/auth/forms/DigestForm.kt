@@ -1,14 +1,14 @@
 package ba.fluxor.fetchapi.feature.tabs.ui.auth.forms
 
 import androidx.compose.runtime.Composable
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuth
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.Auth
 import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 private val digestAlgorithms = listOf("MD5", "MD5-sess", "SHA-256", "SHA-256-sess", "SHA-512-256", "SHA-512-256-sess")
 
 @Composable
-fun DigestForm(auth: SubProjectAuth.Digest, emit: (SubProjectAuth) -> Unit) {
+fun DigestForm(auth: Auth.Digest, emit: (Auth) -> Unit) {
   FieldText(stringResource(Res.string.username), auth.username) { emit(auth.copy(username = it)) }
   FieldText(stringResource(Res.string.password), auth.password) { emit(auth.copy(password = it)) }
   FieldText(stringResource(Res.string.realm), auth.realm) { emit(auth.copy(realm = it)) }

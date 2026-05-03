@@ -1,7 +1,7 @@
 package ba.fluxor.fetchapi.feature.tabs.ui.auth.forms
 
 import androidx.compose.runtime.Composable
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuth
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.Auth
 import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -9,7 +9,7 @@ private val oauth2GrantTypes = listOf("AUTHORIZATION_CODE", "IMPLICIT", "PASSWOR
 private val oauth2ClientAuth = listOf("BODY", "HEADER")
 
 @Composable
-fun OAuth2Form(auth: SubProjectAuth.OAuth2, emit: (SubProjectAuth) -> Unit) {
+fun OAuth2Form(auth: Auth.OAuth2, emit: (Auth) -> Unit) {
   FieldText(stringResource(Res.string.access_token), auth.accessToken) { emit(auth.copy(accessToken = it)) }
   FieldText(stringResource(Res.string.header_prefix), auth.headerPrefix) { emit(auth.copy(headerPrefix = it)) }
   EnumDropdown(

@@ -2,14 +2,14 @@ package ba.fluxor.fetchapi.feature.tabs.ui.auth.forms
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import ba.fluxor.fetchapi.feature.sub_project.data.auth.SubProjectAuth
+import ba.fluxor.fetchapi.feature.sub_project.data.auth.Auth
 import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 private val jwtAlgorithms = listOf("HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512")
 
 @Composable
-fun JwtForm(auth: SubProjectAuth.Jwt, emit: (SubProjectAuth) -> Unit) {
+fun JwtForm(auth: Auth.Jwt, emit: (Auth) -> Unit) {
   EnumDropdown(
     label = stringResource(Res.string.algorithm),
     options = jwtAlgorithms,
@@ -43,7 +43,7 @@ fun JwtForm(auth: SubProjectAuth.Jwt, emit: (SubProjectAuth) -> Unit) {
     selected = auth.addTo,
     onSelect = { emit(auth.copy(addTo = it)) },
   )
-  if (auth.addTo == SubProjectAuth.AddTo.QUERY) {
+  if (auth.addTo == Auth.AddTo.QUERY) {
     FieldText(
       label = stringResource(Res.string.query_param_key),
       value = auth.queryParamKey,
