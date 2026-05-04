@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ba.fluxor.fetchapi.component.CompactInput
 import ba.fluxor.fetchapi.component.SquareIconButton
@@ -95,15 +96,19 @@ private fun HeaderRow() {
   ) {
     Text(
       text = stringResource(Res.string.variables_key),
-      style = MaterialTheme.typography.labelLarge,
+      style = MaterialTheme.typography.bodyLarge,
       modifier = Modifier.weight(1f)
         .padding(horizontal = 4.dp),
+      fontWeight = FontWeight.Bold,
+      color = MaterialTheme.colorScheme.secondary,
     )
     Text(
       text = stringResource(Res.string.variables_value),
-      style = MaterialTheme.typography.labelLarge,
+      style = MaterialTheme.typography.bodyLarge,
       modifier = Modifier.weight(1f)
         .padding(horizontal = 4.dp),
+      fontWeight = FontWeight.Bold,
+      color = MaterialTheme.colorScheme.secondary,
     )
     Spacer(Modifier.width(40.dp))
   }

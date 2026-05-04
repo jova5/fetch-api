@@ -1,6 +1,7 @@
 package ba.fluxor.fetchapi.feature.tabs.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Divider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,8 @@ fun SubProjectTabEditor(
           .padding(horizontal = 16.dp, vertical = 6.dp)
       )
     }
+    Spacer(Modifier.height(8.dp))
+    Divider(thickness = 1.dp)
     Spacer(Modifier.height(20.dp))
 
     Column(
@@ -63,6 +66,8 @@ fun SubProjectTabEditor(
           )
         }
       }
+      Spacer(Modifier.height(8.dp))
+      Divider(thickness = 1.dp)
 
       Spacer(Modifier.height(24.dp))
 

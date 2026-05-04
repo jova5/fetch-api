@@ -41,13 +41,13 @@ fun AuthorizationSection(
       },
     )
 
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(32.dp))
 
     Box {
 
       val scrollState = rememberScrollState()
 
-      Column(modifier = Modifier.verticalScroll(scrollState)) {
+      Column(modifier = Modifier.verticalScroll(scrollState).padding(end = 16.dp)) {
 
         when (auth) {
           Auth.None -> NoneEmptyState()

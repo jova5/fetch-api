@@ -10,8 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import ba.fluxor.fetchapi.component.CompactInput
 import ba.fluxor.fetchapi.component.SquareOutlineButton
 import ba.fluxor.fetchapi.feature.sub_project.data.auth.Auth
 import ba.fluxor.fetchapi.feature.sub_project.data.auth.AuthTypes
@@ -40,8 +42,15 @@ fun AuthTypeDropdown(selected: String, onSelect: (String) -> Unit) {
   var buttonWidth by remember { mutableStateOf(0.dp) }
   val density = LocalDensity.current
 
-  Text(text = stringResource(Res.string.auth_type))
-  Box {
+  Text(
+    text = stringResource(Res.string.auth_type),
+    fontWeight = FontWeight.Bold,
+    color = MaterialTheme.colorScheme.secondary,
+  )
+  Spacer(modifier = Modifier.size(4.dp))
+  Box(
+    modifier = Modifier.padding(end = 16.dp)
+  ) {
     SquareOutlineButton(
       text = selected,
       onClick = { expanded = true },
@@ -108,18 +117,23 @@ fun <T> EnumDropdown(
   var buttonWidth by remember { mutableStateOf(0.dp) }
   val density = LocalDensity.current
 
-  Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+  Row(
+    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.SpaceBetween,
+  ) {
     Text(text = label)
     Box {
       SquareOutlineButton(
         text = optionLabel(selected),
         onClick = { expanded = true },
         modifier = Modifier
-          .padding(horizontal = 16.dp)
-          .fillMaxWidth()
+          .width(400.dp)
+          .height(32.dp)
           .onGloballyPositioned { coordinates ->
             buttonWidth = with(density) { coordinates.size.width.toDp() + 30.dp }
-          },
+          }
+          .padding(start = 8.dp),
         contentAlignment = Alignment.CenterStart,
       )
       DropdownMenu(
@@ -172,12 +186,21 @@ fun FieldText(
   onChange: (String) -> Unit,
 ) {
   Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-    OutlinedTextField(
-      value = value,
-      onValueChange = onChange,
-      label = { Text(label) },
-      singleLine = singleLine,
-      modifier = if (minHeight > 0.dp) Modifier.fillMaxWidth().height(minHeight) else Modifier.fillMaxWidth(),
-    )
+    Row (
+      modifier = Modifier.fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+
+      Text(
+        text = label,
+      )
+      CompactInput(
+        value = value,
+        onValueChange = onChange,
+        modifier = Modifier.width(400.dp),
+        placeholder = label,
+      )
+    }
   }
 }
