@@ -7,7 +7,13 @@ sealed interface TabBuffer {
     val name: String,
     val authType: String,
     val authConfig: String?,
+    val variables: List<VariableEntry> = emptyList(),
   ) : TabBuffer
+
+  data class VariableEntry(
+    val key: String,
+    val value: String,
+  )
 
   data class Folder(
     val name: String,

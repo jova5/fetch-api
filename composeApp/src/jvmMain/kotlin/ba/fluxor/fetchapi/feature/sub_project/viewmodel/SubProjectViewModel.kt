@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
+import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectVariable
+import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectVariableRepository
 import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.error_updating_subproject
 import fetchapi.composeapp.generated.resources.name_can_not_be_empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +17,7 @@ import kotlinx.coroutines.launch
 
 class SubProjectViewModel(
   private val subProjectRepository: SubProjectRepository,
+  private val subProjectVariableRepository: SubProjectVariableRepository,
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(SubProjectUiState())
@@ -22,7 +26,8 @@ class SubProjectViewModel(
   fun createSubProject(projectId: Long) {
     launchCatching {
 
-      val existing = subProjectRepository.getAllByProjectId(projectId).map { it.name }
+      val existing = subProjectRepository.getAllByProjectId(projectId)
+        .map { it.name }
       val name = uniqueName("New Sub Project", existing)
 
       val created = subProjectRepository.create(projectId, name)
@@ -38,16 +43,22 @@ class SubProjectViewModel(
     return "$base $i"
   }
 
-  fun updateSubProject(id: Long, name: String, authType: String, authConfig: String?) {
+  suspend fun updateSubProject(id: Long, name: String, authType: String,
+    authConfig: String?): SubProject? {
     val trimmed = name.trim()
     if (trimmed.isEmpty()) {
       _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
-      return
+      return null
     }
-    launchCatching {
-      subProjectRepository.update(id, trimmed, authType, authConfig)
+
+    try {
+      val updated = subProjectRepository.update(id, trimmed, authType, authConfig)
       _state.update { it.copy(error = null) }
       SubProjectEvents.triggerRefresh()
+      return updated
+    } catch (e: Exception) {
+      _state.update { it.copy(error = Res.string.error_updating_subproject) }
+      return null
     }
   }
 
@@ -73,5 +84,13 @@ class SubProjectViewModel(
 
   suspend fun getAllByProjectId(projectId: Long): List<SubProject> {
     return subProjectRepository.getAllByProjectId(projectId)
+  }
+
+  suspend fun getAllVariablesBySubProjectId(subProjectId: Long): List<SubProjectVariable> {
+    return subProjectVariableRepository.getAllBySubProjectId(subProjectId)
+  }
+
+  suspend fun replaceAllBySubProjectId(subProjectId: Long, items: List<SubProjectVariable>) {
+    subProjectVariableRepository.replaceAll(subProjectId, items)
   }
 }

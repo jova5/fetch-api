@@ -15,7 +15,9 @@ import ba.fluxor.fetchapi.feature.settings.data.SettingDao
 import ba.fluxor.fetchapi.feature.settings.data.SettingRepository
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
+import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectVariableRepository
 import ba.fluxor.fetchapi.feature.sub_project.data.dao.SubProjectDao
+import ba.fluxor.fetchapi.feature.sub_project.data.dao.SubProjectVariableDao
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import ba.fluxor.fetchapi.feature.tabs.data.TabRepository
 import ba.fluxor.fetchapi.feature.tabs.data.dao.TabDao
@@ -31,7 +33,9 @@ val appModule = module {
   viewModel { ProjectViewModel(get()) }
   single { SubProjectDao(get()) }
   single { SubProjectRepository(get()) }
-  single { SubProjectViewModel(get()) }
+  single { SubProjectVariableDao(get()) }
+  single { SubProjectVariableRepository(get()) }
+  single { SubProjectViewModel(get(), get()) }
   single { FolderDao(get()) }
   single { FolderRepository(get()) }
   single { FolderViewModel(get()) }

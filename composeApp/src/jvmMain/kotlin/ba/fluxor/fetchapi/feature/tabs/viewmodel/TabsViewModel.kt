@@ -3,33 +3,28 @@ package ba.fluxor.fetchapi.feature.tabs.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.folder.data.Folder
-import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvent
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
+import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.request.data.Request
-import ba.fluxor.fetchapi.feature.request.data.RequestRepository
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvent
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
+import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
-import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectRepository
+import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectVariable
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvent
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
+import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import ba.fluxor.fetchapi.feature.tabs.data.TabRepository
 import ba.fluxor.fetchapi.feature.tabs.data.TabType
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class TabsViewModel(
   private val tabRepository: TabRepository,
-  private val subProjectRepository: SubProjectRepository,
-  private val folderRepository: FolderRepository,
-  private val requestRepository: RequestRepository,
+  private val subProjectViewModel: SubProjectViewModel,
+  private val folderViewModel: FolderViewModel,
+  private val requestViewModel: RequestViewModel
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(TabsUiState())
@@ -63,14 +58,17 @@ class TabsViewModel(
             val newSubProject = event.subProject
             openSubProjectTab(newSubProject)
           }
+
           is FolderEvent.Created -> {
             val newFolder = event.folder
             openFolderTab(newFolder)
           }
+
           is RequestEvent.Created -> {
             val newRequest = event.request
             openRequestTab(newRequest)
           }
+
           else -> {}
         }
       }
@@ -107,7 +105,11 @@ class TabsViewModel(
   fun openSubProjectTab(sp: SubProject) {
     val id = sp.id ?: return
     openTab(TabType.SUB_PROJECT, id) { tabId ->
-      val buffer = TabBuffer.SubProject(sp.name, sp.authType, sp.authConfig)
+      val variables = subProjectViewModel.getAllVariablesBySubProjectId(id)
+        .map {
+          TabBuffer.VariableEntry(it.key, it.value.orEmpty())
+        }
+      val buffer = TabBuffer.SubProject(sp.name, sp.authType, sp.authConfig, variables)
       TabItem(tabId, TabType.SUB_PROJECT, id, sp.name, buffer, buffer)
     }
   }
@@ -134,7 +136,7 @@ class TabsViewModel(
     }
   }
 
-  private fun openTab(type: TabType, entityId: Long, buildItem: (Long) -> TabItem) {
+  private fun openTab(type: TabType, entityId: Long, buildItem: suspend (Long) -> TabItem) {
     val existing = _state.value.tabs.find { it.type == type && it.entityId == entityId }
     if (existing != null) {
       _state.update { it.copy(selectedTabId = existing.id) }
@@ -145,11 +147,12 @@ class TabsViewModel(
       val persisted = tabRepository.findByEntity(projectId, type, entityId)
         ?: tabRepository.create(projectId, type, entityId)
       val tabId = persisted.id ?: return@launch
+      val item = buildItem(tabId)
       _state.update { s ->
         if (s.tabs.any { it.id == tabId }) {
           s.copy(selectedTabId = tabId)
         } else {
-          s.copy(tabs = s.tabs + buildItem(tabId), selectedTabId = tabId)
+          s.copy(tabs = s.tabs + item, selectedTabId = tabId)
         }
       }
     }
@@ -188,18 +191,31 @@ class TabsViewModel(
     viewModelScope.launch {
       val savedBuffer: TabBuffer = when (val buffer = tab.buffer) {
         is TabBuffer.SubProject -> {
-          val updated = subProjectRepository.update(tab.entityId, buffer.name, buffer.authType, buffer.authConfig)
+          var updated =
+            subProjectViewModel.updateSubProject(tab.entityId, buffer.name, buffer.authType,
+              buffer.authConfig)
+          val cleanedVariables = buffer.variables.filter { it.key.isNotBlank() }
+          subProjectViewModel.replaceAllBySubProjectId(
+            tab.entityId,
+            cleanedVariables.map {
+              SubProjectVariable(subProjectId = tab.entityId, key = it.key, value = it.value)
+            },
+          )
           SubProjectEvents.triggerRefresh()
-          TabBuffer.SubProject(updated.name, updated.authType, updated.authConfig)
+          updated = updated ?: SubProject(projectId = -1, name = "", authType = "", authConfig = "")
+          TabBuffer.SubProject(updated.name, updated.authType, updated.authConfig, cleanedVariables)
         }
+
         is TabBuffer.Folder -> {
-          val updated = folderRepository.update(tab.entityId, buffer.name)
+          var updated = folderViewModel.updateFolder(tab.entityId, buffer.name)
           FolderEvents.triggerRefresh()
+          updated = updated ?: Folder(subProjectId = -1, name = "")
           TabBuffer.Folder(updated.name)
         }
+
         is TabBuffer.Request -> {
-          val current = requestRepository.getById(tab.entityId)
-          val updated = requestRepository.update(
+          val current = requestViewModel.getById(tab.entityId)
+          var updated = requestViewModel.updateRequest(
             tab.entityId,
             current?.folderId,
             buffer.name,
@@ -209,6 +225,9 @@ class TabsViewModel(
             buffer.body,
           )
           RequestEvents.triggerRefresh()
+          updated =
+            updated ?: Request(subProjectId = -1, name = "", method = "", url = "", headers = "",
+              body = "")
           TabBuffer.Request(
             name = updated.name,
             method = updated.method,
@@ -259,18 +278,24 @@ class TabsViewModel(
   private suspend fun buildItem(tabId: Long, type: TabType, entityId: Long): TabItem? {
     return when (type) {
       TabType.SUB_PROJECT -> {
-        val sp = subProjectRepository.getAllByProjectId(_state.value.projectId ?: return null)
+        val sp = subProjectViewModel.getAllByProjectId(_state.value.projectId ?: return null)
           .find { it.id == entityId } ?: return null
-        val buffer = TabBuffer.SubProject(sp.name, sp.authType, sp.authConfig)
+        val variables = subProjectViewModel.getAllVariablesBySubProjectId(entityId)
+          .map {
+            TabBuffer.VariableEntry(it.key, it.value.orEmpty())
+          }
+        val buffer = TabBuffer.SubProject(sp.name, sp.authType, sp.authConfig, variables)
         TabItem(tabId, type, entityId, sp.name, buffer, buffer)
       }
+
       TabType.FOLDER -> {
         val folder = findFolder(entityId) ?: return null
         val buffer = TabBuffer.Folder(folder.name)
         TabItem(tabId, type, entityId, folder.name, buffer, buffer)
       }
+
       TabType.REQUEST -> {
-        val request = requestRepository.getById(entityId) ?: return null
+        val request = requestViewModel.getById(entityId) ?: return null
         val buffer = TabBuffer.Request(
           name = request.name,
           method = request.method,
@@ -285,10 +310,11 @@ class TabsViewModel(
 
   private suspend fun findFolder(folderId: Long): Folder? {
     val projectId = _state.value.projectId ?: return null
-    val subProjects = subProjectRepository.getAllByProjectId(projectId)
+    val subProjects = subProjectViewModel.getAllByProjectId(projectId)
     for (sp in subProjects) {
       val spId = sp.id ?: continue
-      val match = folderRepository.getAllBySubProjectId(spId).find { it.id == folderId }
+      val match = folderViewModel.getAllBySubProjectId(spId)
+        .find { it.id == folderId }
       if (match != null) return match
     }
     return null

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.folder.data.Folder
 import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
 import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.error_updating_folder
 import fetchapi.composeapp.generated.resources.name_can_not_be_empty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,16 +39,21 @@ class FolderViewModel(
     return "$base $i"
   }
 
-  fun updateFolder(id: Long, name: String) {
+  suspend fun updateFolder(id: Long, name: String): Folder? {
     val trimmed = name.trim()
     if (trimmed.isEmpty()) {
       _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
-      return
+      return null
     }
-    launchCatching {
-      folderRepository.update(id, trimmed)
+
+    try {
+      val updated = folderRepository.update(id, trimmed)
       _state.update { it.copy(error = null) }
       FolderEvents.triggerRefresh()
+      return updated
+    } catch (e: Exception) {
+      _state.update { it.copy(error = Res.string.error_updating_folder) }
+      return null
     }
   }
 
