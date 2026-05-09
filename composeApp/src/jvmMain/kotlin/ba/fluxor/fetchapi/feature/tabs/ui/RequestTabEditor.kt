@@ -1,12 +1,20 @@
 package ba.fluxor.fetchapi.feature.tabs.ui
 
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ba.fluxor.fetchapi.component.CompactInput
+import ba.fluxor.fetchapi.component.SimpleDropdown
 import ba.fluxor.fetchapi.component.SquareButton
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabBuffer
 import ba.fluxor.fetchapi.network.http.HttpMethod
@@ -37,26 +45,34 @@ fun RequestTabEditor(
         onClick = onSave,
         enabled = isDirty,
         modifier = Modifier
+          .background(MaterialTheme.colorScheme.tertiary)
           .padding(horizontal = 16.dp, vertical = 6.dp)
       )
     }
     Spacer(Modifier.height(12.dp))
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-      MethodDropdown(
+      SimpleDropdown(
+        options = HttpMethod.entries.map { it.name },
         selected = buffer.method,
         onSelect = { onChange(buffer.copy(method = it)) },
-        modifier = Modifier.width(140.dp),
+        width = 100.dp,
+        optionLabel = { it }
       )
       Spacer(Modifier.width(8.dp))
-      OutlinedTextField(
+      CompactInput(
         value = buffer.url,
         onValueChange = { onChange(buffer.copy(url = it)) },
-        label = { Text(stringResource(Res.string.url)) },
-        singleLine = true,
+        placeholder = stringResource(Res.string.url),
         modifier = Modifier.weight(1f),
       )
+      Spacer(Modifier.width(8.dp))
+      SquareButton(
+        text = stringResource(Res.string.send),
+        onClick = {},
+        modifier = Modifier
+          .padding(horizontal = 16.dp, vertical = 6.dp)
+      )
     }
-    Spacer(Modifier.height(12.dp))
     OutlinedTextField(
       value = buffer.headers.orEmpty(),
       onValueChange = { onChange(buffer.copy(headers = it.ifBlank { null })) },
@@ -64,7 +80,7 @@ fun RequestTabEditor(
       modifier = Modifier.fillMaxWidth()
         .height(120.dp),
     )
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(8.dp))
     OutlinedTextField(
       value = buffer.body.orEmpty(),
       onValueChange = { onChange(buffer.copy(body = it.ifBlank { null })) },
@@ -72,37 +88,31 @@ fun RequestTabEditor(
       modifier = Modifier.fillMaxWidth()
         .weight(1f),
     )
-  }
-}
 
-@Composable
-private fun MethodDropdown(selected: String, onSelect: (String) -> Unit,
-  modifier: Modifier = Modifier) {
-  var expanded by remember { mutableStateOf(false) }
-  Box(modifier = modifier) {
-    OutlinedTextField(
-      value = selected,
-      onValueChange = {},
-      readOnly = true,
-      label = { Text(stringResource(Res.string.method)) },
-      modifier = Modifier.fillMaxWidth(),
-    )
-    Box(modifier = Modifier.matchParentSize()) {
-      TextButton(
-        onClick = { expanded = true },
-        modifier = Modifier.fillMaxSize(),
-      ) {}
-    }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-      HttpMethod.entries.forEach { m ->
-        DropdownMenuItem(
-          text = { Text(m.name) },
-          onClick = {
-            onSelect(m.name)
-            expanded = false
-          },
+    Spacer(Modifier.height(8.dp))
+
+    val scrollState = rememberScrollState()
+    val shape = RoundedCornerShape(4.dp)
+
+    SelectionContainer(
+      modifier = Modifier
+        .border(1.dp, MaterialTheme.colorScheme.primary, shape = shape),
+    ) {
+      BasicTextField(
+        value = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a",
+        onValueChange = {},
+        readOnly = true,
+        modifier = Modifier
+          .heightIn(min = 300.dp, max = 600.dp)
+          .fillMaxWidth()
+          .padding(12.dp)
+          .verticalScroll(scrollState)
+          .horizontalScroll(rememberScrollState()),
+        textStyle = TextStyle(
+          fontFamily = FontFamily.Monospace,
+          fontSize = 14.sp,
         )
-      }
+      )
     }
   }
 }
