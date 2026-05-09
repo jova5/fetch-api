@@ -30,22 +30,29 @@ class RequestViewModel(
       }
 
       val name = uniqueName("New Request", existing)
-      val created = requestRepository.create(subProjectId, folderId, name, "GET", "")
+      val created = requestRepository.create(
+        Request(
+          subProjectId = subProjectId,
+          folderId = folderId,
+          name = name,
+          method = "GET",
+          url = "",
+        )
+      )
 
       RequestEvents.triggerRequestCreated(created)
     }
   }
 
-  suspend fun updateRequest(id: Long, folderId: Long?, name: String, method: String, url: String,
-    headers: String?, body: String?): Request? {
-    val trimmed = name.trim()
+  suspend fun updateRequest(id: Long, request: Request): Request? {
+    val trimmed = request.name.trim()
     if (trimmed.isEmpty()) {
       _state.update { it.copy(error = Res.string.name_can_not_be_empty) }
       return null
     }
 
     try {
-      val updated = requestRepository.update(id, folderId, trimmed, method, url, headers, body)
+      val updated = requestRepository.update(request.copy(name = trimmed), id)
       _state.update { it.copy(error = null) }
       RequestEvents.triggerRefresh()
       return updated

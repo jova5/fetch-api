@@ -1,0 +1,199 @@
+package ba.fluxor.fetchapi.component
+
+import androidx.compose.foundation.LocalScrollbarStyle
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import ba.fluxor.fetchapi.feature.request.data.KeyValueEntry
+import fetchapi.composeapp.generated.resources.Res
+import fetchapi.composeapp.generated.resources.api_key_value
+import fetchapi.composeapp.generated.resources.description
+import fetchapi.composeapp.generated.resources.variables_key
+import org.jetbrains.compose.resources.stringResource
+
+@Composable
+fun KeyValueDescTable(
+  rows: List<KeyValueEntry>,
+  onChange: (List<KeyValueEntry>) -> Unit,
+  modifier: Modifier = Modifier,
+  readOnlyRows: List<KeyValueEntry> = emptyList(),
+  keyPlaceholder: String? = null,
+) {
+  val displayRows = rows + KeyValueEntry()
+
+  Box(modifier = modifier) {
+    val scrollState = rememberScrollState()
+
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .verticalScroll(scrollState),
+    ) {
+      HeaderRow(keyPlaceholder = keyPlaceholder ?: stringResource(Res.string.variables_key))
+
+      readOnlyRows.forEach { entry ->
+        ReadOnlyRow(entry)
+      }
+
+      displayRows.forEachIndexed { index, entry ->
+        val isTrailing = index == displayRows.lastIndex
+        EditableRow(
+          entry = entry,
+          showDelete = !isTrailing,
+          onEnabledChange = { onChange(updateAt(rows, index, isTrailing, entry.copy(enabled = it))) },
+          onKeyChange = { onChange(updateAt(rows, index, isTrailing, entry.copy(key = it))) },
+          onValueChange = { onChange(updateAt(rows, index, isTrailing, entry.copy(value = it))) },
+          onDescriptionChange = { onChange(updateAt(rows, index, isTrailing, entry.copy(description = it))) },
+          onDelete = {
+            if (!isTrailing) {
+              onChange(rows.toMutableList().also { it.removeAt(index) })
+            }
+          },
+          keyPlaceholder = keyPlaceholder,
+        )
+      }
+    }
+    VerticalScrollbar(
+      modifier = Modifier.width(4.dp).align(Alignment.CenterEnd).fillMaxHeight(),
+      adapter = rememberScrollbarAdapter(scrollState = scrollState),
+      style = LocalScrollbarStyle.current.copy(
+        unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+        hoverColor = MaterialTheme.colorScheme.primary,
+      ),
+    )
+  }
+}
+
+private fun updateAt(
+  current: List<KeyValueEntry>,
+  index: Int,
+  isTrailing: Boolean,
+  next: KeyValueEntry,
+): List<KeyValueEntry> {
+  if (isTrailing) {
+    if (next.key.isBlank() && next.value.isBlank() && next.description.isBlank()) return current
+    return current + next
+  }
+  return current.toMutableList().also { it[index] = next }
+}
+
+@Composable
+private fun HeaderRow(keyPlaceholder: String) {
+  Row(
+    verticalAlignment = Alignment.CenterVertically,
+    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+  ) {
+    Spacer(Modifier.width(40.dp))
+    Text(
+      text = keyPlaceholder,
+      style = MaterialTheme.typography.bodyLarge,
+      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      fontWeight = FontWeight.Bold,
+      color = MaterialTheme.colorScheme.secondary,
+    )
+    Text(
+      text = stringResource(Res.string.api_key_value),
+      style = MaterialTheme.typography.bodyLarge,
+      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      fontWeight = FontWeight.Bold,
+      color = MaterialTheme.colorScheme.secondary,
+    )
+    Text(
+      text = stringResource(Res.string.description),
+      style = MaterialTheme.typography.bodyLarge,
+      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      fontWeight = FontWeight.Bold,
+      color = MaterialTheme.colorScheme.secondary,
+    )
+    Spacer(Modifier.width(40.dp))
+  }
+}
+
+@Composable
+private fun EditableRow(
+  entry: KeyValueEntry,
+  showDelete: Boolean,
+  onEnabledChange: (Boolean) -> Unit,
+  onKeyChange: (String) -> Unit,
+  onValueChange: (String) -> Unit,
+  onDescriptionChange: (String) -> Unit,
+  onDelete: () -> Unit,
+  keyPlaceholder: String?,
+) {
+  Row(
+    verticalAlignment = Alignment.CenterVertically,
+    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+  ) {
+    Box(modifier = Modifier.width(40.dp), contentAlignment = Alignment.Center) {
+      Checkbox(checked = entry.enabled, onCheckedChange = onEnabledChange)
+    }
+    CompactInput(
+      value = entry.key,
+      onValueChange = onKeyChange,
+      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      placeholder = keyPlaceholder ?: stringResource(Res.string.variables_key),
+    )
+    CompactInput(
+      value = entry.value,
+      onValueChange = onValueChange,
+      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      placeholder = stringResource(Res.string.api_key_value),
+    )
+    CompactInput(
+      value = entry.description,
+      onValueChange = onDescriptionChange,
+      modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+      placeholder = stringResource(Res.string.description),
+    )
+    Box(modifier = Modifier.width(40.dp), contentAlignment = Alignment.Center) {
+      if (showDelete) {
+        SquareIconButton(
+          icon = Icons.Default.Close,
+          onClick = onDelete,
+          borderWidth = 0.dp,
+        )
+      }
+    }
+  }
+}
+
+@Composable
+private fun ReadOnlyRow(entry: KeyValueEntry) {
+  Row(
+    verticalAlignment = Alignment.CenterVertically,
+    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).alpha(0.5f),
+  ) {
+    Box(modifier = Modifier.width(40.dp), contentAlignment = Alignment.Center) {
+      Checkbox(checked = true, onCheckedChange = null, enabled = false)
+    }
+    Text(
+      text = entry.key,
+      modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+      color = MaterialTheme.colorScheme.onSurface,
+    )
+    Text(
+      text = entry.value,
+      modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+      color = MaterialTheme.colorScheme.onSurface,
+    )
+    Text(
+      text = entry.description,
+      modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+      color = MaterialTheme.colorScheme.onSurface,
+    )
+    Spacer(Modifier.width(40.dp))
+  }
+}

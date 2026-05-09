@@ -22,29 +22,13 @@ class RequestRepository(private val dao: RequestDao) {
     dao.findById(id)
   }
 
-  suspend fun create(
-    subProjectId: Long,
-    folderId: Long?,
-    name: String,
-    method: String,
-    url: String,
-    headers: String? = null,
-    body: String? = null,
-  ): Request = withContext(Dispatchers.IO) {
-    val id = dao.insert(subProjectId, folderId, name, method, url, headers, body)
+  suspend fun create(request: Request): Request = withContext(Dispatchers.IO) {
+    val id = dao.insert(request)
     dao.findById(id) ?: error("Inserted request with id=$id not found")
   }
 
-  suspend fun update(
-    id: Long,
-    folderId: Long?,
-    name: String,
-    method: String,
-    url: String,
-    headers: String?,
-    body: String?,
-  ): Request = withContext(Dispatchers.IO) {
-    dao.update(id, folderId, name, method, url, headers, body)
+  suspend fun update(request: Request, id: Long): Request = withContext(Dispatchers.IO) {
+    dao.update(request, id)
     dao.findById(id) ?: error("Updated request with id=$id not found")
   }
 

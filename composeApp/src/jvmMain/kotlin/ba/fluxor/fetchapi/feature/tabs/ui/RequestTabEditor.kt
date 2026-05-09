@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.Divider
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +17,14 @@ import androidx.compose.ui.unit.sp
 import ba.fluxor.fetchapi.component.CompactInput
 import ba.fluxor.fetchapi.component.SimpleDropdown
 import ba.fluxor.fetchapi.component.SquareButton
+import ba.fluxor.fetchapi.component.SquareOutlineButton
+import ba.fluxor.fetchapi.feature.tabs.ui.request.BodySection
+import ba.fluxor.fetchapi.feature.tabs.ui.request.HeadersSection
+import ba.fluxor.fetchapi.feature.tabs.ui.request.ParamsSection
+import ba.fluxor.fetchapi.feature.tabs.ui.request.RequestAuthorizationSection
+import ba.fluxor.fetchapi.feature.tabs.ui.request.UrlParamSync
+import ba.fluxor.fetchapi.feature.tabs.ui.request.computeAutoHeaders
+import ba.fluxor.fetchapi.feature.tabs.viewmodel.RequestTab
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabBuffer
 import ba.fluxor.fetchapi.network.http.HttpMethod
 import fetchapi.composeapp.generated.resources.*
@@ -28,16 +37,14 @@ fun RequestTabEditor(
   onChange: (TabBuffer) -> Unit,
   onSave: () -> Unit,
 ) {
-  Column(modifier = Modifier.fillMaxSize()
-    .padding(16.dp)) {
+  var selectedTab by remember { mutableStateOf(RequestTab.entries.first()) }
 
-    Row(
-      verticalAlignment = Alignment.CenterVertically,
-      modifier = Modifier.fillMaxWidth()
-    ) {
+  Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
       CompactInput(
         value = buffer.name,
-        onValueChange = { onChange(buffer.copy(name = it)) }
+        onValueChange = { onChange(buffer.copy(name = it)) },
       )
       Spacer(Modifier.weight(1f))
       SquareButton(
@@ -46,7 +53,7 @@ fun RequestTabEditor(
         enabled = isDirty,
         modifier = Modifier
           .background(MaterialTheme.colorScheme.tertiary)
-          .padding(horizontal = 16.dp, vertical = 6.dp)
+          .padding(horizontal = 16.dp, vertical = 6.dp),
       )
     }
     Spacer(Modifier.height(12.dp))
@@ -56,12 +63,15 @@ fun RequestTabEditor(
         selected = buffer.method,
         onSelect = { onChange(buffer.copy(method = it)) },
         width = 100.dp,
-        optionLabel = { it }
+        optionLabel = { it },
       )
       Spacer(Modifier.width(8.dp))
       CompactInput(
         value = buffer.url,
-        onValueChange = { onChange(buffer.copy(url = it)) },
+        onValueChange = { newUrl ->
+          val newParams = UrlParamSync.mergeFromUrl(newUrl, buffer.params)
+          onChange(buffer.copy(url = newUrl, params = newParams))
+        },
         placeholder = stringResource(Res.string.url),
         modifier = Modifier.weight(1f),
       )
@@ -69,49 +79,75 @@ fun RequestTabEditor(
       SquareButton(
         text = stringResource(Res.string.send),
         onClick = {},
-        modifier = Modifier
-          .padding(horizontal = 16.dp, vertical = 6.dp)
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
       )
     }
-    OutlinedTextField(
-      value = buffer.headers.orEmpty(),
-      onValueChange = { onChange(buffer.copy(headers = it.ifBlank { null })) },
-      label = { Text(stringResource(Res.string.headers)) },
-      modifier = Modifier.fillMaxWidth()
-        .height(120.dp),
-    )
-    Spacer(Modifier.height(8.dp))
-    OutlinedTextField(
-      value = buffer.body.orEmpty(),
-      onValueChange = { onChange(buffer.copy(body = it.ifBlank { null })) },
-      label = { Text(stringResource(Res.string.body)) },
-      modifier = Modifier.fillMaxWidth()
-        .weight(1f),
-    )
 
+    Spacer(Modifier.height(12.dp))
+    Divider(thickness = 1.dp)
+    Spacer(Modifier.height(12.dp))
+
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+      RequestTab.entries.forEach { tab ->
+        SquareOutlineButton(
+          text = stringResource(tab.labelRes()),
+          onClick = { selectedTab = tab },
+          modifier = Modifier.padding(horizontal = 16.dp),
+          borderWidth = if (selectedTab == tab) 2.dp else 0.dp,
+        )
+      }
+    }
     Spacer(Modifier.height(8.dp))
+    Divider(thickness = 1.dp)
+    Spacer(Modifier.height(16.dp))
+
+    Box(modifier = Modifier.weight(1f, fill = false).fillMaxWidth()) {
+      when (selectedTab) {
+        RequestTab.PARAMS -> ParamsSection(
+          params = buffer.params,
+          onChange = { newParams ->
+            val newUrl = UrlParamSync.rebuildUrl(buffer.url, newParams)
+            onChange(buffer.copy(params = newParams, url = newUrl))
+          },
+        )
+        RequestTab.AUTHORIZATION -> RequestAuthorizationSection(
+          authType = buffer.authType,
+          authConfig = buffer.authConfig,
+          onChange = { newType, newConfig ->
+            onChange(buffer.copy(authType = newType, authConfig = newConfig))
+          },
+        )
+        RequestTab.HEADERS -> HeadersSection(
+          headers = buffer.headers,
+          autoGenerated = computeAutoHeaders(buffer),
+          onChange = { newHeaders -> onChange(buffer.copy(headers = newHeaders)) },
+        )
+        RequestTab.BODY -> BodySection(
+          body = buffer.body,
+          onChange = { newBody -> onChange(buffer.copy(body = newBody)) },
+        )
+      }
+    }
+
+    Spacer(Modifier.height(16.dp))
 
     val scrollState = rememberScrollState()
     val shape = RoundedCornerShape(4.dp)
 
     SelectionContainer(
-      modifier = Modifier
-        .border(1.dp, MaterialTheme.colorScheme.primary, shape = shape),
+      modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.primary, shape = shape),
     ) {
       BasicTextField(
         value = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a",
         onValueChange = {},
         readOnly = true,
         modifier = Modifier
-          .heightIn(min = 300.dp, max = 600.dp)
+          .heightIn(min = 200.dp, max = 400.dp)
           .fillMaxWidth()
           .padding(12.dp)
           .verticalScroll(scrollState)
           .horizontalScroll(rememberScrollState()),
-        textStyle = TextStyle(
-          fontFamily = FontFamily.Monospace,
-          fontSize = 14.sp,
-        )
+        textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 14.sp),
       )
     }
   }

@@ -1,5 +1,7 @@
 package ba.fluxor.fetchapi.feature.tabs.viewmodel
 
+import ba.fluxor.fetchapi.feature.request.data.BodyConfig
+import ba.fluxor.fetchapi.feature.request.data.KeyValueEntry
 import ba.fluxor.fetchapi.feature.tabs.data.TabType
 
 sealed interface TabBuffer {
@@ -23,8 +25,11 @@ sealed interface TabBuffer {
     val name: String,
     val method: String,
     val url: String,
-    val headers: String?,
-    val body: String?,
+    val params: List<KeyValueEntry> = emptyList(),
+    val headers: List<KeyValueEntry> = emptyList(),
+    val body: BodyConfig = BodyConfig.None,
+    val authType: String = "INHERIT",
+    val authConfig: String? = null,
   ) : TabBuffer
 }
 

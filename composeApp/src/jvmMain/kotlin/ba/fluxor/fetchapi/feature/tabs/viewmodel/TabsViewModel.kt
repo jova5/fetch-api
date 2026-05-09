@@ -129,8 +129,11 @@ class TabsViewModel(
         name = request.name,
         method = request.method,
         url = request.url,
+        params = request.params,
         headers = request.headers,
         body = request.body,
+        authType = request.authType,
+        authConfig = request.authConfig,
       )
       TabItem(tabId, TabType.REQUEST, id, request.name, buffer, buffer)
     }
@@ -217,23 +220,31 @@ class TabsViewModel(
           val current = requestViewModel.getById(tab.entityId)
           var updated = requestViewModel.updateRequest(
             tab.entityId,
-            current?.folderId,
-            buffer.name,
-            buffer.method,
-            buffer.url,
-            buffer.headers,
-            buffer.body,
+            Request(
+              id = tab.entityId,
+              subProjectId = current?.subProjectId ?: -1,
+              folderId = current?.folderId,
+              name = buffer.name,
+              method = buffer.method,
+              url = buffer.url,
+              params = buffer.params,
+              headers = buffer.headers,
+              body = buffer.body,
+              authType = buffer.authType,
+              authConfig = buffer.authConfig,
+            ),
           )
           RequestEvents.triggerRefresh()
-          updated =
-            updated ?: Request(subProjectId = -1, name = "", method = "", url = "", headers = "",
-              body = "")
+          updated = updated ?: Request(subProjectId = -1, name = "", method = "", url = "")
           TabBuffer.Request(
             name = updated.name,
             method = updated.method,
             url = updated.url,
+            params = updated.params,
             headers = updated.headers,
             body = updated.body,
+            authType = updated.authType,
+            authConfig = updated.authConfig,
           )
         }
       }
@@ -300,8 +311,11 @@ class TabsViewModel(
           name = request.name,
           method = request.method,
           url = request.url,
+          params = request.params,
           headers = request.headers,
           body = request.body,
+          authType = request.authType,
+          authConfig = request.authConfig,
         )
         TabItem(tabId, type, entityId, request.name, buffer, buffer)
       }

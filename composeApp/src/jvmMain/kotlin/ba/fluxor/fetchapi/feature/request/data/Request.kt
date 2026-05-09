@@ -7,6 +7,9 @@ data class Request(
   val name: String,
   val method: String,
   val url: String,
-  val headers: String? = null,
-  val body: String? = null,
+  val params: List<KeyValueEntry> = emptyList(),
+  val headers: List<KeyValueEntry> = emptyList(),
+  val body: BodyConfig = BodyConfig.None,
+  val authType: String = "INHERIT",
+  val authConfig: String? = null,
 )
