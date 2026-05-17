@@ -134,6 +134,7 @@ class TabsViewModel(
         body = request.body,
         authType = request.authType,
         authConfig = request.authConfig,
+        excludedAutoHeaders = request.excludedAutoHeaders,
       )
       TabItem(tabId, TabType.REQUEST, id, request.name, buffer, buffer)
     }
@@ -232,6 +233,7 @@ class TabsViewModel(
               body = buffer.body,
               authType = buffer.authType,
               authConfig = buffer.authConfig,
+              excludedAutoHeaders = buffer.excludedAutoHeaders,
             ),
           )
           RequestEvents.triggerRefresh()
@@ -245,6 +247,7 @@ class TabsViewModel(
             body = updated.body,
             authType = updated.authType,
             authConfig = updated.authConfig,
+            excludedAutoHeaders = updated.excludedAutoHeaders,
           )
         }
       }
@@ -316,6 +319,7 @@ class TabsViewModel(
           body = request.body,
           authType = request.authType,
           authConfig = request.authConfig,
+          excludedAutoHeaders = request.excludedAutoHeaders,
         )
         TabItem(tabId, type, entityId, request.name, buffer, buffer)
       }

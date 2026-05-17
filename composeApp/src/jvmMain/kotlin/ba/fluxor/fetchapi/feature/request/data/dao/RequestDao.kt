@@ -13,11 +13,11 @@ import java.sql.Types
 class RequestDao(private val connection: Connection) {
 
   private val columns =
-    "id, sub_project_id, folder_id, name, method, url, headers, body, params, headers_json, body_config, auth_type, auth_config"
+    "id, sub_project_id, folder_id, name, method, url, headers, body, params, headers_json, body_config, auth_type, auth_config, excluded_auto_headers"
 
   fun insert(request: Request): Long {
     connection.prepareStatement(
-      "INSERT INTO request(sub_project_id, folder_id, name, method, url, params, headers_json, body_config, auth_type, auth_config) VALUES(?,?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO request(sub_project_id, folder_id, name, method, url, params, headers_json, body_config, auth_type, auth_config, excluded_auto_headers) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
       Statement.RETURN_GENERATED_KEYS,
     ).use { stmt ->
       bindWriteParams(stmt, request, startIndex = 1)
@@ -31,7 +31,7 @@ class RequestDao(private val connection: Connection) {
 
   fun update(request: Request, id: Long): Int {
     connection.prepareStatement(
-      "UPDATE request SET folder_id=?, name=?, method=?, url=?, params=?, headers_json=?, body_config=?, auth_type=?, auth_config=?, headers=NULL, body=NULL WHERE id=?"
+      "UPDATE request SET folder_id=?, name=?, method=?, url=?, params=?, headers_json=?, body_config=?, auth_type=?, auth_config=?, excluded_auto_headers=?, headers=NULL, body=NULL WHERE id=?"
     ).use { stmt ->
       if (request.folderId != null) stmt.setLong(1, request.folderId) else stmt.setNull(1, Types.INTEGER)
       stmt.setString(2, request.name)
@@ -42,7 +42,8 @@ class RequestDao(private val connection: Connection) {
       setNullableString(stmt, 7, RequestCodecs.encodeBody(request.body))
       stmt.setString(8, request.authType)
       setNullableString(stmt, 9, request.authConfig)
-      stmt.setLong(10, id)
+      setNullableString(stmt, 10, RequestCodecs.encodeStringSet(request.excludedAutoHeaders))
+      stmt.setLong(11, id)
       return stmt.executeUpdate()
     }
   }
@@ -115,7 +116,8 @@ class RequestDao(private val connection: Connection) {
     setNullableString(stmt, i++, RequestCodecs.encodeKeyValues(request.headers))
     setNullableString(stmt, i++, RequestCodecs.encodeBody(request.body))
     stmt.setString(i++, request.authType)
-    setNullableString(stmt, i, request.authConfig)
+    setNullableString(stmt, i++, request.authConfig)
+    setNullableString(stmt, i, RequestCodecs.encodeStringSet(request.excludedAutoHeaders))
   }
 
   private fun setNullableString(stmt: java.sql.PreparedStatement, index: Int, value: String?) {
@@ -157,6 +159,7 @@ class RequestDao(private val connection: Connection) {
       body = body,
       authType = authType,
       authConfig = authConfig,
+      excludedAutoHeaders = RequestCodecs.decodeStringSet(getString("excluded_auto_headers")),
     )
   }
 }

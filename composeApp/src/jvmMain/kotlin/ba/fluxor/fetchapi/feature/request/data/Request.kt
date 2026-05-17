@@ -12,4 +12,5 @@ data class Request(
   val body: BodyConfig = BodyConfig.None,
   val authType: String = "INHERIT",
   val authConfig: String? = null,
+  val excludedAutoHeaders: Set<String> = emptySet(),
 )

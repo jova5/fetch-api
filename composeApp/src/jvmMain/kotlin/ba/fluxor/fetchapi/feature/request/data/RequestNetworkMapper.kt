@@ -12,6 +12,7 @@ object RequestNetworkMapper {
     request: Request,
     parentAuthType: String? = null,
     parentAuthConfig: String? = null,
+    excludedAutoHeaders: Set<String> = emptySet(),
   ): HttpRequest {
     val (resolvedAuthType, resolvedAuthConfig) = resolveAuth(
       request.authType,
@@ -30,7 +31,15 @@ object RequestNetworkMapper {
     val mergedHeaders = LinkedHashMap<String, String>().apply {
       putAll(authHeaders)
       putAll(userHeaders)
-      putIfAbsent("Content-Type", contentTypeFor(request.body))
+      mapOf(
+        "Content-Type" to contentTypeFor(request.body),
+        "User-Agent" to "FetchAPI/1.0",
+        "Accept" to "*/*",
+        "Accept-Encoding" to "gzip, deflate, br",
+        "Connection" to "keep-alive",
+      ).forEach { (k, v) ->
+        if (k !in excludedAutoHeaders) putIfAbsent(k, v)
+      }
     }.filterValues { it.isNotEmpty() }
 
     val bodyString = encodeBody(request.body)

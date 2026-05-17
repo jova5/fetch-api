@@ -1,6 +1,7 @@
 package ba.fluxor.fetchapi.feature.request.data
 
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 object RequestCodecs {
@@ -31,5 +32,16 @@ object RequestCodecs {
     if (raw.isNullOrBlank()) return BodyConfig.None
     return runCatching { json.decodeFromString(BodyConfig.serializer(), raw) }
       .getOrDefault(BodyConfig.None)
+  }
+
+  fun encodeStringSet(set: Set<String>): String? {
+    if (set.isEmpty()) return null
+    return json.encodeToString(ListSerializer(String.serializer()), set.toList())
+  }
+
+  fun decodeStringSet(raw: String?): Set<String> {
+    if (raw.isNullOrBlank()) return emptySet()
+    return runCatching { json.decodeFromString(ListSerializer(String.serializer()), raw).toSet() }
+      .getOrDefault(emptySet())
   }
 }
