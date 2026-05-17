@@ -12,7 +12,7 @@ fun formatAndHighlightJson(rawJson: String, isDarkTheme: Boolean): AnnotatedStri
   val prettyJson = try {
     val jsonElement = jsonPrettyPrinter.parseToJsonElement(rawJson)
     jsonPrettyPrinter.encodeToString(JsonElement.serializer(), jsonElement)
-  } catch (e: Exception) {
+  } catch (_: Exception) {
     return AnnotatedString(rawJson)
   }
 
