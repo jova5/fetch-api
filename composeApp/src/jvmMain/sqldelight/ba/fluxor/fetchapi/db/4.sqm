@@ -1,0 +1,1 @@
+ALTER TABLE request ADD COLUMN excluded_auto_headers TEXT;
