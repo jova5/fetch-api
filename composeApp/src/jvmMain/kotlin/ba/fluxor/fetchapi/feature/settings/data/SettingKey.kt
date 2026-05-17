@@ -6,4 +6,5 @@ enum class SettingKey(val tag: String) {
   LANGUAGE("language"),
   FONT_SCALE("font_scale"),
   DIVIDER_PERCENTAGE("divider_percentage"),
+  REQUEST_DIVIDER_PERCENTAGE("request_divider_percentage"),
 }

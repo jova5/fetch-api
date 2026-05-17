@@ -52,4 +52,13 @@ class SettingRepository(private val dao: SettingDao) {
   suspend fun setDividerPercentage(dividerPercentage: Float) = withContext(Dispatchers.IO) {
     dao.upsert(SettingKey.DIVIDER_PERCENTAGE.tag, dividerPercentage.toString())
   }
+
+  suspend fun getRequestDividerPercentage(): Float? = withContext(Dispatchers.IO) {
+    dao.get(SettingKey.REQUEST_DIVIDER_PERCENTAGE.tag)
+      ?.let { runCatching { it.toFloat() }.getOrNull() }
+  }
+
+  suspend fun setRequestDividerPercentage(dividerPercentage: Float) = withContext(Dispatchers.IO) {
+    dao.upsert(SettingKey.REQUEST_DIVIDER_PERCENTAGE.tag, dividerPercentage.toString())
+  }
 }

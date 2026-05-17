@@ -1,6 +1,9 @@
 package ba.fluxor.fetchapi.feature.tabs.ui
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Divider
@@ -9,11 +12,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ba.fluxor.fetchapi.LocalWindowHeight
 import ba.fluxor.fetchapi.component.*
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.feature.tabs.ui.request.*
@@ -27,6 +35,7 @@ import fetchapi.composeapp.generated.resources.send
 import fetchapi.composeapp.generated.resources.url
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import java.awt.Cursor
 
 @Composable
 fun RequestTabEditor(
@@ -146,76 +155,135 @@ fun RequestTabEditor(
 
     Spacer(Modifier.height(16.dp))
 
-    val verticalScrollState = rememberScrollState()
-    val horizontalScrollState = rememberScrollState()
-    val rawResponse = "[{\n" +
-        "    \"name\": \"Adeel Solangi\",\n" +
-        "    \"language\": \"Sindhi\",\n" +
-        "    \"id\": \"V59OF92YF627HFY0\",\n" +
-        "    \"bio\": \"Donec lobortis eleifend condimentum. Cras dictum dolor lacinia lectus vehicula rutrum. Maecenas quis nisi nunc. Nam tristique feugiat est vitae mollis. Maecenas quis nisi nunc.\",\n" +
-        "    \"version\": 6.1\n" +
-        "  },\n" +
-        "  {\n" +
-        "    \"name\": \"Afzal Ghaffar\",\n" +
-        "    \"language\": \"Sindhi\",\n" +
-        "    \"id\": \"ENTOCR13RSCLZ6KU\",\n" +
-        "    \"bio\": \"Aliquam sollicitudin ante ligula, eget malesuada nibh efficitur et. Pellentesque massa sem, scelerisque sit amet odio id, cursus tempor urna. Etiam congue dignissim volutpat. Vestibulum pharetra libero et velit gravida euismod.\",\n" +
-        "    \"version\": 1.88\n" +
-        "  },\n" +
-        "  {\n" +
-        "    \"name\": \"Aamir Solangi\",\n" +
-        "    \"language\": \"Sindhi\",\n" +
-        "    \"id\": \"IAKPO3R4761JDRVG\",\n" +
-        "    \"bio\": \"Vestibulum pharetra libero et velit gravida euismod. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Fusce eu ultrices elit, vel posuere neque.\",\n" +
-        "    \"version\": 7.27\n" +
-        "  }" +
-        "]"
+    val settingState by settingsVm.state.collectAsStateWithLifecycle()
+    val density = LocalDensity.current
 
-    val formattedJson = remember(rawResponse, isDark) {
-      formatAndHighlightJson(rawResponse, isDark)
+    val windowHeight = LocalWindowHeight.current
+
+    val minHeight = 225.dp
+    val maxHeight = windowHeight * 0.60f
+
+    var percentage by remember { mutableStateOf(settingState.requestDividerPercentage) }
+
+    val height by remember(windowHeight, percentage) {
+      derivedStateOf {
+        (minHeight + (maxHeight - minHeight) * percentage)
+          .coerceIn(minHeight, maxHeight)
+      }
+    }
+    var virtualMouseY by remember { mutableStateOf(height) }
+
+    val dragState = rememberDraggableState { delta ->
+      val deltaDp = with(density) { delta.toDp() }
+
+      virtualMouseY -= deltaDp
+
+      if (virtualMouseY in minHeight..maxHeight) {
+        val range = maxHeight - minHeight
+        if (range > 0.dp) {
+          percentage = ((virtualMouseY - minHeight) / range).coerceIn(0f, 1f)
+        }
+      }
     }
 
-    SelectionContainer {
+    Box(
+      modifier = Modifier
+        .fillMaxWidth()
+        .pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR)))
+        .draggable(
+          state = dragState,
+          orientation = Orientation.Vertical,
+          onDragStarted = {
+            virtualMouseY = height
+          },
+          onDragStopped = {
+            settingsVm.setRequestDividerPercentage(percentage)
+          }
+        )
+    ) {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(4.dp)
+      ) { }
+    }
+
+    ResponseView(isDark, height)
+  }
+}
+
+@Composable
+fun ResponseView(isDark: Boolean = false, height: Dp) {
+
+  val verticalScrollState = rememberScrollState()
+  val horizontalScrollState = rememberScrollState()
+  val rawResponse = "[{\n" +
+      "    \"name\": \"Adeel Solangi\",\n" +
+      "    \"language\": \"Sindhi\",\n" +
+      "    \"id\": \"V59OF92YF627HFY0\",\n" +
+      "    \"bio\": \"Donec lobortis eleifend condimentum. Cras dictum dolor lacinia lectus vehicula rutrum. Maecenas quis nisi nunc. Nam tristique feugiat est vitae mollis. Maecenas quis nisi nunc.\",\n" +
+      "    \"version\": 6.1\n" +
+      "  },\n" +
+      "  {\n" +
+      "    \"name\": \"Afzal Ghaffar\",\n" +
+      "    \"language\": \"Sindhi\",\n" +
+      "    \"id\": \"ENTOCR13RSCLZ6KU\",\n" +
+      "    \"bio\": \"Aliquam sollicitudin ante ligula, eget malesuada nibh efficitur et. Pellentesque massa sem, scelerisque sit amet odio id, cursus tempor urna. Etiam congue dignissim volutpat. Vestibulum pharetra libero et velit gravida euismod.\",\n" +
+      "    \"version\": 1.88\n" +
+      "  },\n" +
+      "  {\n" +
+      "    \"name\": \"Aamir Solangi\",\n" +
+      "    \"language\": \"Sindhi\",\n" +
+      "    \"id\": \"IAKPO3R4761JDRVG\",\n" +
+      "    \"bio\": \"Vestibulum pharetra libero et velit gravida euismod. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Fusce eu ultrices elit, vel posuere neque.\",\n" +
+      "    \"version\": 7.27\n" +
+      "  }" +
+      "]"
+
+  val formattedJson = remember(rawResponse, isDark) {
+    formatAndHighlightJson(rawResponse, isDark)
+  }
+
+  SelectionContainer {
+    Box(
+      modifier = Modifier
+        .height(height)
+        .fillMaxWidth()
+        .border(1.dp, MaterialTheme.colorScheme.outline, shape = MaterialTheme.shapes.medium)
+    ) {
       Box(
         modifier = Modifier
-          .heightIn(min = 200.dp, max = 400.dp)
           .fillMaxWidth()
-          .border(1.dp, MaterialTheme.colorScheme.outline, shape = MaterialTheme.shapes.medium)
+          .verticalScroll(verticalScrollState)
+          .horizontalScroll(horizontalScrollState)
+          .padding(12.dp)
+          .padding(end = 12.dp, bottom = 12.dp)
       ) {
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(verticalScrollState)
-            .horizontalScroll(horizontalScrollState)
-            .padding(12.dp)
-            .padding(end = 12.dp, bottom = 12.dp)
-        ) {
-          Text(
-            text = formattedJson,
-            style = TextStyle(
-              fontFamily = FontFamily.Monospace,
-              fontSize = 14.sp,
-              color = MaterialTheme.colorScheme.onSurface
-            )
+        Text(
+          text = formattedJson,
+          style = TextStyle(
+            fontFamily = FontFamily.Monospace,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface
           )
-        }
-
-        VerticalScrollbar(
-          adapter = rememberScrollbarAdapter(verticalScrollState),
-          modifier = Modifier
-            .align(Alignment.CenterEnd)
-            .fillMaxHeight()
-            .padding(end = 2.dp, top = 4.dp, bottom = 4.dp)
-        )
-
-        HorizontalScrollbar(
-          adapter = rememberScrollbarAdapter(horizontalScrollState),
-          modifier = Modifier
-            .align(Alignment.BottomStart)
-            .fillMaxWidth()
-            .padding(bottom = 2.dp, start = 4.dp, end = 4.dp)
         )
       }
+
+      VerticalScrollbar(
+        adapter = rememberScrollbarAdapter(verticalScrollState),
+        modifier = Modifier
+          .align(Alignment.CenterEnd)
+          .fillMaxHeight()
+          .padding(end = 2.dp, top = 4.dp, bottom = 4.dp)
+      )
+
+      HorizontalScrollbar(
+        adapter = rememberScrollbarAdapter(horizontalScrollState),
+        modifier = Modifier
+          .align(Alignment.BottomStart)
+          .fillMaxWidth()
+          .padding(bottom = 2.dp, start = 4.dp, end = 4.dp)
+      )
     }
   }
 }

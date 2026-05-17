@@ -10,5 +10,6 @@ data class SettingsUiState(
   val language: AppLanguage = AppLanguage.ENGLISH,
   val fontScale: Float = 1f,
   val loaded: Boolean = false,
-  val dividerPercentage: Float = 0f
+  val dividerPercentage: Float = 0f,
+  val requestDividerPercentage: Float = 0f
 )

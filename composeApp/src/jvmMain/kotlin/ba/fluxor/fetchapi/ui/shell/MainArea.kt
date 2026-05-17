@@ -90,7 +90,6 @@ fun MainArea(
           },
           onDragStopped = {
             settingsVm.setDividerPercentage(percentage)
-            println(percentage)
           }
         )
     ) {

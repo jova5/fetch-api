@@ -42,6 +42,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import java.awt.Dimension
 
 val LocalWindowWidth = compositionLocalOf { 0.dp }
+val LocalWindowHeight = compositionLocalOf { 0.dp }
 
 @Composable
 fun App(
@@ -115,8 +116,12 @@ fun App(
 
         BoxWithConstraints(Modifier.fillMaxSize()) {
           val windowWidth = maxWidth
+          val windowHeight = maxHeight
 
-          CompositionLocalProvider(LocalWindowWidth provides windowWidth) {
+          CompositionLocalProvider(
+            LocalWindowWidth provides windowWidth,
+            LocalWindowHeight provides windowHeight
+          ) {
             Column(Modifier.fillMaxSize()) {
 
               TitleBar(modifier = Modifier

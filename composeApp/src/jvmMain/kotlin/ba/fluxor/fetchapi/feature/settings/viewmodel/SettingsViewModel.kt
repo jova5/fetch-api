@@ -26,6 +26,7 @@ class SettingsViewModel(
       val language = repository.getLanguage()
       val fontScale = repository.getFontScale()
       val dividerPercentage = repository.getDividerPercentage()
+      val requestDividerPercentage = repository.getRequestDividerPercentage()
       _state.update {
         it.copy(
           themeMode = mode ?: ThemeMode.SYSTEM,
@@ -33,7 +34,8 @@ class SettingsViewModel(
           language = language ?: AppLanguage.ENGLISH,
           fontScale = fontScale ?: 1f,
           loaded = true,
-          dividerPercentage = dividerPercentage ?: 0f
+          dividerPercentage = dividerPercentage ?: 0f,
+          requestDividerPercentage = requestDividerPercentage ?: 0f
         )
       }
     }
@@ -62,5 +64,10 @@ class SettingsViewModel(
   fun setDividerPercentage(dividerPercentage: Float) {
     _state.update { it.copy(dividerPercentage = dividerPercentage) }
     viewModelScope.launch { repository.setDividerPercentage(dividerPercentage) }
+  }
+
+  fun setRequestDividerPercentage(dividerPercentage: Float) {
+    _state.update { it.copy(requestDividerPercentage = dividerPercentage) }
+    viewModelScope.launch { repository.setRequestDividerPercentage(dividerPercentage) }
   }
 }
