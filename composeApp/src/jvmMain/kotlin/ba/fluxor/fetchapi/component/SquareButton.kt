@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -23,19 +24,19 @@ fun SquareButton(
   modifier: Modifier = Modifier,
   borderRadius: Dp = 4.dp,
   enabled: Boolean = true,
+  containerColor: Color = MaterialTheme.colorScheme.primary,
+  contentColor: Color = MaterialTheme.colorScheme.onPrimary,
 ) {
   val shape = RoundedCornerShape(borderRadius)
 
-  // Boja pozadine zavisi od toga da li je dugme omogućeno
   val containerColor = if (enabled) {
-    MaterialTheme.colorScheme.primary
+    containerColor
   } else {
     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
   }
 
-  // Boja teksta se prilagođava pozadini (npr. bijela na plavoj)
   val contentColor = if (enabled) {
-    MaterialTheme.colorScheme.onPrimary
+    contentColor
   } else {
     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
   }
@@ -43,12 +44,12 @@ fun SquareButton(
   Box(
     modifier = Modifier
       .clip(shape)
-      .background(containerColor) // Puna boja umjesto Transparent
+      .background(containerColor)
       .clickable(
         enabled = enabled,
         onClick = onClick,
         interactionSource = remember { MutableInteractionSource() },
-        indication = ripple(bounded = true, color = contentColor) // Ripple u boji teksta
+        indication = ripple(bounded = true, color = contentColor)
       )
       .then(modifier),
     contentAlignment = Alignment.Center
