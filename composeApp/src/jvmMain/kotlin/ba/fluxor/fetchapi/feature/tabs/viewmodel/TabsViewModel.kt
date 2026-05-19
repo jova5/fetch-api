@@ -125,6 +125,7 @@ class TabsViewModel(
   fun openRequestTab(request: Request) {
     val id = request.id ?: return
     openTab(TabType.REQUEST, id) { tabId ->
+      val parent = subProjectViewModel.getById(request.subProjectId)
       val buffer = TabBuffer.Request(
         name = request.name,
         method = request.method,
@@ -135,6 +136,8 @@ class TabsViewModel(
         authType = request.authType,
         authConfig = request.authConfig,
         excludedAutoHeaders = request.excludedAutoHeaders,
+        parentAuthType = parent?.authType,
+        parentAuthConfig = parent?.authConfig,
       )
       TabItem(tabId, TabType.REQUEST, id, request.name, buffer, buffer)
     }
@@ -248,6 +251,8 @@ class TabsViewModel(
             authType = updated.authType,
             authConfig = updated.authConfig,
             excludedAutoHeaders = updated.excludedAutoHeaders,
+            parentAuthType = buffer.parentAuthType,
+            parentAuthConfig = buffer.parentAuthConfig,
           )
         }
       }
@@ -310,6 +315,7 @@ class TabsViewModel(
 
       TabType.REQUEST -> {
         val request = requestViewModel.getById(entityId) ?: return null
+        val parent = subProjectViewModel.getById(request.subProjectId)
         val buffer = TabBuffer.Request(
           name = request.name,
           method = request.method,
@@ -320,6 +326,8 @@ class TabsViewModel(
           authType = request.authType,
           authConfig = request.authConfig,
           excludedAutoHeaders = request.excludedAutoHeaders,
+          parentAuthType = parent?.authType,
+          parentAuthConfig = parent?.authConfig,
         )
         TabItem(tabId, type, entityId, request.name, buffer, buffer)
       }

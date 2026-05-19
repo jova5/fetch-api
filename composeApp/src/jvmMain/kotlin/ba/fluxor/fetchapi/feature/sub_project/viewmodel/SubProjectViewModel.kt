@@ -86,6 +86,10 @@ class SubProjectViewModel(
     return subProjectRepository.getAllByProjectId(projectId)
   }
 
+  suspend fun getById(id: Long): SubProject? {
+    return subProjectRepository.getById(id)
+  }
+
   suspend fun getAllVariablesBySubProjectId(subProjectId: Long): List<SubProjectVariable> {
     return subProjectVariableRepository.getAllBySubProjectId(subProjectId)
   }

@@ -8,4 +8,5 @@ data class KeyValueEntry(
   val value: String = "",
   val description: String = "",
   val enabled: Boolean = true,
+  val readOnly: Boolean = false,
 )

@@ -19,6 +19,5 @@ fun ParamsSection(
     onChange = onChange,
     modifier = Modifier.fillMaxWidth(),
     keyPlaceholder = stringResource(Res.string.params),
-    showHideButton = false
   )
 }

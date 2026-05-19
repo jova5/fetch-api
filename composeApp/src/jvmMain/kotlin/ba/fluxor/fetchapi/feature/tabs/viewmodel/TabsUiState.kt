@@ -31,6 +31,8 @@ sealed interface TabBuffer {
     val authType: String = "INHERIT",
     val authConfig: String? = null,
     val excludedAutoHeaders: Set<String> = emptySet(),
+    val parentAuthType: String? = null,
+    val parentAuthConfig: String? = null,
   ) : TabBuffer
 }
 
