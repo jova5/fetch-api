@@ -77,6 +77,7 @@ fun BodySection(
         rows = body.fields,
         onChange = { onChange(BodyConfig.UrlEncoded(it)) },
         modifier = Modifier.fillMaxWidth(),
+        showHideButton = false
       )
       is BodyConfig.Binary -> BinaryEditor(body, onChange)
     }
