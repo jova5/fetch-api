@@ -59,7 +59,7 @@ fun RequestAuthorizationSection(
     onChange(type, config)
   }
 
-  Column(modifier = Modifier.fillMaxWidth()) {
+  Column(modifier = Modifier.widthIn(max = 800.dp)) {
     RequestAuthTypeDropdown(
       selected = effectiveType,
       onSelect = { newType ->

@@ -5,8 +5,13 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -77,10 +82,17 @@ fun MainArea(
         }
       }
     }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isDragging by interactionSource.collectIsDraggedAsState()
+
+    val borderColor = if (isHovered || isDragging) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.outlineVariant
 
     Box(
       modifier = Modifier
         .fillMaxHeight()
+        .hoverable(interactionSource)
         .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
         .draggable(
           state = dragState,
@@ -97,15 +109,8 @@ fun MainArea(
         Column(
           modifier = Modifier
             .width(4.dp)
-            .fillMaxHeight()
-            .background(color = MaterialTheme.colorScheme.surfaceContainerLow))
-        {}
-        Column(
-          modifier = Modifier
-            .width(2.dp)
-            .fillMaxHeight()
-            .background(color = MaterialTheme.colorScheme.outlineVariant))
-        {}
+            .fillMaxHeight()) {}
+        VerticalDivider(thickness = 2.dp, color = borderColor)
         Column(
           modifier = Modifier
             .width(4.dp)

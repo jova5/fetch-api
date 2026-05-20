@@ -4,14 +4,21 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
@@ -204,10 +211,14 @@ fun RequestTabEditor(
         }
       }
     }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isDragging by interactionSource.collectIsDraggedAsState()
 
     Box(
       modifier = Modifier
         .fillMaxWidth()
+        .hoverable(interactionSource)
         .pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR)))
         .draggable(
           state = dragState,
@@ -220,19 +231,15 @@ fun RequestTabEditor(
           }
         )
     ) {
-      Column(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(4.dp)
-      ) { }
+      HorizontalDivider(thickness = 4.dp, color = Color.Transparent)
     }
 
-    ResponseView(isDark, height)
+    ResponseView(isDark, height, isHovered = isHovered || isDragging)
   }
 }
 
 @Composable
-fun ResponseView(isDark: Boolean = false, height: Dp) {
+fun ResponseView(isDark: Boolean = false, height: Dp, isHovered: Boolean = false) {
 
   val verticalScrollState = rememberScrollState()
   val horizontalScrollState = rememberScrollState()
@@ -263,12 +270,22 @@ fun ResponseView(isDark: Boolean = false, height: Dp) {
     formatAndHighlightJson(rawResponse, isDark)
   }
 
+  val borderColor = if (isHovered) MaterialTheme.colorScheme.primary else Color.Transparent
+
   SelectionContainer {
     Box(
       modifier = Modifier
         .height(height)
         .fillMaxWidth()
-        .border(1.dp, MaterialTheme.colorScheme.outline, shape = MaterialTheme.shapes.medium)
+        .border(1.dp, MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.medium)
+        .drawBehind {
+          drawLine(
+            color = borderColor,
+            start = Offset(3f, 0f),
+            end = Offset(size.width - 3f, 0f),
+            strokeWidth = 2.dp.toPx(),
+          )
+        }
     ) {
       Box(
         modifier = Modifier
