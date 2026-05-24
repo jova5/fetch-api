@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ba.fluxor.fetchapi.component.SimpleDropdown
 import ba.fluxor.fetchapi.component.SquareOutlineButton
+import ba.fluxor.fetchapi.component.highlightJson
 import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.RawLanguage
 import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.format.RawFormatter
@@ -106,6 +107,7 @@ fun RawBodyEditor(
       parser = parser,
       theme = theme,
       codeLang = codeLang,
+      isDark = isDark,
       highlightEnabled = highlightEnabled,
       formatter = formatter,
       errorMessage = errorMessage,
@@ -153,6 +155,7 @@ private fun HighlightedEditor(
   parser: PrettifyParser,
   theme: CodeTheme,
   codeLang: CodeLang,
+  isDark: Boolean,
   highlightEnabled: Boolean,
   formatter: RawFormatter?,
   errorMessage: String?,
@@ -161,22 +164,25 @@ private fun HighlightedEditor(
   var textFieldValue by remember {
     mutableStateOf(
       TextFieldValue(
-        annotatedString = renderHighlight(content, parser, theme, codeLang, highlightEnabled),
+        annotatedString = renderHighlight(content, parser, theme, codeLang, isDark,
+          highlightEnabled),
         selection = TextRange(content.length),
       )
     )
   }
 
-  LaunchedEffect(content, codeLang, theme) {
+  LaunchedEffect(content, codeLang, theme, isDark) {
 
     if (textFieldValue.text != content) {
       textFieldValue = TextFieldValue(
-        annotatedString = renderHighlight(content, parser, theme, codeLang, highlightEnabled),
+        annotatedString = renderHighlight(content, parser, theme, codeLang, isDark,
+          highlightEnabled),
         selection = TextRange(content.length),
       )
     } else {
       textFieldValue = textFieldValue.copy(
-        annotatedString = renderHighlight(content, parser, theme, codeLang, highlightEnabled),
+        annotatedString = renderHighlight(content, parser, theme, codeLang, isDark,
+          highlightEnabled),
       )
     }
   }
@@ -224,7 +230,8 @@ private fun HighlightedEditor(
           }
 
           textFieldValue = TextFieldValue(
-            annotatedString = renderHighlight(finalText, parser, theme, codeLang, highlightEnabled),
+            annotatedString = renderHighlight(finalText, parser, theme, codeLang, isDark,
+              highlightEnabled),
             selection = newSelection,
           )
 
@@ -289,11 +296,12 @@ private fun renderHighlight(
   parser: PrettifyParser,
   theme: CodeTheme,
   lang: CodeLang,
+  isDark: Boolean,
   highlightEnabled: Boolean,
-): AnnotatedString = if (!highlightEnabled || code.isEmpty()) {
-  AnnotatedString(code)
-} else {
-  runCatching { parseCodeAsAnnotatedString(parser, theme, lang, code) }
+): AnnotatedString = when {
+  !highlightEnabled || code.isEmpty() -> AnnotatedString(code)
+  lang == CodeLang.JSON -> highlightJson(code, isDark)
+  else -> runCatching { parseCodeAsAnnotatedString(parser, theme, lang, code) }
     .getOrDefault(AnnotatedString(code))
 }
 
