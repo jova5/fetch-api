@@ -190,11 +190,13 @@ private fun HighlightedEditor(
   val borderColor = if (errorMessage != null) {
     MaterialTheme.colorScheme.error
   } else {
-    MaterialTheme.colorScheme.outlineVariant
+    MaterialTheme.colorScheme.primary
   }
   val borderWidth = if (errorMessage != null) 2.dp else 1.dp
   val shape = RoundedCornerShape(4.dp)
   val plainColor = MaterialTheme.colorScheme.onSurface
+
+  val scrollState = rememberScrollState()
 
   Box(modifier = modifier) {
     Box(
@@ -237,7 +239,9 @@ private fun HighlightedEditor(
 
           if (finalText != previousText) onContentChange(finalText)
         },
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+          .fillMaxWidth()
+          .verticalScroll(scrollState),
         textStyle = TextStyle(
           fontFamily = FontFamily.Monospace,
           fontSize = 14.sp,
@@ -246,6 +250,19 @@ private fun HighlightedEditor(
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
       )
     }
+
+    VerticalScrollbar(
+      modifier = Modifier
+        .width(4.dp)
+        .align(Alignment.CenterEnd)
+        .fillMaxHeight()
+        .padding(vertical = 4.dp),
+      adapter = rememberScrollbarAdapter(scrollState),
+      style = LocalScrollbarStyle.current.copy(
+        unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+        hoverColor = MaterialTheme.colorScheme.primary,
+      ),
+    )
 
     if (errorMessage != null) {
       ErrorBadge(

@@ -308,17 +308,27 @@ fun ResponseView(isDark: Boolean = false, height: Dp, isHovered: Boolean = false
       VerticalScrollbar(
         adapter = rememberScrollbarAdapter(verticalScrollState),
         modifier = Modifier
+          .width(4.dp)
           .align(Alignment.CenterEnd)
           .fillMaxHeight()
-          .padding(end = 2.dp, top = 4.dp, bottom = 4.dp)
+          .padding(vertical = 4.dp),
+        style = LocalScrollbarStyle.current.copy(
+          unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+          hoverColor = MaterialTheme.colorScheme.primary,
+        ),
       )
 
       HorizontalScrollbar(
         adapter = rememberScrollbarAdapter(horizontalScrollState),
         modifier = Modifier
+          .height(4.dp)
           .align(Alignment.BottomStart)
           .fillMaxWidth()
-          .padding(bottom = 2.dp, start = 4.dp, end = 4.dp)
+          .padding(horizontal = 4.dp),
+        style = LocalScrollbarStyle.current.copy(
+          unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+          hoverColor = MaterialTheme.colorScheme.primary,
+        ),
       )
     }
   }

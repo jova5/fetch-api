@@ -1,5 +1,6 @@
 package ba.fluxor.fetchapi.feature.tabs.ui.request.raw.format
 
+import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import java.io.StringReader
 import java.io.StringWriter
@@ -24,11 +25,14 @@ object XmlFormatter : RawFormatter {
   }
 
   override fun format(text: String): Result<String> {
+
     if (text.isBlank()) return Result.success(text)
+
     return runCatching {
       val builder = docBuilderFactory.newDocumentBuilder()
       val document = builder.parse(InputSource(StringReader(text)))
       document.normalize()
+      stripWhitespaceNodes(document.documentElement)
 
       val transformer = transformerFactory.newTransformer().apply {
         setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes")
@@ -43,10 +47,27 @@ object XmlFormatter : RawFormatter {
   }
 
   override fun validate(text: String): Result<Unit> {
+
     if (text.isBlank()) return Result.success(Unit)
+
     return runCatching {
       val builder = docBuilderFactory.newDocumentBuilder()
       builder.parse(InputSource(StringReader(text)))
     }.map { }
+  }
+
+  private fun stripWhitespaceNodes(node: Node) {
+
+    val children = node.childNodes
+    var i = children.length - 1
+    while (i >= 0) {
+      val child = children.item(i)
+      if (child.nodeType == Node.TEXT_NODE && child.textContent.isBlank()) {
+        node.removeChild(child)
+      } else if (child.hasChildNodes()) {
+        stripWhitespaceNodes(child)
+      }
+      i--
+    }
   }
 }
