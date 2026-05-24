@@ -52,6 +52,8 @@ kotlin {
       implementation(libs.jna)
       implementation(libs.jna.platform)
       implementation(libs.jewel.int.ui.decorated.window)
+      implementation(libs.codeeditor)
+      implementation(libs.jsoup)
     }
   }
 }

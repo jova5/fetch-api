@@ -139,4 +139,6 @@
   <string name="body_none_description">This request does not have a body.</string>
   <string name="is_file">File</string>
   <string name="show_auto_generated">Show auto-generated</string>
+  <string name="body_raw_beautify">Beautify</string>
+  <string name="body_raw_invalid_content">Invalid %1$s</string>
 </resources>

@@ -6,20 +6,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import ba.fluxor.fetchapi.component.*
+import ba.fluxor.fetchapi.component.CompactInput
+import ba.fluxor.fetchapi.component.KeyValueDescTable
+import ba.fluxor.fetchapi.component.SquareIconButton
+import ba.fluxor.fetchapi.component.SquareOutlineButton
 import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.FormDataEntry
-import ba.fluxor.fetchapi.feature.request.data.RawLanguage
+import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.RawBodyEditor
 import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -74,7 +73,7 @@ fun BodySection(
 
     when (body) {
       BodyConfig.None -> NoneEditor()
-      is BodyConfig.Raw -> RawEditor(body, onChange)
+      is BodyConfig.Raw -> RawBodyEditor(body, onChange)
       is BodyConfig.FormData -> FormDataEditor(body, onChange)
       is BodyConfig.UrlEncoded -> KeyValueDescTable(
         rows = body.fields,
@@ -102,37 +101,6 @@ private fun NoneEditor() {
     style = MaterialTheme.typography.bodyMedium,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
   )
-}
-
-@Composable
-private fun RawEditor(body: BodyConfig.Raw, onChange: (BodyConfig) -> Unit) {
-  Column(
-    modifier = Modifier.fillMaxSize(),
-  ) {
-    SimpleDropdown(
-      options = RawLanguage.entries,
-      selected = body.language,
-      onSelect = { onChange(body.copy(language = it)) },
-      width = 200.dp,
-      optionLabel = { it.localizedLabel() },
-    )
-    Spacer(Modifier.height(8.dp))
-    OutlinedTextField(
-      value = body.content,
-      onValueChange = { onChange(body.copy(content = it)) },
-      modifier = Modifier.fillMaxSize(),
-      textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 14.sp),
-    )
-  }
-}
-
-@Composable
-private fun RawLanguage.localizedLabel(): String = when (this) {
-  RawLanguage.JSON -> stringResource(Res.string.lang_json)
-  RawLanguage.XML -> stringResource(Res.string.lang_xml)
-  RawLanguage.TEXT -> stringResource(Res.string.lang_text)
-  RawLanguage.HTML -> stringResource(Res.string.lang_html)
-  RawLanguage.JAVASCRIPT -> stringResource(Res.string.lang_javascript)
 }
 
 @Composable

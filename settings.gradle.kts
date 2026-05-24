@@ -25,6 +25,12 @@ dependencyResolutionManagement {
       }
     }
     mavenCentral()
+    maven {
+      url = uri("https://jitpack.io")
+      content {
+        includeGroupAndSubgroups("com.github.Qawaz")
+      }
+    }
   }
 }
 

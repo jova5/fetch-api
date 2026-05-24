@@ -139,4 +139,6 @@
   <string name="body_none_description">Ovaj zahtev nema telo.</string>
   <string name="is_file">Fajl</string>
   <string name="show_auto_generated">Prikaži auto-generisana</string>
+  <string name="body_raw_beautify">Formatiraj</string>
+  <string name="body_raw_invalid_content">Neispravan %1$s</string>
 </resources>
