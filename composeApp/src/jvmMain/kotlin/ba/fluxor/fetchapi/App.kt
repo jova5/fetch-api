@@ -103,10 +103,6 @@ fun App(
     CompositionLocalProvider(
       LocalDecoratedWindowStyle provides windowStyle,
       LocalTitleBarStyle provides titleBarStyle,
-      LocalDensity provides Density(
-        density = LocalDensity.current.density,
-        fontScale = state.fontScale
-      )
     ) {
       DecoratedWindow(
         onCloseRequest = onCloseRequest
@@ -120,7 +116,11 @@ fun App(
 
           CompositionLocalProvider(
             LocalWindowWidth provides windowWidth,
-            LocalWindowHeight provides windowHeight
+            LocalWindowHeight provides windowHeight,
+            LocalDensity provides Density(
+              density = LocalDensity.current.density,
+              fontScale = state.fontScale
+            )
           ) {
             Column(Modifier.fillMaxSize()) {
 
