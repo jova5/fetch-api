@@ -19,6 +19,8 @@ import ba.fluxor.fetchapi.component.SquareOutlineButton
 import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.FormDataEntry
 import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.RawBodyEditor
+import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.RawToolbar
+import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.format.formatter
 import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -54,9 +56,12 @@ fun BodySection(
 ) {
   Column(modifier = Modifier.fillMaxWidth()) {
 
+    val topRowScroll = rememberScrollState()
+
     Row(
       verticalAlignment = Alignment.CenterVertically,
       modifier = Modifier.fillMaxWidth()
+        .horizontalScroll(topRowScroll),
     ) {
       BodyKind.entries.forEach { kind ->
         SquareOutlineButton(
@@ -68,7 +73,41 @@ fun BodySection(
           borderWidth = if (body.kind() == kind) 2.dp else 0.dp,
         )
       }
+      if (body is BodyConfig.Raw) {
+        Spacer(Modifier.width(8.dp))
+        RawToolbar(
+          language = body.language,
+          onLanguageChange = { newLang ->
+            val formatted = newLang.formatter()
+              ?.format(body.content)
+              ?.getOrNull()
+              ?: body.content
+            onChange(body.copy(language = newLang, content = formatted))
+          },
+          beautifyEnabled = body.language.formatter() != null && body.content.isNotBlank(),
+          onBeautify = {
+            body.language.formatter()
+              ?.format(body.content)
+              ?.onSuccess { formatted ->
+                if (formatted != body.content) onChange(body.copy(content = formatted))
+              }
+          },
+        )
+      }
     }
+
+    HorizontalScrollbar(
+      adapter = rememberScrollbarAdapter(topRowScroll),
+      modifier = Modifier
+        .fillMaxWidth()
+        .height(2.dp)
+        .padding(horizontal = 4.dp),
+      style = LocalScrollbarStyle.current.copy(
+        unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+        hoverColor = MaterialTheme.colorScheme.primary,
+      ),
+    )
+
     Spacer(Modifier.height(12.dp))
 
     when (body) {

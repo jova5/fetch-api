@@ -22,8 +22,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ba.fluxor.fetchapi.component.SimpleDropdown
-import ba.fluxor.fetchapi.component.SquareOutlineButton
 import ba.fluxor.fetchapi.component.highlightJson
 import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.RawLanguage
@@ -83,24 +81,6 @@ fun RawBodyEditor(
   }
 
   Column(modifier = modifier.fillMaxSize()) {
-    RawToolbar(
-      language = body.language,
-      onLanguageChange = { newLang ->
-        val formatted = newLang.formatter()
-          ?.format(body.content)
-          ?.getOrNull()
-          ?: body.content
-        onChange(body.copy(language = newLang, content = formatted))
-      },
-      beautifyEnabled = formatter != null && body.content.isNotBlank(),
-      onBeautify = {
-        formatter?.format(body.content)
-          ?.onSuccess { formatted ->
-            if (formatted != body.content) onChange(body.copy(content = formatted))
-          }
-      },
-    )
-    Spacer(Modifier.height(8.dp))
     HighlightedEditor(
       content = body.content,
       onContentChange = { next -> onChange(body.copy(content = next)) },
@@ -112,37 +92,6 @@ fun RawBodyEditor(
       formatter = formatter,
       errorMessage = errorMessage,
       modifier = Modifier.fillMaxSize(),
-    )
-  }
-}
-
-@Composable
-private fun RawToolbar(
-  language: RawLanguage,
-  onLanguageChange: (RawLanguage) -> Unit,
-  beautifyEnabled: Boolean,
-  onBeautify: () -> Unit,
-) {
-  Row(
-    modifier = Modifier.fillMaxWidth(),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
-  ) {
-    SimpleDropdown(
-      options = RawLanguage.entries,
-      selected = language,
-      onSelect = onLanguageChange,
-      width = 200.dp,
-      optionLabel = { it.localizedShortLabel() },
-    )
-    SquareOutlineButton(
-      text = stringResource(Res.string.body_raw_beautify),
-      onClick = onBeautify,
-      enabled = beautifyEnabled,
-      borderWidth = 1.dp,
-      modifier = Modifier
-        .height(32.dp)
-        .width(110.dp),
     )
   }
 }
@@ -205,7 +154,7 @@ private fun HighlightedEditor(
         .clip(shape)
         .background(MaterialTheme.colorScheme.surface)
         .border(borderWidth, borderColor, shape)
-        .padding(8.dp),
+        .padding(horizontal = 8.dp),
     ) {
       BasicTextField(
         value = textFieldValue,
@@ -241,7 +190,8 @@ private fun HighlightedEditor(
         },
         modifier = Modifier
           .fillMaxWidth()
-          .verticalScroll(scrollState),
+          .verticalScroll(scrollState)
+          .padding(vertical = 8.dp),
         textStyle = TextStyle(
           fontFamily = FontFamily.Monospace,
           fontSize = 14.sp,
@@ -331,7 +281,7 @@ private fun RawLanguage.toCodeLang(): CodeLang = when (this) {
 }
 
 @Composable
-private fun RawLanguage.localizedShortLabel(): String = when (this) {
+fun RawLanguage.localizedShortLabel(): String = when (this) {
   RawLanguage.JSON -> stringResource(Res.string.lang_json)
   RawLanguage.XML -> stringResource(Res.string.lang_xml)
   RawLanguage.TEXT -> stringResource(Res.string.lang_text)

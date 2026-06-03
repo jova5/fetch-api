@@ -30,7 +30,6 @@ fun <T> SimpleDropdown(
   val density = LocalDensity.current
 
   Row(
-    modifier = Modifier.padding(vertical = 4.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.SpaceBetween,
   ) {
