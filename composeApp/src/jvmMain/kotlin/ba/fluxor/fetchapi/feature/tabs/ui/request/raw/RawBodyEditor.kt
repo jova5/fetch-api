@@ -12,16 +12,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.max
 import ba.fluxor.fetchapi.component.highlightJson
 import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.RawLanguage
@@ -38,6 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val PASTE_THRESHOLD = 50
 private const val HIGHLIGHT_MAX_CHARS = 500_000
@@ -69,7 +78,7 @@ fun RawBodyEditor(
       return@LaunchedEffect
     }
 
-    delay(VALIDATION_DEBOUNCE_MS)
+    delay(VALIDATION_DEBOUNCE_MS.milliseconds)
 
     errorMessage = withContext(Dispatchers.Default) {
       formatter.validate(body.content)
@@ -146,59 +155,152 @@ private fun HighlightedEditor(
   val plainColor = MaterialTheme.colorScheme.onSurface
 
   val scrollState = rememberScrollState()
+  val density = LocalDensity.current
+  val textMeasurer = rememberTextMeasurer()
+
+  // Shared text metrics: the gutter MUST use the same style as the field so line
+  // heights line up exactly.
+  val vPad = 8.dp
+  val editorStyle = TextStyle(
+    fontFamily = FontFamily.Monospace,
+    fontSize = 14.sp,
+    color = plainColor,
+  )
+  val gutterStyle = editorStyle.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+  val bandColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+  val dividerColor = MaterialTheme.colorScheme.outlineVariant
+
+  // Layout result from the text field, shared by the gutter and the current-line band.
+  var textLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
+  var isFocused by remember { mutableStateOf(false) }
+
+  // Start offset of every logical line; index k -> line number k+1.
+  val lineStarts = remember(content) { lineStartOffsets(content) }
+  val contentLength = content.length
+  val cursorOffset = textFieldValue.selection.start
+
+  // Uniform single-line metrics, used for gutter width and as a fallback before the
+  // first layout pass.
+  val sampleLine = remember(textMeasurer, editorStyle) {
+    textMeasurer.measure(AnnotatedString("0"), editorStyle)
+  }
+  val lineHeightPx = sampleLine.size.height.toFloat()
+  val digitCount = max(2, lineStarts.size.toString().length)
+  val gutterWidth = with(density) { (digitCount * sampleLine.size.width).toDp() } + 16.dp
 
   Box(modifier = modifier) {
-    Box(
+    BoxWithConstraints(
       modifier = Modifier
         .fillMaxSize()
         .clip(shape)
         .background(MaterialTheme.colorScheme.surface)
-        .border(borderWidth, borderColor, shape)
-        .padding(horizontal = 8.dp),
+        .border(borderWidth, borderColor, shape),
     ) {
-      BasicTextField(
-        value = textFieldValue,
-        onValueChange = { newValue ->
+      val viewportHeight = maxHeight
 
-          val previousText = textFieldValue.text
-          val delta = newValue.text.length - previousText.length
-          val looksLikePaste =
-            delta > PASTE_THRESHOLD && newValue.text.contains('\n') && formatter != null
+      Row(modifier = Modifier.fillMaxSize()) {
+        // Line-number gutter. Drawn at viewport size and offset by the shared scroll,
+        // so only visible numbers are measured/drawn (cheap for large payloads).
+        Canvas(
+          modifier = Modifier
+            .width(gutterWidth)
+            .fillMaxHeight(),
+        ) {
+          val layout = textLayout
+          val padTop = vPad.toPx()
+          val scroll = scrollState.value.toFloat()
+          val rightPad = 8.dp.toPx()
+          for (k in lineStarts.indices) {
+            val top = if (layout != null) {
+              val visual = layout.getLineForOffset(lineStarts[k].coerceIn(0, contentLength))
+              padTop + layout.getLineTop(visual) - scroll
+            } else {
+              padTop + k * lineHeightPx - scroll
+            }
+            if (top > size.height || top + lineHeightPx < 0f) continue
+            val measured = textMeasurer.measure(AnnotatedString((k + 1).toString()), gutterStyle)
+            drawText(
+              textLayoutResult = measured,
+              topLeft = Offset(size.width - measured.size.width - rightPad, top),
+            )
+          }
+        }
 
-          val (finalText, formattedFromPaste) = if (looksLikePaste) {
-            val formatted = formatter.format(newValue.text)
-              .getOrNull()
-            if (formatted != null && formatted != newValue.text) formatted to true
-            else newValue.text to false
-          } else {
-            newValue.text to false
+        Box(
+          modifier = Modifier
+            .width(1.dp)
+            .fillMaxHeight()
+            .background(dividerColor),
+        )
+
+        Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+          // Current-line band, drawn behind the text and offset by the shared scroll.
+          Canvas(modifier = Modifier.matchParentSize()) {
+            val layout = textLayout
+            if (!isFocused || layout == null) return@Canvas
+            val cursor = cursorOffset.coerceIn(0, contentLength)
+            val k = lineIndexForOffset(lineStarts, cursor)
+            val lineStart = lineStarts[k]
+            val lineEnd = if (k + 1 < lineStarts.size) {
+              (lineStarts[k + 1] - 1).coerceAtLeast(lineStart)
+            } else {
+              contentLength
+            }
+            val startVisual = layout.getLineForOffset(lineStart.coerceIn(0, contentLength))
+            val endVisual = layout.getLineForOffset(lineEnd.coerceIn(0, contentLength))
+            val top = vPad.toPx() + layout.getLineTop(startVisual) - scrollState.value
+            val bottom = vPad.toPx() + layout.getLineBottom(endVisual) - scrollState.value
+            drawRect(
+              color = bandColor,
+              topLeft = Offset(0f, top),
+              size = Size(size.width, bottom - top),
+            )
           }
 
-          val newSelection = if (formattedFromPaste) {
-            TextRange(finalText.length)
-          } else {
-            newValue.selection
-          }
+          BasicTextField(
+            value = textFieldValue,
+            onValueChange = { newValue ->
 
-          textFieldValue = TextFieldValue(
-            annotatedString = renderHighlight(finalText, parser, theme, codeLang, isDark,
-              highlightEnabled),
-            selection = newSelection,
+              val previousText = textFieldValue.text
+              val delta = newValue.text.length - previousText.length
+              val looksLikePaste =
+                delta > PASTE_THRESHOLD && newValue.text.contains('\n') && formatter != null
+
+              val (finalText, formattedFromPaste) = if (looksLikePaste) {
+                val formatted = formatter.format(newValue.text)
+                  .getOrNull()
+                if (formatted != null && formatted != newValue.text) formatted to true
+                else newValue.text to false
+              } else {
+                newValue.text to false
+              }
+
+              val newSelection = if (formattedFromPaste) {
+                TextRange(finalText.length)
+              } else {
+                newValue.selection
+              }
+
+              textFieldValue = TextFieldValue(
+                annotatedString = renderHighlight(finalText, parser, theme, codeLang, isDark,
+                  highlightEnabled),
+                selection = newSelection,
+              )
+
+              if (finalText != previousText) onContentChange(finalText)
+            },
+            onTextLayout = { textLayout = it },
+            modifier = Modifier
+              .fillMaxWidth()
+              .verticalScroll(scrollState)
+              .defaultMinSize(minHeight = viewportHeight) // make the whole area clickable
+              .onFocusChanged { isFocused = it.isFocused }
+              .padding(start = 4.dp, top = vPad, bottom = vPad, end = 8.dp),
+            textStyle = editorStyle,
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
           )
-
-          if (finalText != previousText) onContentChange(finalText)
-        },
-        modifier = Modifier
-          .fillMaxWidth()
-          .verticalScroll(scrollState)
-          .padding(vertical = 8.dp),
-        textStyle = TextStyle(
-          fontFamily = FontFamily.Monospace,
-          fontSize = 14.sp,
-          color = plainColor,
-        ),
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-      )
+        }
+      }
     }
 
     VerticalScrollbar(
@@ -223,6 +325,21 @@ private fun HighlightedEditor(
       )
     }
   }
+}
+
+/** Character offset where each logical line starts; size == logical line count. */
+private fun lineStartOffsets(text: String): List<Int> = buildList {
+  add(0)
+  text.forEachIndexed { i, c -> if (c == '\n') add(i + 1) }
+}
+
+/** Index of the logical line containing [offset], given precomputed line start offsets. */
+private fun lineIndexForOffset(starts: List<Int>, offset: Int): Int {
+  var idx = 0
+  for (i in starts.indices) {
+    if (starts[i] <= offset) idx = i else break
+  }
+  return idx
 }
 
 @OptIn(ExperimentalFoundationApi::class)
