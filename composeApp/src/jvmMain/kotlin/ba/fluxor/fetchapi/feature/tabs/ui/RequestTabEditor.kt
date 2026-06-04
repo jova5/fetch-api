@@ -174,7 +174,10 @@ fun RequestTabEditor(
 
         RequestTab.BODY -> BodySection(
           body = buffer.body,
-          onChange = { newBody -> onChange(buffer.copy(body = newBody)) },
+          drafts = buffer.bodyDrafts,
+          onChange = { newBody, newDrafts ->
+            onChange(buffer.copy(body = newBody, bodyDrafts = newDrafts))
+          },
         )
       }
     }

@@ -28,12 +28,32 @@ sealed interface TabBuffer {
     val params: List<KeyValueEntry> = emptyList(),
     val headers: List<KeyValueEntry> = emptyList(),
     val body: BodyConfig = BodyConfig.None,
+    val bodyDrafts: BodyDrafts = BodyDrafts(),
     val authType: String = "INHERIT",
     val authConfig: String? = null,
     val excludedAutoHeaders: Set<String> = emptySet(),
     val parentAuthType: String? = null,
     val parentAuthConfig: String? = null,
   ) : TabBuffer
+}
+
+data class BodyDrafts(
+  val raw: BodyConfig.Raw = BodyConfig.Raw(),
+  val formData: BodyConfig.FormData = BodyConfig.FormData(),
+  val urlEncoded: BodyConfig.UrlEncoded = BodyConfig.UrlEncoded(),
+  val binary: BodyConfig.Binary = BodyConfig.Binary(),
+) {
+  fun stash(body: BodyConfig): BodyDrafts = when (body) {
+    is BodyConfig.Raw -> copy(raw = body)
+    is BodyConfig.FormData -> copy(formData = body)
+    is BodyConfig.UrlEncoded -> copy(urlEncoded = body)
+    is BodyConfig.Binary -> copy(binary = body)
+    BodyConfig.None -> this
+  }
+
+  companion object {
+    fun from(body: BodyConfig): BodyDrafts = BodyDrafts().stash(body)
+  }
 }
 
 data class TabItem(
@@ -44,8 +64,11 @@ data class TabItem(
   val buffer: TabBuffer,
   val original: TabBuffer,
 ) {
-  val isDirty: Boolean get() = buffer != original
+  val isDirty: Boolean get() = buffer.withoutDrafts() != original.withoutDrafts()
 }
+
+private fun TabBuffer.withoutDrafts(): TabBuffer =
+  if (this is TabBuffer.Request) copy(bodyDrafts = BodyDrafts()) else this
 
 data class TabsUiState(
   val projectId: Long? = null,

@@ -19,6 +19,7 @@ import ba.fluxor.fetchapi.component.SquareOutlineButton
 import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.FormDataEntry
 import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.RawBodyEditor
+import ba.fluxor.fetchapi.feature.tabs.viewmodel.BodyDrafts
 import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.RawToolbar
 import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.format.formatter
 import fetchapi.composeapp.generated.resources.*
@@ -52,8 +53,11 @@ private fun BodyKind.label(): String = when (this) {
 @Composable
 fun BodySection(
   body: BodyConfig,
-  onChange: (BodyConfig) -> Unit,
+  drafts: BodyDrafts,
+  onChange: (BodyConfig, BodyDrafts) -> Unit,
 ) {
+  val onBodyChange: (BodyConfig) -> Unit = { onChange(it, drafts) }
+
   Column(modifier = Modifier.fillMaxWidth()) {
 
     val topRowScroll = rememberScrollState()
@@ -66,7 +70,10 @@ fun BodySection(
       BodyKind.entries.forEach { kind ->
         SquareOutlineButton(
           text = kind.label(),
-          onClick = { onChange(switchTo(kind, body)) },
+          onClick = {
+            val stashed = drafts.stash(body)
+            onChange(restore(kind, stashed), stashed)
+          },
           modifier = Modifier.padding(end = 8.dp)
             .height(32.dp)
             .padding(horizontal = 12.dp),
@@ -82,14 +89,14 @@ fun BodySection(
               ?.format(body.content)
               ?.getOrNull()
               ?: body.content
-            onChange(body.copy(language = newLang, content = formatted))
+            onBodyChange(body.copy(language = newLang, content = formatted))
           },
           beautifyEnabled = body.language.formatter() != null && body.content.isNotBlank(),
           onBeautify = {
             body.language.formatter()
               ?.format(body.content)
               ?.onSuccess { formatted ->
-                if (formatted != body.content) onChange(body.copy(content = formatted))
+                if (formatted != body.content) onBodyChange(body.copy(content = formatted))
               }
           },
         )
@@ -112,25 +119,25 @@ fun BodySection(
 
     when (body) {
       BodyConfig.None -> NoneEditor()
-      is BodyConfig.Raw -> RawBodyEditor(body, onChange)
-      is BodyConfig.FormData -> FormDataEditor(body, onChange)
+      is BodyConfig.Raw -> RawBodyEditor(body, onBodyChange)
+      is BodyConfig.FormData -> FormDataEditor(body, onBodyChange)
       is BodyConfig.UrlEncoded -> KeyValueDescTable(
         rows = body.fields,
-        onChange = { onChange(BodyConfig.UrlEncoded(it)) },
+        onChange = { onBodyChange(BodyConfig.UrlEncoded(it)) },
         modifier = Modifier.fillMaxWidth(),
       )
 
-      is BodyConfig.Binary -> BinaryEditor(body, onChange)
+      is BodyConfig.Binary -> BinaryEditor(body, onBodyChange)
     }
   }
 }
 
-private fun switchTo(target: BodyKind, current: BodyConfig): BodyConfig = when (target) {
+private fun restore(kind: BodyKind, drafts: BodyDrafts): BodyConfig = when (kind) {
   BodyKind.NONE -> BodyConfig.None
-  BodyKind.RAW -> if (current is BodyConfig.Raw) current else BodyConfig.Raw()
-  BodyKind.FORM_DATA -> if (current is BodyConfig.FormData) current else BodyConfig.FormData()
-  BodyKind.URL_ENCODED -> if (current is BodyConfig.UrlEncoded) current else BodyConfig.UrlEncoded()
-  BodyKind.BINARY -> if (current is BodyConfig.Binary) current else BodyConfig.Binary()
+  BodyKind.RAW -> drafts.raw
+  BodyKind.FORM_DATA -> drafts.formData
+  BodyKind.URL_ENCODED -> drafts.urlEncoded
+  BodyKind.BINARY -> drafts.binary
 }
 
 @Composable
