@@ -65,6 +65,7 @@ fun RightTabsPanel(
           tab = selected,
           onChange = { tabsVm.updateBuffer(selected.id, it) },
           onSave = { tabsVm.saveTab(selected.id) },
+          onSend = { tabsVm.sendRequest(selected.id) },
         )
       }
     }

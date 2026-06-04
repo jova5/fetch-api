@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Divider
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
@@ -33,14 +35,12 @@ import ba.fluxor.fetchapi.component.*
 import ba.fluxor.fetchapi.feature.request.data.RequestHeaderDerivation
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.feature.tabs.ui.request.*
+import ba.fluxor.fetchapi.feature.tabs.viewmodel.RequestExecution
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.RequestTab
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabBuffer
 import ba.fluxor.fetchapi.network.http.HttpMethod
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
-import fetchapi.composeapp.generated.resources.Res
-import fetchapi.composeapp.generated.resources.save
-import fetchapi.composeapp.generated.resources.send
-import fetchapi.composeapp.generated.resources.url
+import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import java.awt.Cursor
@@ -49,8 +49,10 @@ import java.awt.Cursor
 fun RequestTabEditor(
   buffer: TabBuffer.Request,
   isDirty: Boolean,
+  execution: RequestExecution,
   onChange: (TabBuffer) -> Unit,
   onSave: () -> Unit,
+  onSend: () -> Unit,
 ) {
   var selectedTab by remember { mutableStateOf(RequestTab.entries.first()) }
   var autoHidden by remember { mutableStateOf(false) }
@@ -105,7 +107,8 @@ fun RequestTabEditor(
       Spacer(Modifier.width(8.dp))
       SquareButton(
         text = stringResource(Res.string.send),
-        onClick = {},
+        onClick = onSend,
+        enabled = execution !is RequestExecution.Loading,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
       )
     }
@@ -237,59 +240,147 @@ fun RequestTabEditor(
       HorizontalDivider(thickness = 4.dp, color = Color.Transparent)
     }
 
-    ResponseView(isDark, height, isHovered = isHovered || isDragging)
+    ResponseView(execution, isDark, height, isHovered = isHovered || isDragging)
+  }
+}
+
+private enum class ResponseTab {
+  BODY,
+  HEADERS
+}
+
+@Composable
+fun ResponseView(
+  execution: RequestExecution,
+  isDark: Boolean = false,
+  height: Dp,
+  isHovered: Boolean = false,
+) {
+  val borderColor = if (isHovered) MaterialTheme.colorScheme.primary else Color.Transparent
+
+  Box(
+    modifier = Modifier
+      .height(height)
+      .fillMaxWidth()
+      .border(1.dp, MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.medium)
+      .drawBehind {
+        drawLine(
+          color = borderColor,
+          start = Offset(3f, 0f),
+          end = Offset(size.width - 3f, 0f),
+          strokeWidth = 2.dp.toPx(),
+        )
+      }
+  ) {
+    when (execution) {
+      RequestExecution.Idle -> ResponseCenteredMessage(
+        text = stringResource(Res.string.response_placeholder),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+
+      RequestExecution.Loading -> Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+      ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+          CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+          Spacer(Modifier.height(8.dp))
+          Text(
+            text = stringResource(Res.string.response_sending),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
+      }
+
+      is RequestExecution.Failure -> ResponseCenteredMessage(
+        text = execution.message,
+        color = MaterialTheme.colorScheme.error,
+      )
+
+      is RequestExecution.Success -> ResponseSuccess(execution, isDark)
+    }
   }
 }
 
 @Composable
-fun ResponseView(isDark: Boolean = false, height: Dp, isHovered: Boolean = false) {
+private fun ResponseCenteredMessage(text: String, color: Color) {
+  Box(
+    modifier = Modifier.fillMaxSize()
+      .padding(16.dp),
+    contentAlignment = Alignment.Center,
+  ) {
+    Text(text = text, style = MaterialTheme.typography.bodySmall, color = color)
+  }
+}
 
+@Composable
+private fun ResponseSuccess(success: RequestExecution.Success, isDark: Boolean) {
+  val response = success.response
+  var selectedTab by remember { mutableStateOf(ResponseTab.BODY) }
+
+  Column(modifier = Modifier.fillMaxSize()) {
+    // Meta row: status, time, size
+    Row(
+      modifier = Modifier.fillMaxWidth()
+        .padding(horizontal = 12.dp, vertical = 8.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(
+        text = "${stringResource(Res.string.response_status)}: ${response.statusCode}",
+        style = MaterialTheme.typography.bodySmall,
+        color = statusColor(response.statusCode),
+      )
+      Spacer(Modifier.width(16.dp))
+      Text(
+        text = "${stringResource(Res.string.response_time)}: ${success.durationMs} ms",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+      Spacer(Modifier.width(16.dp))
+      Text(
+        text = "${stringResource(Res.string.response_size)}: ${formatSize(response.body)}",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+      Spacer(Modifier.weight(1f))
+      SquareOutlineButton(
+        text = stringResource(Res.string.body),
+        onClick = { selectedTab = ResponseTab.BODY },
+        modifier = Modifier.padding(horizontal = 4.dp),
+        borderWidth = if (selectedTab == ResponseTab.BODY) 2.dp else 0.dp,
+      )
+      SquareOutlineButton(
+        text = stringResource(Res.string.headers),
+        onClick = { selectedTab = ResponseTab.HEADERS },
+        modifier = Modifier.padding(horizontal = 4.dp),
+        borderWidth = if (selectedTab == ResponseTab.HEADERS) 2.dp else 0.dp,
+      )
+    }
+    HorizontalDivider(thickness = 1.dp)
+
+    val content = remember(response, selectedTab, isDark) {
+      when (selectedTab) {
+        ResponseTab.BODY -> formatAndHighlightJson(response.body, isDark)
+        ResponseTab.HEADERS -> AnnotatedString(
+          response.headers.entries.joinToString("\n") { (key, values) ->
+            "$key: ${values.joinToString(", ")}"
+          }
+        )
+      }
+    }
+
+    ResponseScrollableText(content, modifier = Modifier.weight(1f))
+  }
+}
+
+@Composable
+private fun ResponseScrollableText(text: AnnotatedString, modifier: Modifier = Modifier) {
   val verticalScrollState = rememberScrollState()
   val horizontalScrollState = rememberScrollState()
-  val rawResponse = "[{\n" +
-      "    \"name\": \"Adeel Solangi\",\n" +
-      "    \"language\": \"Sindhi\",\n" +
-      "    \"id\": \"V59OF92YF627HFY0\",\n" +
-      "    \"bio\": \"Donec lobortis eleifend condimentum. Cras dictum dolor lacinia lectus vehicula rutrum. Maecenas quis nisi nunc. Nam tristique feugiat est vitae mollis. Maecenas quis nisi nunc.\",\n" +
-      "    \"version\": 6.1\n" +
-      "  },\n" +
-      "  {\n" +
-      "    \"name\": \"Afzal Ghaffar\",\n" +
-      "    \"language\": \"Sindhi\",\n" +
-      "    \"id\": \"ENTOCR13RSCLZ6KU\",\n" +
-      "    \"bio\": \"Aliquam sollicitudin ante ligula, eget malesuada nibh efficitur et. Pellentesque massa sem, scelerisque sit amet odio id, cursus tempor urna. Etiam congue dignissim volutpat. Vestibulum pharetra libero et velit gravida euismod.\",\n" +
-      "    \"version\": 1.88\n" +
-      "  },\n" +
-      "  {\n" +
-      "    \"name\": \"Aamir Solangi\",\n" +
-      "    \"language\": \"Sindhi\",\n" +
-      "    \"id\": \"IAKPO3R4761JDRVG\",\n" +
-      "    \"bio\": \"Vestibulum pharetra libero et velit gravida euismod. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Fusce eu ultrices elit, vel posuere neque.\",\n" +
-      "    \"version\": 7.27\n" +
-      "  }" +
-      "]"
 
-  val formattedJson = remember(rawResponse, isDark) {
-    formatAndHighlightJson(rawResponse, isDark)
-  }
-
-  val borderColor = if (isHovered) MaterialTheme.colorScheme.primary else Color.Transparent
-
-  SelectionContainer {
-    Box(
-      modifier = Modifier
-        .height(height)
-        .fillMaxWidth()
-        .border(1.dp, MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.medium)
-        .drawBehind {
-          drawLine(
-            color = borderColor,
-            start = Offset(3f, 0f),
-            end = Offset(size.width - 3f, 0f),
-            strokeWidth = 2.dp.toPx(),
-          )
-        }
-    ) {
+  SelectionContainer(modifier = modifier) {
+    Box(modifier = Modifier.fillMaxSize()) {
       Box(
         modifier = Modifier
           .fillMaxWidth()
@@ -299,7 +390,7 @@ fun ResponseView(isDark: Boolean = false, height: Dp, isHovered: Boolean = false
           .padding(end = 12.dp, bottom = 12.dp)
       ) {
         Text(
-          text = formattedJson,
+          text = text,
           style = TextStyle(
             fontFamily = FontFamily.Monospace,
             fontSize = 14.sp,
@@ -335,4 +426,18 @@ fun ResponseView(isDark: Boolean = false, height: Dp, isHovered: Boolean = false
       )
     }
   }
+}
+
+@Composable
+private fun statusColor(code: Int): Color = when (code) {
+  in 200..299 -> Color(0xFF4CAF50)
+  in 300..399 -> Color(0xFF00BCD4)
+  in 400..499 -> Color(0xFFFF9800)
+  in 500..599 -> Color(0xFFF44336)
+  else -> MaterialTheme.colorScheme.onSurface
+}
+
+private fun formatSize(body: String): String {
+  val bytes = body.toByteArray(Charsets.UTF_8).size
+  return if (bytes < 1024) "$bytes B" else "%.1f KB".format(bytes / 1024.0)
 }

@@ -3,6 +3,7 @@ package ba.fluxor.fetchapi.feature.tabs.viewmodel
 import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.KeyValueEntry
 import ba.fluxor.fetchapi.feature.tabs.data.TabType
+import ba.fluxor.fetchapi.network.http.HttpResponse
 
 sealed interface TabBuffer {
   data class SubProject(
@@ -56,6 +57,13 @@ data class BodyDrafts(
   }
 }
 
+sealed interface RequestExecution {
+  data object Idle : RequestExecution
+  data object Loading : RequestExecution
+  data class Success(val response: HttpResponse, val durationMs: Long) : RequestExecution
+  data class Failure(val message: String) : RequestExecution
+}
+
 data class TabItem(
   val id: Long,
   val type: TabType,
@@ -63,6 +71,7 @@ data class TabItem(
   val title: String,
   val buffer: TabBuffer,
   val original: TabBuffer,
+  val execution: RequestExecution = RequestExecution.Idle,
 ) {
   val isDirty: Boolean get() = buffer.withoutDrafts() != original.withoutDrafts()
 }

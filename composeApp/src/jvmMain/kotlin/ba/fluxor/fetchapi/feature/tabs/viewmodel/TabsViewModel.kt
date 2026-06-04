@@ -7,6 +7,7 @@ import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvent
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
 import ba.fluxor.fetchapi.feature.request.data.Request
+import ba.fluxor.fetchapi.feature.request.data.RequestNetworkMapper
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvent
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
@@ -17,8 +18,11 @@ import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import ba.fluxor.fetchapi.feature.tabs.data.TabRepository
 import ba.fluxor.fetchapi.feature.tabs.data.TabType
+import ba.fluxor.fetchapi.network.http.HttpEngine
+import ba.fluxor.fetchapi.network.http.HttpResponse
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.system.measureTimeMillis
 
 class TabsViewModel(
   private val tabRepository: TabRepository,
@@ -277,6 +281,49 @@ class TabsViewModel(
     }
   }
 
+  fun sendRequest(tabId: Long) {
+    val tab = _state.value.tabs.find { it.id == tabId } ?: return
+    val buffer = tab.buffer as? TabBuffer.Request ?: return
+    if (buffer.url.isBlank()) {
+      setExecution(tabId, RequestExecution.Failure("URL is empty"))
+      return
+    }
+    setExecution(tabId, RequestExecution.Loading)
+    viewModelScope.launch {
+      try {
+        val request = Request(
+          subProjectId = -1, // unused by the mapper
+          name = buffer.name,
+          method = buffer.method,
+          url = buffer.url,
+          params = buffer.params,
+          headers = buffer.headers,
+          body = buffer.body,
+          authType = buffer.authType,
+          authConfig = buffer.authConfig,
+          excludedAutoHeaders = buffer.excludedAutoHeaders,
+        )
+        val httpRequest = RequestNetworkMapper.toHttpRequest(
+          request,
+          parentAuthType = buffer.parentAuthType,
+          parentAuthConfig = buffer.parentAuthConfig,
+          excludedAutoHeaders = buffer.excludedAutoHeaders,
+        )
+        var response: HttpResponse? = null
+        val durationMs = measureTimeMillis { response = HttpEngine.execute(httpRequest) }
+        setExecution(tabId, RequestExecution.Success(response!!, durationMs))
+      } catch (t: Throwable) {
+        setExecution(tabId, RequestExecution.Failure(t.message ?: "Request failed"))
+      }
+    }
+  }
+
+  private fun setExecution(tabId: Long, execution: RequestExecution) {
+    _state.update { s ->
+      s.copy(tabs = s.tabs.map { if (it.id == tabId) it.copy(execution = execution) else it })
+    }
+  }
+
   private suspend fun syncWithEntities() {
     val current = _state.value.tabs
     if (current.isEmpty()) return
@@ -290,7 +337,7 @@ class TabsViewModel(
       if (item.isDirty) {
         refreshed += item.copy(original = latest.original, title = latest.title)
       } else {
-        refreshed += latest
+        refreshed += latest.copy(execution = item.execution)
       }
     }
     _state.update { s ->

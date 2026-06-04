@@ -2,7 +2,7 @@ package ba.fluxor.fetchapi.feature.request.data
 
 import ba.fluxor.fetchapi.feature.sub_project.data.auth.Auth
 import ba.fluxor.fetchapi.feature.sub_project.data.auth.AuthCodec
-import java.util.Base64
+import java.util.*
 
 object RequestHeaderDerivation {
 
@@ -23,7 +23,8 @@ object RequestHeaderDerivation {
     parentAuthType: String?,
     parentAuthConfig: String?,
   ): Auth {
-    val (type, config) = resolveAuth(requestAuthType, requestAuthConfig, parentAuthType, parentAuthConfig)
+    val (type, config) = resolveAuth(requestAuthType, requestAuthConfig, parentAuthType,
+      parentAuthConfig)
     return AuthCodec.decode(type, config)
   }
 
@@ -31,10 +32,14 @@ object RequestHeaderDerivation {
     Auth.None -> emptyMap()
     is Auth.Bearer -> mapOf("Authorization" to "Bearer ${auth.token}")
     is Auth.Basic -> {
-      val encoded = Base64.getEncoder().encodeToString("${auth.username}:${auth.password}".toByteArray())
+      val encoded = Base64.getEncoder()
+        .encodeToString("${auth.username}:${auth.password}".toByteArray())
       mapOf("Authorization" to "Basic $encoded")
     }
-    is Auth.ApiKey -> if (auth.addTo == Auth.AddTo.HEADER) mapOf(auth.key to auth.value) else emptyMap()
+
+    is Auth.ApiKey -> if (auth.addTo == Auth.AddTo.HEADER) mapOf(
+      auth.key to auth.value) else emptyMap()
+
     is Auth.OAuth2 -> mapOf("Authorization" to "${auth.headerPrefix} ${auth.accessToken}")
     else -> emptyMap()
   }
@@ -50,7 +55,6 @@ object RequestHeaderDerivation {
   fun staticAutoHeaders(): Map<String, String> = linkedMapOf(
     "User-Agent" to "FetchAPI/1.0",
     "Accept" to "*/*",
-    "Accept-Encoding" to "gzip, deflate, br",
     "Connection" to "keep-alive",
   )
 }

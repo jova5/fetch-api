@@ -141,4 +141,9 @@
   <string name="show_auto_generated">Prikaži auto-generisana</string>
   <string name="body_raw_beautify">Formatiraj</string>
   <string name="body_raw_invalid_content">Neispravan %1$s</string>
+  <string name="response_placeholder">Pošaljite zahtev da vidite odgovor</string>
+  <string name="response_sending">Slanje…</string>
+  <string name="response_status">Status</string>
+  <string name="response_time">Vreme</string>
+  <string name="response_size">Veličina</string>
 </resources>

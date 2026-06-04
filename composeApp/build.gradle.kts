@@ -49,6 +49,7 @@ kotlin {
       implementation(libs.ktor.client.core)
       implementation(libs.ktor.client.java)
       implementation(libs.ktor.client.logging)
+      implementation(libs.ktor.client.encoding)
       implementation(libs.jna)
       implementation(libs.jna.platform)
       implementation(libs.jewel.int.ui.decorated.window)

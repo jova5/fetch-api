@@ -2,14 +2,12 @@ package ba.fluxor.fetchapi.network.http
 
 import ba.fluxor.fetchapi.network.NetworkEngine
 import ba.fluxor.fetchapi.network.NetworkExecutor
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.java.Java
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.header
-import io.ktor.client.request.request
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.*
+import io.ktor.client.engine.java.*
+import io.ktor.client.plugins.compression.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.HttpMethod as KtorHttpMethod
 
 object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
@@ -24,6 +22,10 @@ object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
         }
         install(Logging) {
             level = LogLevel.NONE
+        }
+        install(ContentEncoding) {
+            gzip()
+            deflate()
         }
     }
 

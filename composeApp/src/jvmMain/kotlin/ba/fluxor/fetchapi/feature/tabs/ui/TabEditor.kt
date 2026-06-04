@@ -9,6 +9,7 @@ fun TabEditor(
   tab: TabItem,
   onChange: (TabBuffer) -> Unit,
   onSave: () -> Unit,
+  onSend: () -> Unit,
 ) {
   when (val buffer = tab.buffer) {
     is TabBuffer.SubProject -> SubProjectTabEditor(
@@ -26,8 +27,10 @@ fun TabEditor(
     is TabBuffer.Request -> RequestTabEditor(
       buffer = buffer,
       isDirty = tab.isDirty,
+      execution = tab.execution,
       onChange = onChange,
       onSave = onSave,
+      onSend = onSend,
     )
   }
 }

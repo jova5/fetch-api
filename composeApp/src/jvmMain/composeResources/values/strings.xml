@@ -141,4 +141,9 @@
   <string name="show_auto_generated">Show auto-generated</string>
   <string name="body_raw_beautify">Beautify</string>
   <string name="body_raw_invalid_content">Invalid %1$s</string>
+  <string name="response_placeholder">Send a request to see the response</string>
+  <string name="response_sending">Sending…</string>
+  <string name="response_status">Status</string>
+  <string name="response_time">Time</string>
+  <string name="response_size">Size</string>
 </resources>
