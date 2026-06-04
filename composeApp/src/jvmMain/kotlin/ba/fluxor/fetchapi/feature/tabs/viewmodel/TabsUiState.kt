@@ -77,3 +77,9 @@ data class TabsUiState(
 ) {
   val selectedTab: TabItem? get() = tabs.find { it.id == selectedTabId }
 }
+
+/** Identifies the tree entity a focus change points at, so the tree can reveal/scroll to it. */
+data class FocusTarget(
+  val type: TabType,
+  val entityId: Long,
+)

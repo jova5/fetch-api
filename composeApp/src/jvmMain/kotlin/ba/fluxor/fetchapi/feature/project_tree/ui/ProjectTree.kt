@@ -1,16 +1,12 @@
 package ba.fluxor.fetchapi.feature.project_tree.ui
 
-import androidx.compose.foundation.LocalScrollbarStyle
-import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.background
-import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +18,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ba.fluxor.fetchapi.feature.folder.ui.FolderItem
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
@@ -32,6 +29,8 @@ import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.ui.SubProjectItem
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
+import ba.fluxor.fetchapi.feature.tabs.data.TabType
+import ba.fluxor.fetchapi.feature.tabs.viewmodel.FocusTarget
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabsViewModel
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.no_matches
@@ -71,6 +70,28 @@ fun ProjectTree(
   val state = rememberLazyListState()
   var isHoveringTree by remember { mutableStateOf(false) }
 
+  val tabsState by tabsVm.state.collectAsStateWithLifecycle()
+  val focusTarget = tabsState.selectedTab?.let { FocusTarget(it.type, it.entityId) }
+
+  // Editor-originated focus changes (tab-bar / restore) ask the tree to reveal & scroll to the
+  // matching node. Tree clicks don't emit here, so they only update the highlight.
+  var pendingScroll by remember { mutableStateOf<FocusTarget?>(null) }
+  LaunchedEffect(Unit) {
+    tabsVm.focusReveals.collect { target ->
+      treeVm.revealEntity(target.type, target.entityId)
+      pendingScroll = target
+    }
+  }
+  // Runs after revealEntity rebuilds flatItems, so the target index is computed post-expansion.
+  LaunchedEffect(pendingScroll, flatItems) {
+    val target = pendingScroll ?: return@LaunchedEffect
+    val idx = flatItems.indexOfFirst { it.matches(target) }
+    if (idx >= 0) {
+      state.scrollToItem(idx)
+      pendingScroll = null
+    }
+  }
+
   Box(
     modifier = Modifier
       .fillMaxSize()
@@ -108,13 +129,19 @@ fun ProjectTree(
         val shouldShowHoverHighlight = isHovered || isDropdownOpen
 
         val hoverColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        val focusColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        val isFocused = item.matches(focusTarget)
 
         Box(
           modifier = Modifier
             .fillMaxWidth()
             .hoverable(interactionSource = interactionSource)
             .background(
-              color = if (isDropdownOpen) hoverColor else Color.Transparent,
+              color = when {
+                isFocused -> focusColor
+                isDropdownOpen -> hoverColor
+                else -> Color.Transparent
+              },
               shape = RoundedCornerShape(4.dp)
             )
         ) {
@@ -191,6 +218,20 @@ fun ProjectTree(
         ),
       )
     }
+  }
+}
+
+private fun TreeItem.matches(focus: FocusTarget?): Boolean {
+  if (focus == null) return false
+  return when (this) {
+    is TreeItem.SubProjectHeader ->
+      focus.type == TabType.SUB_PROJECT && node.subProject.id == focus.entityId
+
+    is TreeItem.FolderHeader ->
+      focus.type == TabType.FOLDER && node.folder.id == focus.entityId
+
+    is TreeItem.RequestLeaf ->
+      focus.type == TabType.REQUEST && request.id == focus.entityId
   }
 }
 

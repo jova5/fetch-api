@@ -10,6 +10,7 @@ import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectNode
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
+import ba.fluxor.fetchapi.feature.tabs.data.TabType
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -95,6 +96,50 @@ class ProjectTreeViewModel(
           )
         }
       )
+    }
+  }
+
+  /**
+   * Force-expands the ancestors of the given entity so it becomes visible in the flattened tree.
+   * Set-expand only (never collapses); a no-op for sub-projects, which are already top-level.
+   */
+  fun revealEntity(type: TabType, entityId: Long) {
+    when (type) {
+      TabType.SUB_PROJECT -> Unit
+
+      TabType.FOLDER -> _state.update { state ->
+        state.copy(
+          subProjectNodes = state.subProjectNodes.map { spNode ->
+            if (spNode.folders.any { it.folder.id == entityId }) {
+              spNode.copy(expanded = true)
+            } else {
+              spNode
+            }
+          }
+        )
+      }
+
+      TabType.REQUEST -> _state.update { state ->
+        state.copy(
+          subProjectNodes = state.subProjectNodes.map { spNode ->
+            val owningFolder = spNode.folders.find { fNode ->
+              fNode.requests.any { it.id == entityId }
+            }
+            val isLoose = spNode.looseRequests.any { it.id == entityId }
+            when {
+              owningFolder != null -> spNode.copy(
+                expanded = true,
+                folders = spNode.folders.map {
+                  if (it.folder.id == owningFolder.folder.id) it.copy(expanded = true) else it
+                },
+              )
+
+              isLoose -> spNode.copy(expanded = true)
+              else -> spNode
+            }
+          }
+        )
+      }
     }
   }
 

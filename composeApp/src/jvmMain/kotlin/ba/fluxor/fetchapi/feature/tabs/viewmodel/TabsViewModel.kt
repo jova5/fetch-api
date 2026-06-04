@@ -30,6 +30,9 @@ class TabsViewModel(
   private val _state = MutableStateFlow(TabsUiState())
   val state: StateFlow<TabsUiState> = _state.asStateFlow()
 
+  private val _focusReveals = MutableSharedFlow<FocusTarget>(extraBufferCapacity = 1)
+  val focusReveals: SharedFlow<FocusTarget> = _focusReveals.asSharedFlow()
+
   init {
     viewModelScope.launch {
       merge(
@@ -88,13 +91,15 @@ class TabsViewModel(
           tabRepository.delete(id)
         }
       }
+      val selected = items.lastOrNull()
       _state.update {
         TabsUiState(
           projectId = projectId,
           tabs = items,
-          selectedTabId = items.lastOrNull()?.id,
+          selectedTabId = selected?.id,
         )
       }
+      selected?.let { _focusReveals.emit(FocusTarget(it.type, it.entityId)) }
     }
   }
 
@@ -168,6 +173,8 @@ class TabsViewModel(
 
   fun selectTab(tabId: Long) {
     _state.update { it.copy(selectedTabId = tabId) }
+    val tab = _state.value.tabs.find { it.id == tabId } ?: return
+    _focusReveals.tryEmit(FocusTarget(tab.type, tab.entityId))
   }
 
   fun closeTab(tabId: Long) {
