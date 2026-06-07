@@ -17,8 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
@@ -64,128 +62,130 @@ fun RequestTabEditor(
     ThemeMode.SYSTEM -> isSystemInDarkTheme()
   }
 
-  Column(modifier = Modifier
-    .fillMaxSize()
-    .padding(16.dp)
-  ) {
+  Column(modifier = Modifier.fillMaxSize()) {
 
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-      CompactInput(
-        value = buffer.name,
-        onValueChange = { onChange(buffer.copy(name = it)) },
-      )
-      Spacer(Modifier.weight(1f))
-      SquareButton(
-        text = stringResource(Res.string.save),
-        onClick = onSave,
-        enabled = isDirty,
-        modifier = Modifier
-          .padding(horizontal = 16.dp, vertical = 6.dp),
-        containerColor = MaterialTheme.colorScheme.tertiary,
-        contentColor = MaterialTheme.colorScheme.onTertiary
-      )
-    }
-    Spacer(Modifier.height(12.dp))
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-      SimpleDropdown(
-        options = HttpMethod.entries.map { it.name },
-        selected = buffer.method,
-        onSelect = { onChange(buffer.copy(method = it)) },
-        width = 100.dp,
-        optionLabel = { it },
-      )
-      Spacer(Modifier.width(8.dp))
-      CompactInput(
-        value = buffer.url,
-        onValueChange = { newUrl ->
-          val newParams = UrlParamSync.mergeFromUrl(newUrl, buffer.params)
-          onChange(buffer.copy(url = newUrl, params = newParams))
-        },
-        placeholder = stringResource(Res.string.url),
-        modifier = Modifier.weight(1f),
-      )
-      Spacer(Modifier.width(8.dp))
-      SquareButton(
-        text = stringResource(Res.string.send),
-        onClick = onSend,
-        enabled = execution !is RequestExecution.Loading,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-      )
-    }
-
-    Spacer(Modifier.height(12.dp))
-    Divider(thickness = 1.dp)
-    Spacer(Modifier.height(12.dp))
-
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-      RequestTab.entries.forEach { tab ->
-        SquareOutlineButton(
-          text = stringResource(tab.labelRes()),
-          onClick = { selectedTab = tab },
-          modifier = Modifier.padding(horizontal = 16.dp),
-          borderWidth = if (selectedTab == tab) 2.dp else 0.dp,
-        )
-      }
-    }
-    Spacer(Modifier.height(8.dp))
-    Divider(thickness = 1.dp)
-    Spacer(Modifier.height(16.dp))
-
-    Box(modifier = Modifier
+    Column(modifier = Modifier
       .weight(1f)
       .fillMaxWidth()
+      .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
-      when (selectedTab) {
-        RequestTab.PARAMS -> ParamsSection(
-          params = buffer.params,
-          onChange = { newParams ->
-            val newUrl = UrlParamSync.rebuildUrl(buffer.url, newParams)
-            onChange(buffer.copy(params = newParams, url = newUrl))
-          },
+
+      Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        CompactInput(
+          value = buffer.name,
+          onValueChange = { onChange(buffer.copy(name = it)) },
         )
-
-        RequestTab.AUTHORIZATION -> RequestAuthorizationSection(
-          authType = buffer.authType,
-          authConfig = buffer.authConfig,
-          onChange = { newType, newConfig ->
-            onChange(buffer.copy(authType = newType, authConfig = newConfig))
-          },
-        )
-
-        RequestTab.HEADERS -> {
-          val resolvedAuth = RequestHeaderDerivation.resolvedAuth(
-            buffer.authType,
-            buffer.authConfig,
-            buffer.parentAuthType,
-            buffer.parentAuthConfig,
-          )
-          HeadersSection(
-            buffer = buffer,
-            resolvedAuthHeaders = RequestHeaderDerivation.authHeaders(resolvedAuth),
-            autoHidden = autoHidden,
-            onCustomHeadersChange = { newHeaders -> onChange(buffer.copy(headers = newHeaders)) },
-            onReadOnlyToggle = { key, included ->
-              val updated = if (included)
-                buffer.excludedAutoHeaders - key
-              else
-                buffer.excludedAutoHeaders + key
-              onChange(buffer.copy(excludedAutoHeaders = updated))
-            },
-            onToggleAutoHidden = { autoHidden = !autoHidden },
-          )
-        }
-
-        RequestTab.BODY -> BodySection(
-          body = buffer.body,
-          drafts = buffer.bodyDrafts,
-          onChange = { newBody, newDrafts ->
-            onChange(buffer.copy(body = newBody, bodyDrafts = newDrafts))
-          },
+        Spacer(Modifier.weight(1f))
+        SquareButton(
+          text = stringResource(Res.string.save),
+          onClick = onSave,
+          enabled = isDirty,
+          modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+          containerColor = MaterialTheme.colorScheme.tertiary,
+          contentColor = MaterialTheme.colorScheme.onTertiary
         )
       }
-    }
+      Spacer(Modifier.height(12.dp))
+      Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        SimpleDropdown(
+          options = HttpMethod.entries.map { it.name },
+          selected = buffer.method,
+          onSelect = { onChange(buffer.copy(method = it)) },
+          width = 100.dp,
+          optionLabel = { it },
+        )
+        Spacer(Modifier.width(8.dp))
+        CompactInput(
+          value = buffer.url,
+          onValueChange = { newUrl ->
+            val newParams = UrlParamSync.mergeFromUrl(newUrl, buffer.params)
+            onChange(buffer.copy(url = newUrl, params = newParams))
+          },
+          placeholder = stringResource(Res.string.url),
+          modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(8.dp))
+        SquareButton(
+          text = stringResource(Res.string.send),
+          onClick = onSend,
+          enabled = execution !is RequestExecution.Loading,
+          modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+        )
+      }
 
-    Spacer(Modifier.height(16.dp))
+      Spacer(Modifier.height(12.dp))
+      Divider(thickness = 1.dp)
+      Spacer(Modifier.height(12.dp))
+
+      Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        RequestTab.entries.forEach { tab ->
+          SquareOutlineButton(
+            text = stringResource(tab.labelRes()),
+            onClick = { selectedTab = tab },
+            modifier = Modifier.padding(horizontal = 16.dp),
+            borderWidth = if (selectedTab == tab) 2.dp else 0.dp,
+          )
+        }
+      }
+      Spacer(Modifier.height(8.dp))
+      Divider(thickness = 1.dp)
+      Spacer(Modifier.height(16.dp))
+
+      Box(modifier = Modifier
+        .weight(1f)
+        .fillMaxWidth()
+      ) {
+        when (selectedTab) {
+          RequestTab.PARAMS -> ParamsSection(
+            params = buffer.params,
+            onChange = { newParams ->
+              val newUrl = UrlParamSync.rebuildUrl(buffer.url, newParams)
+              onChange(buffer.copy(params = newParams, url = newUrl))
+            },
+          )
+
+          RequestTab.AUTHORIZATION -> RequestAuthorizationSection(
+            authType = buffer.authType,
+            authConfig = buffer.authConfig,
+            onChange = { newType, newConfig ->
+              onChange(buffer.copy(authType = newType, authConfig = newConfig))
+            },
+          )
+
+          RequestTab.HEADERS -> {
+            val resolvedAuth = RequestHeaderDerivation.resolvedAuth(
+              buffer.authType,
+              buffer.authConfig,
+              buffer.parentAuthType,
+              buffer.parentAuthConfig,
+            )
+            HeadersSection(
+              buffer = buffer,
+              resolvedAuthHeaders = RequestHeaderDerivation.authHeaders(resolvedAuth),
+              autoHidden = autoHidden,
+              onCustomHeadersChange = { newHeaders -> onChange(buffer.copy(headers = newHeaders)) },
+              onReadOnlyToggle = { key, included ->
+                val updated = if (included)
+                  buffer.excludedAutoHeaders - key
+                else
+                  buffer.excludedAutoHeaders + key
+                onChange(buffer.copy(excludedAutoHeaders = updated))
+              },
+              onToggleAutoHidden = { autoHidden = !autoHidden },
+            )
+          }
+
+          RequestTab.BODY -> BodySection(
+            body = buffer.body,
+            drafts = buffer.bodyDrafts,
+            onChange = { newBody, newDrafts ->
+              onChange(buffer.copy(body = newBody, bodyDrafts = newDrafts))
+            },
+          )
+        }
+      }
+    }
 
     val settingState by settingsVm.state.collectAsStateWithLifecycle()
     val density = LocalDensity.current
@@ -220,27 +220,45 @@ fun RequestTabEditor(
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     val isDragging by interactionSource.collectIsDraggedAsState()
+    val borderColor = if (isHovered || isDragging) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.outlineVariant
 
-    Box(
-      modifier = Modifier
-        .fillMaxWidth()
-        .hoverable(interactionSource)
-        .pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR)))
-        .draggable(
-          state = dragState,
-          orientation = Orientation.Vertical,
-          onDragStarted = {
-            virtualMouseY = height
-          },
-          onDragStopped = {
-            settingsVm.setRequestDividerPercentage(percentage)
+    Column(modifier = Modifier.fillMaxWidth()) {
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(2.dp)
+          .wrapContentHeight(unbounded = true),
+        contentAlignment = Alignment.Center,
+      ) {
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(20.dp)
+            .hoverable(interactionSource)
+            .pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR)))
+            .draggable(
+              state = dragState,
+              orientation = Orientation.Vertical,
+              onDragStarted = {
+                virtualMouseY = height
+              },
+              onDragStopped = {
+                settingsVm.setRequestDividerPercentage(percentage)
+              }
+            ),
+          contentAlignment = Alignment.Center,
+        ) {
+          if (isHovered || isDragging) {
+            HorizontalDivider(thickness = 2.dp, color = borderColor)
+          } else {
+            HorizontalDivider(thickness = 2.dp, color = borderColor)
           }
-        )
-    ) {
-      HorizontalDivider(thickness = 4.dp, color = Color.Transparent)
-    }
+        }
+      }
 
-    ResponseView(execution, isDark, height, isHovered = isHovered || isDragging)
+      ResponseView(execution, isDark, height)
+    }
   }
 }
 
@@ -253,24 +271,13 @@ private enum class ResponseTab {
 fun ResponseView(
   execution: RequestExecution,
   isDark: Boolean = false,
-  height: Dp,
-  isHovered: Boolean = false,
+  height: Dp
 ) {
-  val borderColor = if (isHovered) MaterialTheme.colorScheme.primary else Color.Transparent
 
   Box(
     modifier = Modifier
       .height(height)
       .fillMaxWidth()
-      .border(1.dp, MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.medium)
-      .drawBehind {
-        drawLine(
-          color = borderColor,
-          start = Offset(3f, 0f),
-          end = Offset(size.width - 3f, 0f),
-          strokeWidth = 2.dp.toPx(),
-        )
-      }
   ) {
     when (execution) {
       RequestExecution.Idle -> ResponseCenteredMessage(

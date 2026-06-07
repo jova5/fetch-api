@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
@@ -92,29 +93,33 @@ fun MainArea(
     Box(
       modifier = Modifier
         .fillMaxHeight()
-        .hoverable(interactionSource)
-        .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
-        .draggable(
-          state = dragState,
-          orientation = Orientation.Horizontal,
-          onDragStarted = {
-            virtualMouseX = leftWidth
-          },
-          onDragStopped = {
-            settingsVm.setDividerPercentage(percentage)
-          }
-        )
+        .width(2.dp)
+        .wrapContentWidth(unbounded = true),
+      contentAlignment = Alignment.Center,
     ) {
-      Row {
-        Column(
-          modifier = Modifier
-            .width(4.dp)
-            .fillMaxHeight()) {}
-        VerticalDivider(thickness = 2.dp, color = borderColor)
-        Column(
-          modifier = Modifier
-            .width(4.dp)
-            .fillMaxHeight()) {}
+      Box(
+        modifier = Modifier
+          .fillMaxHeight()
+          .width(20.dp)
+          .hoverable(interactionSource)
+          .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+          .draggable(
+            state = dragState,
+            orientation = Orientation.Horizontal,
+            onDragStarted = {
+              virtualMouseX = leftWidth
+            },
+            onDragStopped = {
+              settingsVm.setDividerPercentage(percentage)
+            }
+          ),
+        contentAlignment = Alignment.Center,
+      ) {
+        if (isHovered || isDragging) {
+          VerticalDivider(thickness = 2.dp, color = borderColor)
+        } else {
+          VerticalDivider(thickness = 2.dp, color = borderColor)
+        }
       }
     }
 
