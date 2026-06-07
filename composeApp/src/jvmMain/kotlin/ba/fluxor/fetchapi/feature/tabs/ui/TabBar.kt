@@ -6,9 +6,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,10 +21,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,7 +36,6 @@ import fetchapi.composeapp.generated.resources.close_tab
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
-/** Distance (px) the tab list scrolls per vertical mouse-wheel notch. Tunable. */
 private const val WHEEL_FACTOR = 64f
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -57,8 +58,8 @@ fun TabBar(
     val info = listState.layoutInfo
     val visible = info.visibleItemsInfo.firstOrNull { it.index == index }
     val clipped = visible == null ||
-      visible.offset < info.viewportStartOffset ||
-      visible.offset + visible.size > info.viewportEndOffset
+        visible.offset < info.viewportStartOffset ||
+        visible.offset + visible.size > info.viewportEndOffset
     if (clipped) listState.animateScrollToItem(index)
   }
 
@@ -79,13 +80,12 @@ fun TabBar(
           if (dy != 0f) scope.launch { listState.scrollBy(dy * WHEEL_FACTOR) }
         },
     ) {
-      itemsIndexed(tabs) { index, tab ->
+      items(tabs, key = { it.id }) { tab ->
         TabChip(
           tab = tab,
           selected = tab.id == selectedTabId,
           onSelect = { onSelect(tab.id) },
           onClose = { onClose(tab.id) },
-          isFirst = index == 0,
         )
       }
     }
@@ -113,14 +113,12 @@ private fun TabChip(
   selected: Boolean,
   onSelect: () -> Unit,
   onClose: () -> Unit,
-  isFirst: Boolean = false,
 ) {
   val bg =
     if (selected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
   val interactionSource = remember { MutableInteractionSource() }
   val isHovered by interactionSource.collectIsHoveredAsState()
   val borderColor = MaterialTheme.colorScheme.primary
-  var isOverflowing by remember { mutableStateOf(false) }
 
   Row(
     verticalAlignment = Alignment.CenterVertically,
@@ -132,14 +130,14 @@ private fun TabChip(
         val strokeWidth = 1.dp.toPx()
 
         // Left Border
-        if (isFirst) {
-          drawLine(
-            color = borderColor,
-            start = Offset(0f, 0f),
-            end = Offset(0f, size.height),
-            strokeWidth = strokeWidth
-          )
-        }
+//        if (isFirst) {
+//          drawLine(
+//            color = borderColor,
+//            start = Offset(0f, 0f),
+//            end = Offset(0f, size.height),
+//            strokeWidth = strokeWidth
+//          )
+//        }
 
         // Right Border
         drawLine(
@@ -164,23 +162,12 @@ private fun TabChip(
         .wrapContentHeight(Alignment.CenterVertically),
     ) {
 
-      Row {
-        if (tab.isDirty) {
-          Text(
-            text = "• ",
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.primary,
-          )
-        }
+      Row(modifier = Modifier.align(Alignment.CenterStart)) {
         TooltipBelow(
           text = tab.title.ifBlank { "Untitled" },
         ) {
           Text(
-            onTextLayout = { textLayoutResult ->
-              isOverflowing = textLayoutResult.hasVisualOverflow
-            },
-            modifier = Modifier.fillMaxWidth()
-              .padding(end = if (isHovered && isOverflowing) 16.dp else 0.dp),
+            modifier = Modifier.fillMaxWidth(),
             text = tab.title.ifBlank { "Untitled" },
             style = MaterialTheme.typography.bodySmall,
             color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -190,17 +177,53 @@ private fun TabChip(
           )
         }
       }
-      if (isHovered) {
-        IconButton(
-          onClick = onClose,
-          modifier = Modifier.size(16.dp)
+
+      val iconFade = Brush.horizontalGradient(
+        colorStops = arrayOf(
+          0.0f to Color.Transparent,
+          0.4f to bg,
+          1.0f to bg,
+        )
+      )
+
+      if (tab.isDirty && !isHovered) {
+        Box(
+          modifier = Modifier
+            .fillMaxHeight()
+            .width(28.dp)
             .align(Alignment.CenterEnd)
+            .background(iconFade)
+            .padding(end = 4.dp),
         ) {
           Icon(
-            Icons.Default.Close,
+            Icons.Filled.Circle,
             contentDescription = stringResource(Res.string.close_tab),
-            modifier = Modifier.size(14.dp),
+            modifier = Modifier.size(8.dp)
+              .align(Alignment.CenterEnd),
+            tint = MaterialTheme.colorScheme.primary,
           )
+        }
+      }
+
+      if (isHovered) {
+        Box(
+          modifier = Modifier
+            .fillMaxHeight()
+            .width(28.dp)
+            .align(Alignment.CenterEnd)
+            .background(iconFade),
+        ) {
+          IconButton(
+            onClick = onClose,
+            modifier = Modifier.size(16.dp)
+              .align(Alignment.CenterEnd)
+          ) {
+            Icon(
+              Icons.Default.Close,
+              contentDescription = stringResource(Res.string.close_tab),
+              modifier = Modifier.size(14.dp),
+            )
+          }
         }
       }
     }
