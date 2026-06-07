@@ -359,18 +359,19 @@ private fun ResponseSuccess(success: RequestExecution.Success, isDark: Boolean) 
     }
     HorizontalDivider(thickness = 1.dp)
 
-    val content = remember(response, selectedTab, isDark) {
-      when (selectedTab) {
-        ResponseTab.BODY -> formatAndHighlightJson(response.body, isDark)
-        ResponseTab.HEADERS -> AnnotatedString(
-          response.headers.entries.joinToString("\n") { (key, values) ->
-            "$key: ${values.joinToString(", ")}"
-          }
-        )
+    when (selectedTab) {
+      ResponseTab.BODY -> {
+        val content = remember(response, isDark) { formatAndHighlightJson(response.body, isDark) }
+        ResponseScrollableText(content, modifier = Modifier.weight(1f))
       }
-    }
 
-    ResponseScrollableText(content, modifier = Modifier.weight(1f))
+      ResponseTab.HEADERS -> KeyValueReadOnlyTable(
+        rows = response.headers.entries.map { (key, values) -> key to values.joinToString(", ") },
+        keyLabel = stringResource(Res.string.variables_key),
+        valueLabel = stringResource(Res.string.api_key_value),
+        modifier = Modifier.weight(1f),
+      )
+    }
   }
 }
 
