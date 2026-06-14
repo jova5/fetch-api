@@ -61,4 +61,20 @@ class SettingRepository(private val dao: SettingDao) {
   suspend fun setRequestDividerPercentage(dividerPercentage: Float) = withContext(Dispatchers.IO) {
     dao.upsert(SettingKey.REQUEST_DIVIDER_PERCENTAGE.tag, dividerPercentage.toString())
   }
+
+  suspend fun getActiveProjectId(): Long? = withContext(Dispatchers.IO) {
+    dao.get(SettingKey.ACTIVE_PROJECT_ID.tag)?.toLongOrNull()
+  }
+
+  suspend fun setActiveProjectId(id: Long?) = withContext(Dispatchers.IO) {
+    dao.upsert(SettingKey.ACTIVE_PROJECT_ID.tag, id?.toString() ?: "")
+  }
+
+  suspend fun getLastFocusedTabId(projectId: Long): Long? = withContext(Dispatchers.IO) {
+    dao.get(SettingKey.LAST_FOCUSED_TAB_PREFIX.tag + projectId)?.toLongOrNull()
+  }
+
+  suspend fun setLastFocusedTabId(projectId: Long, tabId: Long?) = withContext(Dispatchers.IO) {
+    dao.upsert(SettingKey.LAST_FOCUSED_TAB_PREFIX.tag + projectId, tabId?.toString() ?: "")
+  }
 }

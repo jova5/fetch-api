@@ -28,9 +28,12 @@ import java.sql.Connection
 
 val appModule = module {
   single<Connection> { DatabaseFactory.connection }
+  single { SettingDao(get()) }
+  single { SettingRepository(get()) }
+  viewModel { SettingsViewModel(get()) }
   single { ProjectDao(get()) }
   single { ProjectRepository(get()) }
-  viewModel { ProjectViewModel(get()) }
+  viewModel { ProjectViewModel(get(), get()) }
   single { SubProjectDao(get()) }
   single { SubProjectRepository(get()) }
   single { SubProjectVariableDao(get()) }
@@ -45,8 +48,5 @@ val appModule = module {
   viewModel { ProjectTreeViewModel(get(), get(), get()) }
   single { TabDao(get()) }
   single { TabRepository(get()) }
-  single { TabsViewModel(get(), get(), get(), get()) }
-  single { SettingDao(get()) }
-  single { SettingRepository(get()) }
-  viewModel { SettingsViewModel(get()) }
+  single { TabsViewModel(get(), get(), get(), get(), get()) }
 }

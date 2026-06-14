@@ -15,6 +15,7 @@ import ba.fluxor.fetchapi.feature.sub_project.data.SubProject
 import ba.fluxor.fetchapi.feature.sub_project.data.SubProjectVariable
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvent
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
+import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectViewModel
 import ba.fluxor.fetchapi.feature.tabs.data.TabRepository
 import ba.fluxor.fetchapi.feature.tabs.data.TabType
@@ -28,7 +29,8 @@ class TabsViewModel(
   private val tabRepository: TabRepository,
   private val subProjectViewModel: SubProjectViewModel,
   private val folderViewModel: FolderViewModel,
-  private val requestViewModel: RequestViewModel
+  private val requestViewModel: RequestViewModel,
+  private val settingsViewModel: SettingsViewModel,
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(TabsUiState())
@@ -95,7 +97,8 @@ class TabsViewModel(
           tabRepository.delete(id)
         }
       }
-      val selected = items.lastOrNull()
+      val storedTabId = settingsViewModel.getLastFocusedTabId(projectId)
+      val selected = items.find { it.id == storedTabId } ?: items.lastOrNull()
       _state.update {
         TabsUiState(
           projectId = projectId,
@@ -157,6 +160,7 @@ class TabsViewModel(
     val existing = _state.value.tabs.find { it.type == type && it.entityId == entityId }
     if (existing != null) {
       _state.update { it.copy(selectedTabId = existing.id) }
+      persistSelectedTab(existing.id)
       return
     }
     val projectId = _state.value.projectId ?: return
@@ -172,13 +176,20 @@ class TabsViewModel(
           s.copy(tabs = s.tabs + item, selectedTabId = tabId)
         }
       }
+      persistSelectedTab(tabId)
     }
   }
 
   fun selectTab(tabId: Long) {
     _state.update { it.copy(selectedTabId = tabId) }
+    persistSelectedTab(tabId)
     val tab = _state.value.tabs.find { it.id == tabId } ?: return
     _focusReveals.tryEmit(FocusTarget(tab.type, tab.entityId))
+  }
+
+  private fun persistSelectedTab(tabId: Long?) {
+    val projectId = _state.value.projectId ?: return
+    settingsViewModel.setLastFocusedTabId(projectId, tabId)
   }
 
   fun closeTab(tabId: Long) {
@@ -195,6 +206,7 @@ class TabsViewModel(
         }
         s.copy(tabs = newTabs, selectedTabId = newSelected)
       }
+      persistSelectedTab(_state.value.selectedTabId)
     }
   }
 

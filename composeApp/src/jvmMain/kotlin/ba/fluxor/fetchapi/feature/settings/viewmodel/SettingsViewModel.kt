@@ -70,4 +70,17 @@ class SettingsViewModel(
     _state.update { it.copy(requestDividerPercentage = dividerPercentage) }
     viewModelScope.launch { repository.setRequestDividerPercentage(dividerPercentage) }
   }
+
+  suspend fun getActiveProjectId(): Long? = repository.getActiveProjectId()
+
+  fun setActiveProjectId(id: Long?) {
+    viewModelScope.launch { repository.setActiveProjectId(id) }
+  }
+
+  suspend fun getLastFocusedTabId(projectId: Long): Long? =
+    repository.getLastFocusedTabId(projectId)
+
+  fun setLastFocusedTabId(projectId: Long, tabId: Long?) {
+    viewModelScope.launch { repository.setLastFocusedTabId(projectId, tabId) }
+  }
 }

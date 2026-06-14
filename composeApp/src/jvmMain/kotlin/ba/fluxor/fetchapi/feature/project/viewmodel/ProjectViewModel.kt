@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.project.data.Project
 import ba.fluxor.fetchapi.feature.project.data.ProjectRepository
+import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.name_already_exists
 import fetchapi.composeapp.generated.resources.name_can_not_be_empty
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 
 class ProjectViewModel(
   private val repository: ProjectRepository,
+  private val settingsViewModel: SettingsViewModel,
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(ProjectUiState())
@@ -22,6 +24,7 @@ class ProjectViewModel(
 
   init {
     loadAll()
+    restoreActiveProject()
   }
 
   fun loadAll() {
@@ -29,6 +32,14 @@ class ProjectViewModel(
       _state.update { it.copy(isLoading = true, error = null) }
       val projects = repository.getAll()
       _state.update { it.copy(projects = projects, isLoading = false) }
+    }
+  }
+
+  private fun restoreActiveProject() {
+    launchCatching {
+      val id = settingsViewModel.getActiveProjectId() ?: return@launchCatching
+      val project = repository.getById(id) ?: return@launchCatching
+      _state.update { it.copy(active = project, error = null) }
     }
   }
 
@@ -107,10 +118,15 @@ class ProjectViewModel(
 
       repository.delete(id)
 
+      if (_state.value.active?.id == id) {
+        settingsViewModel.setActiveProjectId(null)
+      }
+
       _state.update { ui ->
         ui.copy(
           projects = ui.projects.filterNot { it.id == id },
           selected = if (ui.selected?.id == id) null else ui.selected,
+          active = if (ui.active?.id == id) null else ui.active,
           error = null,
         )
       }
@@ -130,6 +146,7 @@ class ProjectViewModel(
   fun setActiveProject(project: Project) {
     launchCatching {
       _state.update { it.copy(isLoading = false, active = project, error = null) }
+      settingsViewModel.setActiveProjectId(project.id)
     }
   }
 }
