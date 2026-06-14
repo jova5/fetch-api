@@ -18,6 +18,7 @@ jna = "5.14.0" # <- use latest version to corespond with jewel version
 jewel = "0.34.0-253.32098.37"
 codeeditor = "3.1.1"
 jsoup = "1.18.1"
+reorderable = "3.1.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -54,6 +55,7 @@ jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 jewel-int-ui-decorated-window = { module = "org.jetbrains.jewel:jewel-int-ui-decorated-window", version.ref = "jewel" }
 codeeditor = { module = "com.github.Qawaz.compose-code-editor:codeeditor-desktop", version.ref = "codeeditor" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 
 [plugins]
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

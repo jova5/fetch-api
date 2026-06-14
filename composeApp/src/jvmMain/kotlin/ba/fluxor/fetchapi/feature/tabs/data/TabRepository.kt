@@ -28,4 +28,8 @@ class TabRepository(private val dao: TabDao) {
   suspend fun deleteByEntity(type: TabType, entityId: Long): Int = withContext(Dispatchers.IO) {
     dao.deleteByEntity(type, entityId)
   }
+
+  suspend fun updatePositions(orderedIds: List<Long>) = withContext(Dispatchers.IO) {
+    orderedIds.forEachIndexed { index, id -> dao.updatePosition(id, index) }
+  }
 }

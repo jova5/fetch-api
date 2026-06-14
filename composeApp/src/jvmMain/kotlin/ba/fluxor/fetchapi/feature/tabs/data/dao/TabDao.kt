@@ -32,6 +32,14 @@ class TabDao(private val connection: Connection) {
     }
   }
 
+  fun updatePosition(id: Long, position: Int): Int {
+    connection.prepareStatement("UPDATE tab SET position=? WHERE id=?").use { stmt ->
+      stmt.setInt(1, position)
+      stmt.setLong(2, id)
+      return stmt.executeUpdate()
+    }
+  }
+
   fun deleteByEntity(type: TabType, entityId: Long): Int {
     connection.prepareStatement("DELETE FROM tab WHERE type=? AND entity_id=?").use { stmt ->
       stmt.setString(1, type.name)

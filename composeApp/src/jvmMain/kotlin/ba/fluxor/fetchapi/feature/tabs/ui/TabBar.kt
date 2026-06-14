@@ -35,6 +35,8 @@ import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.close_tab
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 private const val WHEEL_FACTOR = 64f
 
@@ -45,8 +47,13 @@ fun TabBar(
   selectedTabId: Long?,
   onSelect: (Long) -> Unit,
   onClose: (Long) -> Unit,
+  onMove: (from: Int, to: Int) -> Unit,
+  onReorderEnd: () -> Unit,
 ) {
   val listState = rememberLazyListState()
+  val reorderState = rememberReorderableLazyListState(listState) { from, to ->
+    onMove(from.index, to.index)
+  }
   val scope = rememberCoroutineScope()
   var isBarHovered by remember { mutableStateOf(false) }
 
@@ -81,12 +88,15 @@ fun TabBar(
         },
     ) {
       items(tabs, key = { it.id }) { tab ->
-        TabChip(
-          tab = tab,
-          selected = tab.id == selectedTabId,
-          onSelect = { onSelect(tab.id) },
-          onClose = { onClose(tab.id) },
-        )
+        ReorderableItem(reorderState, key = tab.id) {
+          TabChip(
+            tab = tab,
+            selected = tab.id == selectedTabId,
+            onSelect = { onSelect(tab.id) },
+            onClose = { onClose(tab.id) },
+            modifier = Modifier.draggableHandle(onDragStopped = { onReorderEnd() }),
+          )
+        }
       }
     }
 
@@ -113,6 +123,7 @@ private fun TabChip(
   selected: Boolean,
   onSelect: () -> Unit,
   onClose: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   val bg =
     if (selected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
@@ -122,7 +133,7 @@ private fun TabChip(
 
   Row(
     verticalAlignment = Alignment.CenterVertically,
-    modifier = Modifier
+    modifier = modifier
       .fillMaxHeight()
       .width(150.dp)
       .background(bg)

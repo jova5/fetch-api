@@ -55,6 +55,7 @@ kotlin {
       implementation(libs.jewel.int.ui.decorated.window)
       implementation(libs.codeeditor)
       implementation(libs.jsoup)
+      implementation(libs.reorderable)
     }
   }
 }

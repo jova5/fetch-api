@@ -207,6 +207,8 @@ class TabsViewModel(
         s.copy(tabs = newTabs, selectedTabId = newSelected)
       }
       persistSelectedTab(_state.value.selectedTabId)
+
+      tabRepository.updatePositions(_state.value.tabs.map { it.id })
     }
   }
 
@@ -327,6 +329,21 @@ class TabsViewModel(
       } catch (t: Throwable) {
         setExecution(tabId, RequestExecution.Failure(t.message ?: "Request failed"))
       }
+    }
+  }
+
+  fun moveTab(fromIndex: Int, toIndex: Int) {
+    _state.update { s ->
+      if (fromIndex !in s.tabs.indices || toIndex !in s.tabs.indices) return@update s
+      val tabs = s.tabs.toMutableList()
+      tabs.add(toIndex, tabs.removeAt(fromIndex))
+      s.copy(tabs = tabs)
+    }
+  }
+
+  fun persistTabOrder() {
+    viewModelScope.launch {
+      tabRepository.updatePositions(_state.value.tabs.map { it.id })
     }
   }
 

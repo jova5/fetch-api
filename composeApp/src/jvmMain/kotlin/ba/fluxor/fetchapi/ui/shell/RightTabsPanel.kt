@@ -57,6 +57,8 @@ fun RightTabsPanel(
         selectedTabId = state.selectedTabId,
         onSelect = tabsVm::selectTab,
         onClose = tabsVm::closeTab,
+        onMove = tabsVm::moveTab,
+        onReorderEnd = tabsVm::persistTabOrder,
       )
       HorizontalDivider()
       val selected = state.selectedTab
