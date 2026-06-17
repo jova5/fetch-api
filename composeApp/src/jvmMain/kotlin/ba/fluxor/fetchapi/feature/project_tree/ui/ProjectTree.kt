@@ -39,7 +39,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private sealed class TreeItem {
   data class SubProjectHeader(val node: SubProjectNode) : TreeItem()
-  data class FolderHeader(val node: FolderNode, val subProjectId: Long) : TreeItem()
+  data class FolderHeader(val node: FolderNode, val subProjectId: Long, val indent: Dp) : TreeItem()
   data class RequestLeaf(val request: Request, val indent: Dp) : TreeItem()
 }
 
@@ -174,6 +174,7 @@ fun ProjectTree(
             is TreeItem.FolderHeader -> FolderItem(
               node = item.node,
               isHovered = shouldShowHoverHighlight,
+              indent = item.indent,
               onExpand = {
                 item.node.folder.id?.let(treeVm::toggleFolderExpanded)
               },
@@ -185,6 +186,10 @@ fun ProjectTree(
               onDropdownClose = { isDropdownOpen = false },
               onEdit = { tabsVm.openFolderTab(item.node.folder) },
               onDelete = { item.node.folder.id?.let(folderVm::deleteFolder) },
+              onAddFolder = {
+                val folderId = item.node.folder.id ?: return@FolderItem
+                folderVm.createFolder(item.subProjectId, parentFolderId = folderId)
+              },
               onAddRequest = {
                 val folderId = item.node.folder.id ?: return@FolderItem
                 requestVm.createRequest(item.subProjectId, folderId)
@@ -235,25 +240,42 @@ private fun TreeItem.matches(focus: FocusTarget?): Boolean {
   }
 }
 
+private val FOLDER_BASE_INDENT = 24.dp
+private val INDENT_PER_LEVEL = 16.dp
+private val REQUEST_EXTRA_INDENT = 24.dp
+
 private fun flattenTree(nodes: List<SubProjectNode>): List<TreeItem> {
   val result = mutableListOf<TreeItem>()
   for (spNode in nodes) {
     result += TreeItem.SubProjectHeader(spNode)
     if (spNode.expanded) {
       for (folderNode in spNode.folders) {
-        result += TreeItem.FolderHeader(folderNode, spNode.subProject.id!!)
-        if (folderNode.expanded) {
-          for (request in folderNode.requests) {
-            result += TreeItem.RequestLeaf(request, 48.dp)
-          }
-        }
+        flattenFolder(folderNode, spNode.subProject.id!!, depth = 0, into = result)
       }
       for (request in spNode.looseRequests) {
-        result += TreeItem.RequestLeaf(request, 24.dp)
+        result += TreeItem.RequestLeaf(request, FOLDER_BASE_INDENT)
       }
     }
   }
   return result
+}
+
+private fun flattenFolder(
+  folderNode: FolderNode,
+  subProjectId: Long,
+  depth: Int,
+  into: MutableList<TreeItem>,
+) {
+  val folderIndent = FOLDER_BASE_INDENT + INDENT_PER_LEVEL * depth
+  into += TreeItem.FolderHeader(folderNode, subProjectId, folderIndent)
+  if (folderNode.expanded) {
+    for (child in folderNode.subFolders) {
+      flattenFolder(child, subProjectId, depth + 1, into)
+    }
+    for (request in folderNode.requests) {
+      into += TreeItem.RequestLeaf(request, folderIndent + REQUEST_EXTRA_INDENT)
+    }
+  }
 }
 
 private fun filterTree(nodes: List<SubProjectNode>, query: String): List<SubProjectNode> {
@@ -261,20 +283,7 @@ private fun filterTree(nodes: List<SubProjectNode>, query: String): List<SubProj
   return nodes.mapNotNull { spNode ->
     val matchesSp = spNode.subProject.name.lowercase()
       .contains(lower)
-    val filteredFolders = spNode.folders.mapNotNull { fNode ->
-      val matchesFolder = fNode.folder.name.lowercase()
-        .contains(lower)
-      val filteredRequests = fNode.requests.filter {
-        it.name.lowercase()
-          .contains(lower) || it.method.lowercase()
-          .contains(lower)
-      }
-      when {
-        matchesFolder -> fNode
-        filteredRequests.isNotEmpty() -> fNode.copy(requests = filteredRequests)
-        else -> null
-      }
-    }
+    val filteredFolders = spNode.folders.mapNotNull { filterFolder(it, lower) }
     val filteredLoose = spNode.looseRequests.filter {
       it.name.lowercase()
         .contains(lower) || it.method.lowercase()
@@ -287,5 +296,25 @@ private fun filterTree(nodes: List<SubProjectNode>, query: String): List<SubProj
 
       else -> null
     }
+  }
+}
+
+/**
+ * Keeps a folder if its own name matches (whole subtree retained), or if any descendant folder
+ * or request matches (subtree pruned to the matches). Matched folders are force-expanded so the
+ * results are visible.
+ */
+private fun filterFolder(node: FolderNode, lower: String): FolderNode? {
+  if (node.folder.name.lowercase().contains(lower)) {
+    return node.copy(expanded = true)
+  }
+  val filteredSub = node.subFolders.mapNotNull { filterFolder(it, lower) }
+  val filteredRequests = node.requests.filter {
+    it.name.lowercase().contains(lower) || it.method.lowercase().contains(lower)
+  }
+  return if (filteredSub.isNotEmpty() || filteredRequests.isNotEmpty()) {
+    node.copy(subFolders = filteredSub, requests = filteredRequests, expanded = true)
+  } else {
+    null
   }
 }

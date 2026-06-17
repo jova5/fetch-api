@@ -20,13 +20,15 @@ class FolderViewModel(
   private val _state = MutableStateFlow(FolderUiState())
   val state: StateFlow<FolderUiState> = _state.asStateFlow()
 
-  fun createFolder(subProjectId: Long) {
+  fun createFolder(subProjectId: Long, parentFolderId: Long? = null) {
     launchCatching {
 
-      val existing = folderRepository.getAllBySubProjectId(subProjectId).map { it.name }
+      val existing = folderRepository.getAllBySubProjectId(subProjectId)
+        .filter { it.parentFolderId == parentFolderId }
+        .map { it.name }
       val name = uniqueName("New Folder", existing)
 
-      val created = folderRepository.create(subProjectId, name)
+      val created = folderRepository.create(subProjectId, name, parentFolderId)
 
       FolderEvents.triggerFolderCreated(created)
     }

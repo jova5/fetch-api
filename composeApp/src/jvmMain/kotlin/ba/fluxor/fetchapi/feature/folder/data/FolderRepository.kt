@@ -10,10 +10,11 @@ class FolderRepository(private val dao: FolderDao) {
     dao.findAllBySubProjectId(subProjectId)
   }
 
-  suspend fun create(subProjectId: Long, name: String): Folder = withContext(Dispatchers.IO) {
-    val id = dao.insert(subProjectId, name)
-    dao.findById(id) ?: error("Inserted folder with id=$id not found")
-  }
+  suspend fun create(subProjectId: Long, name: String, parentFolderId: Long? = null): Folder =
+    withContext(Dispatchers.IO) {
+      val id = dao.insert(subProjectId, name, parentFolderId)
+      dao.findById(id) ?: error("Inserted folder with id=$id not found")
+    }
 
   suspend fun update(id: Long, name: String): Folder = withContext(Dispatchers.IO) {
     dao.update(id, name)

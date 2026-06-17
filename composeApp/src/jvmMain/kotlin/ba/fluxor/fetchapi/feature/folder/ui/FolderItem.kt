@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
@@ -25,12 +26,14 @@ import org.jetbrains.compose.resources.stringResource
 fun FolderItem(
   node: FolderNode,
   isHovered: Boolean,
+  indent: Dp,
   onExpand: () -> Unit,
   onToggle: () -> Unit,
   onDropdownOpen: () -> Unit,
   onDropdownClose: () -> Unit,
   onEdit: () -> Unit,
   onDelete: () -> Unit,
+  onAddFolder: () -> Unit,
   onAddRequest: () -> Unit,
 ) {
   var showMenu by remember { mutableStateOf(false) }
@@ -41,7 +44,7 @@ fun FolderItem(
       .fillMaxWidth()
       .clip(RoundedCornerShape(4.dp))
       .clickable(onClick = onToggle)
-      .padding(start = 24.dp, top = 4.dp, bottom = 4.dp, end = 2.dp),
+      .padding(start = indent, top = 4.dp, bottom = 4.dp, end = 2.dp),
   ) {
     IconButton(onClick = onExpand, modifier = Modifier.size(20.dp)) {
       Icon(
@@ -93,6 +96,10 @@ fun FolderItem(
           onDropdownClose()
         }
       ) {
+        DropdownMenuItem(
+          text = { Text(stringResource(Res.string.add_folder)) },
+          onClick = { showMenu = false; onAddFolder() }
+        )
         DropdownMenuItem(
           text = { Text(stringResource(Res.string.add_request)) },
           onClick = { showMenu = false; onAddRequest() }

@@ -6,5 +6,6 @@ import ba.fluxor.fetchapi.feature.request.data.Request
 data class FolderNode(
   val folder: Folder,
   val requests: List<Request> = emptyList(),
+  val subFolders: List<FolderNode> = emptyList(),
   val expanded: Boolean = true,
 )

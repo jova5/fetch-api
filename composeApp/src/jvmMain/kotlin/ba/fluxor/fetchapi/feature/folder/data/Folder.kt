@@ -4,4 +4,5 @@ data class Folder(
   val id: Long? = null,
   val subProjectId: Long,
   val name: String,
+  val parentFolderId: Long? = null,
 )
