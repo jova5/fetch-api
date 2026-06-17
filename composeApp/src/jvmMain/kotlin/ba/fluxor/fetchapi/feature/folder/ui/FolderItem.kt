@@ -98,19 +98,19 @@ fun FolderItem(
       ) {
         DropdownMenuItem(
           text = { Text(stringResource(Res.string.add_folder)) },
-          onClick = { showMenu = false; onAddFolder() }
+          onClick = { showMenu = false; onDropdownClose(); onAddFolder() }
         )
         DropdownMenuItem(
           text = { Text(stringResource(Res.string.add_request)) },
-          onClick = { showMenu = false; onAddRequest() }
+          onClick = { showMenu = false; onDropdownClose(); onAddRequest() }
         )
         DropdownMenuItem(
           text = { Text(stringResource(Res.string.edit)) },
-          onClick = { showMenu = false; onEdit() }
+          onClick = { showMenu = false; onDropdownClose(); onEdit() }
         )
         DropdownMenuItem(
           text = { Text(stringResource(Res.string.delete)) },
-          onClick = { showMenu = false; onDelete() }
+          onClick = { showMenu = false; onDropdownClose(); onDelete() }
         )
       }
     }

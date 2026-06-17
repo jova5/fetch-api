@@ -16,11 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.request.data.Request
-import fetchapi.composeapp.generated.resources.Res
-import fetchapi.composeapp.generated.resources.delete
-import fetchapi.composeapp.generated.resources.edit
-import fetchapi.composeapp.generated.resources.menu
-import fetchapi.composeapp.generated.resources.more_actions
+import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -86,11 +82,11 @@ fun RequestItem(
       ) {
         DropdownMenuItem(
           text = { Text(stringResource(Res.string.edit)) },
-          onClick = { showMenu = false; onEdit() }
+          onClick = { showMenu = false; onDropdownClose(); onEdit() }
         )
         DropdownMenuItem(
           text = { Text(stringResource(Res.string.delete)) },
-          onClick = { showMenu = false; onDelete() }
+          onClick = { showMenu = false; onDropdownClose(); onDelete() }
         )
       }
     }
