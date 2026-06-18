@@ -102,6 +102,98 @@ class ProjectTreeViewModel(
     _state.update { ProjectTreeUiState() }
   }
 
+  // --- Drag & drop reorder / reparenting ---
+  //
+  // Each method derives the destination sibling order from the current (full, unfiltered) tree
+  // state, then delegates persistence to the owning entity ViewModel. [anchorId] == null means
+  // "append to the end of the destination group" (a drop *into* a container); otherwise the dragged
+  // item is placed before/after the anchor sibling. The resulting refresh event reloads the tree.
+
+  fun moveSubProject(draggedId: Long, anchorId: Long, placeAfter: Boolean) {
+    val siblings = _state.value.subProjectNodes.mapNotNull { it.subProject.id }
+    subProjectViewModel.reorder(buildOrder(siblings, draggedId, anchorId, placeAfter))
+  }
+
+  fun moveFolder(
+    draggedId: Long,
+    targetSubProjectId: Long,
+    targetParentFolderId: Long?,
+    anchorFolderId: Long?,
+    placeAfter: Boolean,
+  ) {
+    val siblings = folderSiblingIds(targetSubProjectId, targetParentFolderId)
+    val ordered = buildOrder(siblings, draggedId, anchorFolderId, placeAfter)
+    folderViewModel.move(draggedId, targetSubProjectId, targetParentFolderId, ordered)
+  }
+
+  fun moveRequest(
+    draggedId: Long,
+    targetSubProjectId: Long,
+    targetFolderId: Long?,
+    anchorRequestId: Long?,
+    placeAfter: Boolean,
+  ) {
+    val siblings = requestSiblingIds(targetSubProjectId, targetFolderId)
+    val ordered = buildOrder(siblings, draggedId, anchorRequestId, placeAfter)
+    requestViewModel.move(draggedId, targetSubProjectId, targetFolderId, ordered)
+  }
+
+  /** Removes [draggedId] from [siblings] and re-inserts it before/after [anchorId] (or at the end). */
+  private fun buildOrder(
+    siblings: List<Long>,
+    draggedId: Long,
+    anchorId: Long?,
+    placeAfter: Boolean,
+  ): List<Long> {
+    val list = siblings.filterNot { it == draggedId }.toMutableList()
+    val index = when {
+      anchorId == null -> list.size
+      else -> {
+        val i = list.indexOf(anchorId)
+        when {
+          i < 0 -> list.size
+          placeAfter -> i + 1
+          else -> i
+        }
+      }
+    }
+    list.add(index.coerceIn(0, list.size), draggedId)
+    return list
+  }
+
+  private fun folderSiblingIds(subProjectId: Long, parentFolderId: Long?): List<Long> {
+    val nodes = _state.value.subProjectNodes
+    return if (parentFolderId != null) {
+      findFolderNode(nodes, parentFolderId)?.subFolders?.mapNotNull { it.folder.id }.orEmpty()
+    } else {
+      nodes.find { it.subProject.id == subProjectId }?.folders?.mapNotNull { it.folder.id }.orEmpty()
+    }
+  }
+
+  private fun requestSiblingIds(subProjectId: Long, folderId: Long?): List<Long> {
+    val nodes = _state.value.subProjectNodes
+    return if (folderId != null) {
+      findFolderNode(nodes, folderId)?.requests?.mapNotNull { it.id }.orEmpty()
+    } else {
+      nodes.find { it.subProject.id == subProjectId }?.looseRequests?.mapNotNull { it.id }.orEmpty()
+    }
+  }
+
+  private fun findFolderNode(nodes: List<SubProjectNode>, folderId: Long): FolderNode? {
+    for (spNode in nodes) {
+      findFolderNodeIn(spNode.folders, folderId)?.let { return it }
+    }
+    return null
+  }
+
+  private fun findFolderNodeIn(nodes: List<FolderNode>, folderId: Long): FolderNode? {
+    for (node in nodes) {
+      if (node.folder.id == folderId) return node
+      findFolderNodeIn(node.subFolders, folderId)?.let { return it }
+    }
+    return null
+  }
+
   // --- UI state ---
 
   fun toggleSubProjectExpanded(id: Long) {

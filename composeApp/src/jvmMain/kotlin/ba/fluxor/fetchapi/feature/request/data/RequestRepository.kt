@@ -23,8 +23,20 @@ class RequestRepository(private val dao: RequestDao) {
   }
 
   suspend fun create(request: Request): Request = withContext(Dispatchers.IO) {
-    val id = dao.insert(request)
+    val position = dao.maxPosition(request.subProjectId, request.folderId) + 1
+    val id = dao.insert(request, position)
     dao.findById(id) ?: error("Inserted request with id=$id not found")
+  }
+
+  /** Re-parents the request (new sub-project and/or folder) and sets its position. */
+  suspend fun move(id: Long, subProjectId: Long, folderId: Long?, position: Int): Unit =
+    withContext(Dispatchers.IO) {
+      dao.move(id, subProjectId, folderId, position)
+    }
+
+  /** Persists the given sibling order by writing each id's index back as its position. */
+  suspend fun updatePositions(orderedIds: List<Long>) = withContext(Dispatchers.IO) {
+    orderedIds.forEachIndexed { index, id -> dao.updatePosition(id, index) }
   }
 
   suspend fun update(request: Request, id: Long): Request = withContext(Dispatchers.IO) {

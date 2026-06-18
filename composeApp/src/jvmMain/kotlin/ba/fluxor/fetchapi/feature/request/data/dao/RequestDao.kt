@@ -15,12 +15,13 @@ class RequestDao(private val connection: Connection) {
   private val columns =
     "id, sub_project_id, folder_id, name, method, url, headers, body, params, headers_json, body_config, auth_type, auth_config, excluded_auto_headers"
 
-  fun insert(request: Request): Long {
+  fun insert(request: Request, position: Int): Long {
     connection.prepareStatement(
-      "INSERT INTO request(sub_project_id, folder_id, name, method, url, params, headers_json, body_config, auth_type, auth_config, excluded_auto_headers) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO request(sub_project_id, folder_id, name, method, url, params, headers_json, body_config, auth_type, auth_config, excluded_auto_headers, position) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
       Statement.RETURN_GENERATED_KEYS,
     ).use { stmt ->
       bindWriteParams(stmt, request, startIndex = 1)
+      stmt.setInt(12, position)
       stmt.executeUpdate()
       stmt.generatedKeys.use { keys ->
         if (keys.next()) return keys.getLong(1)
@@ -55,9 +56,45 @@ class RequestDao(private val connection: Connection) {
     }
   }
 
+  fun updatePosition(id: Long, position: Int): Int {
+    connection.prepareStatement("UPDATE request SET position=? WHERE id=?").use { stmt ->
+      stmt.setInt(1, position)
+      stmt.setLong(2, id)
+      return stmt.executeUpdate()
+    }
+  }
+
+  /** Re-parents the request (new sub-project and/or folder) and sets its position. */
+  fun move(id: Long, subProjectId: Long, folderId: Long?, position: Int): Int {
+    connection.prepareStatement(
+      "UPDATE request SET sub_project_id=?, folder_id=?, position=? WHERE id=?"
+    ).use { stmt ->
+      stmt.setLong(1, subProjectId)
+      if (folderId != null) stmt.setLong(2, folderId) else stmt.setNull(2, Types.INTEGER)
+      stmt.setInt(3, position)
+      stmt.setLong(4, id)
+      return stmt.executeUpdate()
+    }
+  }
+
+  /** Highest sibling position within a container (a folder, or the loose group of a sub-project). */
+  fun maxPosition(subProjectId: Long, folderId: Long?): Int {
+    val sql = if (folderId != null) {
+      "SELECT COALESCE(MAX(position), -1) FROM request WHERE folder_id=?"
+    } else {
+      "SELECT COALESCE(MAX(position), -1) FROM request WHERE sub_project_id=? AND folder_id IS NULL"
+    }
+    connection.prepareStatement(sql).use { stmt ->
+      if (folderId != null) stmt.setLong(1, folderId) else stmt.setLong(1, subProjectId)
+      stmt.executeQuery().use { rs ->
+        return if (rs.next()) rs.getInt(1) else -1
+      }
+    }
+  }
+
   fun findAllBySubProjectId(subProjectId: Long): List<Request> {
     connection.prepareStatement(
-      "SELECT $columns FROM request WHERE sub_project_id=? ORDER BY id"
+      "SELECT $columns FROM request WHERE sub_project_id=? ORDER BY position, id"
     ).use { stmt ->
       stmt.setLong(1, subProjectId)
       stmt.executeQuery().use { rs ->
@@ -70,7 +107,7 @@ class RequestDao(private val connection: Connection) {
 
   fun findAllByFolderId(folderId: Long): List<Request> {
     connection.prepareStatement(
-      "SELECT $columns FROM request WHERE folder_id=? ORDER BY id"
+      "SELECT $columns FROM request WHERE folder_id=? ORDER BY position, id"
     ).use { stmt ->
       stmt.setLong(1, folderId)
       stmt.executeQuery().use { rs ->
@@ -83,7 +120,7 @@ class RequestDao(private val connection: Connection) {
 
   fun findAllLooseBySubProjectId(subProjectId: Long): List<Request> {
     connection.prepareStatement(
-      "SELECT $columns FROM request WHERE sub_project_id=? AND folder_id IS NULL ORDER BY id"
+      "SELECT $columns FROM request WHERE sub_project_id=? AND folder_id IS NULL ORDER BY position, id"
     ).use { stmt ->
       stmt.setLong(1, subProjectId)
       stmt.executeQuery().use { rs ->

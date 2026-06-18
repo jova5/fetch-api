@@ -70,6 +70,14 @@ class SubProjectViewModel(
     }
   }
 
+  /** Persists a new sub-project order (ids in their desired sequence). */
+  fun reorder(orderedIds: List<Long>) {
+    launchCatching {
+      subProjectRepository.updatePositions(orderedIds)
+      SubProjectEvents.triggerRefresh()
+    }
+  }
+
   private fun launchCatching(block: suspend () -> Unit) {
     viewModelScope.launch {
       try {

@@ -67,6 +67,19 @@ class FolderViewModel(
     }
   }
 
+  /**
+   * Re-parents [id] under ([subProjectId], [parentFolderId]) and renumbers the destination sibling
+   * group to [orderedSiblingIds] (which already contains [id] at its target index).
+   */
+  fun move(id: Long, subProjectId: Long, parentFolderId: Long?, orderedSiblingIds: List<Long>) {
+    launchCatching {
+      val position = orderedSiblingIds.indexOf(id).coerceAtLeast(0)
+      folderRepository.move(id, subProjectId, parentFolderId, position)
+      folderRepository.updatePositions(orderedSiblingIds)
+      FolderEvents.triggerRefresh()
+    }
+  }
+
   private fun launchCatching(block: suspend () -> Unit) {
     viewModelScope.launch {
       try {

@@ -12,9 +12,21 @@ class FolderRepository(private val dao: FolderDao) {
 
   suspend fun create(subProjectId: Long, name: String, parentFolderId: Long? = null): Folder =
     withContext(Dispatchers.IO) {
-      val id = dao.insert(subProjectId, name, parentFolderId)
+      val position = dao.maxPosition(subProjectId, parentFolderId) + 1
+      val id = dao.insert(subProjectId, name, parentFolderId, position)
       dao.findById(id) ?: error("Inserted folder with id=$id not found")
     }
+
+  /** Re-parents the folder (subtree follows) and sets its position. */
+  suspend fun move(id: Long, subProjectId: Long, parentFolderId: Long?, position: Int): Unit =
+    withContext(Dispatchers.IO) {
+      dao.move(id, subProjectId, parentFolderId, position)
+    }
+
+  /** Persists the given sibling order by writing each id's index back as its position. */
+  suspend fun updatePositions(orderedIds: List<Long>) = withContext(Dispatchers.IO) {
+    orderedIds.forEachIndexed { index, id -> dao.updatePosition(id, index) }
+  }
 
   suspend fun update(id: Long, name: String): Folder = withContext(Dispatchers.IO) {
     dao.update(id, name)
