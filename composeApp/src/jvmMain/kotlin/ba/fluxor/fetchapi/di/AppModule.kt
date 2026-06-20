@@ -41,10 +41,10 @@ val appModule = module {
   single { SubProjectViewModel(get(), get()) }
   single { FolderDao(get()) }
   single { FolderRepository(get()) }
-  single { FolderViewModel(get()) }
   single { RequestDao(get()) }
   single { RequestRepository(get()) }
   single { RequestViewModel(get()) }
+  single { FolderViewModel(get(), get()) }
   viewModel { ProjectTreeViewModel(get(), get(), get()) }
   single { TabDao(get()) }
   single { TabRepository(get()) }

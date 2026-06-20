@@ -43,11 +43,13 @@ class FolderDao(private val connection: Connection) {
 
   /** Highest sibling position within a parent group; -1 when the group is empty. */
   fun maxPosition(subProjectId: Long, parentFolderId: Long?): Int {
+
     val sql = if (parentFolderId != null) {
       "SELECT COALESCE(MAX(position), -1) FROM folder WHERE sub_project_id=? AND parent_folder_id=?"
     } else {
       "SELECT COALESCE(MAX(position), -1) FROM folder WHERE sub_project_id=? AND parent_folder_id IS NULL"
     }
+
     connection.prepareStatement(sql).use { stmt ->
       stmt.setLong(1, subProjectId)
       if (parentFolderId != null) stmt.setLong(2, parentFolderId)
@@ -59,11 +61,13 @@ class FolderDao(private val connection: Connection) {
 
   /**
    * Re-parents the folder (new sub-project and/or parent folder) and sets its position. Because
-   * every folder and request carries its own [sub_project_id], the whole subtree is re-stamped with
-   * [subProjectId] via a recursive CTE over [parent_folder_id] so descendants follow the move.
+   * every folder carries its own [sub_project_id], the whole subtree is re-stamped with
+   * [subProjectId] via a recursive CTE over [parent_folder_id] so descendant folders follow the
+   * move. Returns the descendant folder ids (the moved folder plus all of its descendants) so the
+   * request feature can re-stamp the requests they contain.
    */
-  fun move(id: Long, subProjectId: Long, parentFolderId: Long?, position: Int): Int {
-    val moved = connection.prepareStatement(
+  fun move(id: Long, subProjectId: Long, parentFolderId: Long?, position: Int): List<Long> {
+    connection.prepareStatement(
       "UPDATE folder SET sub_project_id=?, parent_folder_id=?, position=? WHERE id=?"
     ).use { stmt ->
       stmt.setLong(1, subProjectId)
@@ -90,14 +94,15 @@ class FolderDao(private val connection: Connection) {
     }
 
     connection.prepareStatement(
-      "$descendantsCte UPDATE request SET sub_project_id=? WHERE folder_id IN (SELECT id FROM descendants)"
+      "$descendantsCte SELECT id FROM descendants"
     ).use { stmt ->
       stmt.setLong(1, id)
-      stmt.setLong(2, subProjectId)
-      stmt.executeUpdate()
+      stmt.executeQuery().use { rs ->
+        val ids = mutableListOf<Long>()
+        while (rs.next()) ids += rs.getLong(1)
+        return ids
+      }
     }
-
-    return moved
   }
 
   /**

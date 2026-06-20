@@ -106,6 +106,10 @@ class RequestViewModel(
   suspend fun getById(id: Long): Request? {
     return requestRepository.getById(id)
   }
+
+  suspend fun restampSubProject(descendantFolderIds: List<Long>, subProjectId: Long) {
+    requestRepository.restampSubProject(descendantFolderIds, subProjectId)
+  }
 }
 
 private fun uniqueName(base: String, existing: Collection<String>): String {

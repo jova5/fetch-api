@@ -37,7 +37,7 @@ fun ProjectTreeViewPanel(
 ) {
   val treeState by treeVm.state.collectAsStateWithLifecycle()
   val projectState by projectVm.state.collectAsStateWithLifecycle()
-  var query by remember { mutableStateOf("") }
+  var searchQuery by remember { mutableStateOf("") }
 
   LaunchedEffect(projectState.active) {
     val projectId = projectState.active?.id
@@ -55,8 +55,8 @@ fun ProjectTreeViewPanel(
       modifier = Modifier.fillMaxWidth(),
     ) {
       CompactInput(
-        value = query,
-        onValueChange = { query = it },
+        value = searchQuery,
+        onValueChange = { searchQuery = it },
         placeholder = stringResource(Res.string.search),
         modifier = Modifier.weight(1f),
         enabled = projectState.active != null,
@@ -85,7 +85,7 @@ fun ProjectTreeViewPanel(
       } else {
         ProjectTree(
           nodes = treeState.subProjectNodes,
-          query = query,
+          searchQuery = searchQuery,
           treeVm = treeVm,
           subProjectVm = subProjectVm,
           folderVm = folderVm,

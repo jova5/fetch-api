@@ -145,7 +145,9 @@ class ProjectTreeViewModel(
     anchorId: Long?,
     placeAfter: Boolean,
   ): List<Long> {
+
     val list = siblings.filterNot { it == draggedId }.toMutableList()
+
     val index = when {
       anchorId == null -> list.size
       else -> {

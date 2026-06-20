@@ -45,6 +45,7 @@ import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.no_matches
 import fetchapi.composeapp.generated.resources.no_sub_projects
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Duration.Companion.milliseconds
 
 internal sealed class TreeItem {
   data class SubProjectHeader(val node: SubProjectNode) : TreeItem()
@@ -62,14 +63,14 @@ internal fun keyOf(item: TreeItem): String = when (item) {
 @Composable
 fun ProjectTree(
   nodes: List<SubProjectNode>,
-  query: String,
+  searchQuery: String,
   treeVm: ProjectTreeViewModel,
   subProjectVm: SubProjectViewModel,
   folderVm: FolderViewModel,
   requestVm: RequestViewModel,
   tabsVm: TabsViewModel,
 ) {
-  val filtered = if (query.isBlank()) nodes else filterTree(nodes, query.trim())
+  val filtered = if (searchQuery.isBlank()) nodes else filterTree(nodes, searchQuery.trim())
 
   if (filtered.isEmpty()) {
     Text(
@@ -89,7 +90,7 @@ fun ProjectTree(
   // Drag & drop. Disabled while searching: the flattened list is filtered then, so row indices
   // wouldn't line up with the full tree the ViewModel reorders against.
   val dragState = rememberTreeDragState()
-  val dndEnabled = query.isBlank()
+  val dndEnabled = searchQuery.isBlank()
   var autoScrollVelocity by remember { mutableStateOf(0f) }
 
   fun dispatch(command: DropCommand) {
@@ -122,7 +123,7 @@ fun ProjectTree(
     if (autoScrollVelocity == 0f) return@LaunchedEffect
     while (isActive) {
       state.scrollBy(autoScrollVelocity)
-      delay(16)
+      delay(16.milliseconds)
     }
   }
 

@@ -64,6 +64,23 @@ class RequestDao(private val connection: Connection) {
     }
   }
 
+  /**
+   * Bulk re-stamps [subProjectId] onto every request contained directly in any of [folderIds].
+   * Used after a folder subtree is moved to a new sub-project so the denormalized
+   * [sub_project_id] on its requests stays consistent. No-op for an empty id list.
+   */
+  fun restampSubProject(folderIds: List<Long>, subProjectId: Long): Int {
+    if (folderIds.isEmpty()) return 0
+    val placeholders = folderIds.joinToString(",") { "?" }
+    connection.prepareStatement(
+      "UPDATE request SET sub_project_id=? WHERE folder_id IN ($placeholders)"
+    ).use { stmt ->
+      stmt.setLong(1, subProjectId)
+      folderIds.forEachIndexed { index, folderId -> stmt.setLong(index + 2, folderId) }
+      return stmt.executeUpdate()
+    }
+  }
+
   /** Re-parents the request (new sub-project and/or folder) and sets its position. */
   fun move(id: Long, subProjectId: Long, folderId: Long?, position: Int): Int {
     connection.prepareStatement(
@@ -88,19 +105,6 @@ class RequestDao(private val connection: Connection) {
       if (folderId != null) stmt.setLong(1, folderId) else stmt.setLong(1, subProjectId)
       stmt.executeQuery().use { rs ->
         return if (rs.next()) rs.getInt(1) else -1
-      }
-    }
-  }
-
-  fun findAllBySubProjectId(subProjectId: Long): List<Request> {
-    connection.prepareStatement(
-      "SELECT $columns FROM request WHERE sub_project_id=? ORDER BY position, id"
-    ).use { stmt ->
-      stmt.setLong(1, subProjectId)
-      stmt.executeQuery().use { rs ->
-        val result = mutableListOf<Request>()
-        while (rs.next()) result += rs.toRequest()
-        return result
       }
     }
   }

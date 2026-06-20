@@ -6,10 +6,6 @@ import kotlinx.coroutines.withContext
 
 class RequestRepository(private val dao: RequestDao) {
 
-  suspend fun getAllBySubProjectId(subProjectId: Long): List<Request> = withContext(Dispatchers.IO) {
-    dao.findAllBySubProjectId(subProjectId)
-  }
-
   suspend fun getAllByFolderId(folderId: Long): List<Request> = withContext(Dispatchers.IO) {
     dao.findAllByFolderId(folderId)
   }
@@ -32,6 +28,12 @@ class RequestRepository(private val dao: RequestDao) {
   suspend fun move(id: Long, subProjectId: Long, folderId: Long?, position: Int): Unit =
     withContext(Dispatchers.IO) {
       dao.move(id, subProjectId, folderId, position)
+    }
+
+  /** Bulk re-stamps [subProjectId] onto every request contained directly in any of [folderIds]. */
+  suspend fun restampSubProject(folderIds: List<Long>, subProjectId: Long): Unit =
+    withContext(Dispatchers.IO) {
+      dao.restampSubProject(folderIds, subProjectId)
     }
 
   /** Persists the given sibling order by writing each id's index back as its position. */
