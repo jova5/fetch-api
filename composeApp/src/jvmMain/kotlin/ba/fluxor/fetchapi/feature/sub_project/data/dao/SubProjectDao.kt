@@ -35,11 +35,16 @@ class SubProjectDao(private val connection: Connection) {
     }
   }
 
-  fun updatePosition(id: Long, position: Int): Int {
+  /** Writes each id's index back as its position, in a single batched round-trip. */
+  fun updatePositions(orderedIds: List<Long>) {
+    if (orderedIds.isEmpty()) return
     connection.prepareStatement("UPDATE sub_project SET position=? WHERE id=?").use { stmt ->
-      stmt.setInt(1, position)
-      stmt.setLong(2, id)
-      return stmt.executeUpdate()
+      orderedIds.forEachIndexed { index, id ->
+        stmt.setInt(1, index)
+        stmt.setLong(2, id)
+        stmt.addBatch()
+      }
+      stmt.executeBatch()
     }
   }
 

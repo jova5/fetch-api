@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ba.fluxor.fetchapi.feature.folder.data.Folder
 import ba.fluxor.fetchapi.feature.folder.data.FolderRepository
-import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import fetchapi.composeapp.generated.resources.Res
 import fetchapi.composeapp.generated.resources.error_updating_folder
 import fetchapi.composeapp.generated.resources.name_can_not_be_empty
@@ -16,7 +15,6 @@ import kotlinx.coroutines.launch
 
 class FolderViewModel(
   private val folderRepository: FolderRepository,
-  private val requestViewModel: RequestViewModel,
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(FolderUiState())
@@ -65,21 +63,6 @@ class FolderViewModel(
     launchCatching {
       folderRepository.delete(id)
       _state.update { it.copy(error = null) }
-      FolderEvents.triggerRefresh()
-    }
-  }
-
-  /**
-   * Re-parents [id] under ([subProjectId], [parentFolderId]) and renumbers the destination sibling
-   * group to [orderedSiblingIds] (which already contains [id] at its target index). Re-stamps the
-   * sub-project onto every request in the moved subtree so auth inheritance stays correct.
-   */
-  fun move(id: Long, subProjectId: Long, parentFolderId: Long?, orderedSiblingIds: List<Long>) {
-    launchCatching {
-      val position = orderedSiblingIds.indexOf(id).coerceAtLeast(0)
-      val descendantFolderIds = folderRepository.move(id, subProjectId, parentFolderId, position)
-      requestViewModel.restampSubProject(descendantFolderIds, subProjectId)
-      folderRepository.updatePositions(orderedSiblingIds)
       FolderEvents.triggerRefresh()
     }
   }

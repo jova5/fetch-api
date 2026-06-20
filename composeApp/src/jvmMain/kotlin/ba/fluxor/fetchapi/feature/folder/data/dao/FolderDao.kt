@@ -33,11 +33,16 @@ class FolderDao(private val connection: Connection) {
     }
   }
 
-  fun updatePosition(id: Long, position: Int): Int {
+  /** Writes each id's index back as its position, in a single batched round-trip. */
+  fun updatePositions(orderedIds: List<Long>) {
+    if (orderedIds.isEmpty()) return
     connection.prepareStatement("UPDATE folder SET position=? WHERE id=?").use { stmt ->
-      stmt.setInt(1, position)
-      stmt.setLong(2, id)
-      return stmt.executeUpdate()
+      orderedIds.forEachIndexed { index, id ->
+        stmt.setInt(1, index)
+        stmt.setLong(2, id)
+        stmt.addBatch()
+      }
+      stmt.executeBatch()
     }
   }
 
@@ -60,20 +65,19 @@ class FolderDao(private val connection: Connection) {
   }
 
   /**
-   * Re-parents the folder (new sub-project and/or parent folder) and sets its position. Because
-   * every folder carries its own [sub_project_id], the whole subtree is re-stamped with
-   * [subProjectId] via a recursive CTE over [parent_folder_id] so descendant folders follow the
-   * move. Returns the descendant folder ids (the moved folder plus all of its descendants) so the
-   * request feature can re-stamp the requests they contain.
+   * Re-parents the folder (new sub-project and/or parent folder). Because every folder carries its
+   * own [sub_project_id], the whole subtree is re-stamped with [subProjectId] via a recursive CTE
+   * over [parent_folder_id] so descendant folders follow the move. Returns the descendant folder
+   * ids (the moved folder plus all of its descendants) so the request feature can re-stamp the
+   * requests they contain. The moved folder's position is set separately by [updatePositions].
    */
-  fun move(id: Long, subProjectId: Long, parentFolderId: Long?, position: Int): List<Long> {
+  fun move(id: Long, subProjectId: Long, parentFolderId: Long?): List<Long> {
     connection.prepareStatement(
-      "UPDATE folder SET sub_project_id=?, parent_folder_id=?, position=? WHERE id=?"
+      "UPDATE folder SET sub_project_id=?, parent_folder_id=? WHERE id=?"
     ).use { stmt ->
       stmt.setLong(1, subProjectId)
       if (parentFolderId != null) stmt.setLong(2, parentFolderId) else stmt.setNull(2, Types.INTEGER)
-      stmt.setInt(3, position)
-      stmt.setLong(4, id)
+      stmt.setLong(3, id)
       stmt.executeUpdate()
     }
 

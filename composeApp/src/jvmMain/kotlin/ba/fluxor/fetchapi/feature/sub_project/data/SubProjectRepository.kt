@@ -21,11 +21,6 @@ class SubProjectRepository(private val dao: SubProjectDao) {
       dao.findById(id) ?: error("Inserted sub_project with id=$id not found")
     }
 
-  /** Persists the given order by writing each id's index back as its position. */
-  suspend fun updatePositions(orderedIds: List<Long>) = withContext(Dispatchers.IO) {
-    orderedIds.forEachIndexed { index, id -> dao.updatePosition(id, index) }
-  }
-
   suspend fun update(id: Long, name: String, authType: String, authConfig: String?): SubProject =
     withContext(Dispatchers.IO) {
       dao.update(id, name, authType, authConfig)

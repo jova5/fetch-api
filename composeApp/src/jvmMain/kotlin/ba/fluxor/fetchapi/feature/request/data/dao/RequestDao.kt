@@ -56,11 +56,16 @@ class RequestDao(private val connection: Connection) {
     }
   }
 
-  fun updatePosition(id: Long, position: Int): Int {
+  /** Writes each id's index back as its position, in a single batched round-trip. */
+  fun updatePositions(orderedIds: List<Long>) {
+    if (orderedIds.isEmpty()) return
     connection.prepareStatement("UPDATE request SET position=? WHERE id=?").use { stmt ->
-      stmt.setInt(1, position)
-      stmt.setLong(2, id)
-      return stmt.executeUpdate()
+      orderedIds.forEachIndexed { index, id ->
+        stmt.setInt(1, index)
+        stmt.setLong(2, id)
+        stmt.addBatch()
+      }
+      stmt.executeBatch()
     }
   }
 
@@ -81,15 +86,17 @@ class RequestDao(private val connection: Connection) {
     }
   }
 
-  /** Re-parents the request (new sub-project and/or folder) and sets its position. */
-  fun move(id: Long, subProjectId: Long, folderId: Long?, position: Int): Int {
+  /**
+   * Re-parents the request (new sub-project and/or folder). The request's position is set
+   * separately by [updatePositions].
+   */
+  fun move(id: Long, subProjectId: Long, folderId: Long?): Int {
     connection.prepareStatement(
-      "UPDATE request SET sub_project_id=?, folder_id=?, position=? WHERE id=?"
+      "UPDATE request SET sub_project_id=?, folder_id=? WHERE id=?"
     ).use { stmt ->
       stmt.setLong(1, subProjectId)
       if (folderId != null) stmt.setLong(2, folderId) else stmt.setNull(2, Types.INTEGER)
-      stmt.setInt(3, position)
-      stmt.setLong(4, id)
+      stmt.setLong(3, id)
       return stmt.executeUpdate()
     }
   }

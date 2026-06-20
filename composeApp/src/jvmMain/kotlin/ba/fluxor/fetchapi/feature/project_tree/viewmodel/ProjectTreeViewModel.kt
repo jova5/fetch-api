@@ -6,6 +6,7 @@ import ba.fluxor.fetchapi.feature.folder.data.Folder
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderNode
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
+import ba.fluxor.fetchapi.feature.project_tree.data.TreeReorderService
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvents
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestViewModel
 import ba.fluxor.fetchapi.feature.sub_project.viewmodel.SubProjectEvents
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 class ProjectTreeViewModel(
   private val subProjectViewModel: SubProjectViewModel,
   private val folderViewModel: FolderViewModel,
-  private val requestViewModel: RequestViewModel
+  private val requestViewModel: RequestViewModel,
+  private val treeReorderService: TreeReorderService,
 ) : ViewModel() {
 
   private val _state = MutableStateFlow(ProjectTreeUiState())
@@ -105,13 +107,18 @@ class ProjectTreeViewModel(
   // --- Drag & drop reorder / reparenting ---
   //
   // Each method derives the destination sibling order from the current (full, unfiltered) tree
-  // state, then delegates persistence to the owning entity ViewModel. [anchorId] == null means
-  // "append to the end of the destination group" (a drop *into* a container); otherwise the dragged
-  // item is placed before/after the anchor sibling. The resulting refresh event reloads the tree.
+  // state, then delegates persistence to [TreeReorderService], which applies it as one atomic
+  // transaction. [anchorId] == null means "append to the end of the destination group" (a drop
+  // *into* a container); otherwise the dragged item is placed before/after the anchor sibling. The
+  // refresh event triggered on success reloads the tree.
 
   fun moveSubProject(draggedId: Long, anchorId: Long, placeAfter: Boolean) {
     val siblings = _state.value.subProjectNodes.mapNotNull { it.subProject.id }
-    subProjectViewModel.reorder(buildOrder(siblings, draggedId, anchorId, placeAfter))
+    val ordered = buildOrder(siblings, draggedId, anchorId, placeAfter)
+    launchCatching {
+      treeReorderService.reorderSubProjects(ordered)
+      SubProjectEvents.triggerRefresh()
+    }
   }
 
   fun moveFolder(
@@ -123,7 +130,10 @@ class ProjectTreeViewModel(
   ) {
     val siblings = folderSiblingIds(targetSubProjectId, targetParentFolderId)
     val ordered = buildOrder(siblings, draggedId, anchorFolderId, placeAfter)
-    folderViewModel.move(draggedId, targetSubProjectId, targetParentFolderId, ordered)
+    launchCatching {
+      treeReorderService.moveFolder(draggedId, targetSubProjectId, targetParentFolderId, ordered)
+      FolderEvents.triggerRefresh()
+    }
   }
 
   fun moveRequest(
@@ -135,7 +145,10 @@ class ProjectTreeViewModel(
   ) {
     val siblings = requestSiblingIds(targetSubProjectId, targetFolderId)
     val ordered = buildOrder(siblings, draggedId, anchorRequestId, placeAfter)
-    requestViewModel.move(draggedId, targetSubProjectId, targetFolderId, ordered)
+    launchCatching {
+      treeReorderService.moveRequest(draggedId, targetSubProjectId, targetFolderId, ordered)
+      RequestEvents.triggerRefresh()
+    }
   }
 
   /** Removes [draggedId] from [siblings] and re-inserts it before/after [anchorId] (or at the end). */

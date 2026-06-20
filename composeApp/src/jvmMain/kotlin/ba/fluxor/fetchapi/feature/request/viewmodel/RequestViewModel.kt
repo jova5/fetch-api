@@ -70,19 +70,6 @@ class RequestViewModel(
     }
   }
 
-  /**
-   * Re-parents [id] into ([subProjectId], [folderId]) and renumbers the destination sibling group
-   * to [orderedSiblingIds] (which already contains [id] at its target index).
-   */
-  fun move(id: Long, subProjectId: Long, folderId: Long?, orderedSiblingIds: List<Long>) {
-    launchCatching {
-      val position = orderedSiblingIds.indexOf(id).coerceAtLeast(0)
-      requestRepository.move(id, subProjectId, folderId, position)
-      requestRepository.updatePositions(orderedSiblingIds)
-      RequestEvents.triggerRefresh()
-    }
-  }
-
   private fun launchCatching(block: suspend () -> Unit) {
     viewModelScope.launch {
       try {
@@ -105,10 +92,6 @@ class RequestViewModel(
 
   suspend fun getById(id: Long): Request? {
     return requestRepository.getById(id)
-  }
-
-  suspend fun restampSubProject(descendantFolderIds: List<Long>, subProjectId: Long) {
-    requestRepository.restampSubProject(descendantFolderIds, subProjectId)
   }
 }
 

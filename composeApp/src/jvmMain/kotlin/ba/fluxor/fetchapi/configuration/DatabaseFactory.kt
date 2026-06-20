@@ -52,6 +52,8 @@ object DatabaseFactory {
     conn.createStatement().use { stmt ->
       stmt.execute("PRAGMA encoding = 'UTF-8';")
       stmt.execute("PRAGMA foreign_keys = ON;")
+      // Wait (instead of failing immediately) if another operation briefly holds the write lock.
+      stmt.execute("PRAGMA busy_timeout = 5000;")
     }
     _connection = conn
 
