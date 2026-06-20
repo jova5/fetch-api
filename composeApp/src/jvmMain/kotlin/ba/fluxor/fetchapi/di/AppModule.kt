@@ -30,7 +30,9 @@ import java.sql.Connection
 
 val appModule = module {
   single<Connection> { DatabaseFactory.connection }
-  // Serializes write transactions across the single shared JDBC connection.
+  // Serializes write *transactions* across the single shared JDBC connection. Note: plain
+  // (non-transactional) writes don't take this lock, so they aren't serialized against an open
+  // transaction — accepted for this single-user app. See `Connection.transaction` for details.
   single { Mutex() }
   single { SettingDao(get()) }
   single { SettingRepository(get()) }
