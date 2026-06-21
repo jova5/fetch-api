@@ -150,4 +150,13 @@
   <string name="cut">Cut</string>
   <string name="paste">Paste</string>
   <string name="select_all">Select All</string>
+  <string name="cookies">Cookies</string>
+  <string name="response_no_cookies">No cookies</string>
+  <string name="cookie_name">Name</string>
+  <string name="cookie_value">Value</string>
+  <string name="cookie_domain">Domain</string>
+  <string name="cookie_path">Path</string>
+  <string name="cookie_expires">Expires</string>
+  <string name="cookie_http_only">HttpOnly</string>
+  <string name="cookie_secure">Secure</string>
 </resources>

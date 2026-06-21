@@ -150,4 +150,13 @@
   <string name="cut">Isjeci</string>
   <string name="paste">Nalijepi</string>
   <string name="select_all">Izaberi sve</string>
+  <string name="cookies">Kolačići</string>
+  <string name="response_no_cookies">Nema kolačića</string>
+  <string name="cookie_name">Ime</string>
+  <string name="cookie_value">Vrijednost</string>
+  <string name="cookie_domain">Domen</string>
+  <string name="cookie_path">Putanja</string>
+  <string name="cookie_expires">Ističe</string>
+  <string name="cookie_http_only">HttpOnly</string>
+  <string name="cookie_secure">Secure</string>
 </resources>

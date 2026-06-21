@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +37,7 @@ import ba.fluxor.fetchapi.feature.tabs.ui.request.*
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.RequestExecution
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.RequestTab
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.TabBuffer
+import ba.fluxor.fetchapi.network.http.HttpCookie
 import ba.fluxor.fetchapi.network.http.HttpMethod
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
 import fetchapi.composeapp.generated.resources.*
@@ -264,7 +266,8 @@ fun RequestTabEditor(
 
 private enum class ResponseTab {
   BODY,
-  HEADERS
+  HEADERS,
+  COOKIES,
 }
 
 @Composable
@@ -363,6 +366,12 @@ private fun ResponseSuccess(success: RequestExecution.Success, isDark: Boolean) 
         modifier = Modifier.padding(horizontal = 4.dp),
         borderWidth = if (selectedTab == ResponseTab.HEADERS) 2.dp else 0.dp,
       )
+      SquareOutlineButton(
+        text = stringResource(Res.string.cookies),
+        onClick = { selectedTab = ResponseTab.COOKIES },
+        modifier = Modifier.padding(horizontal = 4.dp),
+        borderWidth = if (selectedTab == ResponseTab.COOKIES) 2.dp else 0.dp,
+      )
     }
     HorizontalDivider(thickness = 1.dp)
 
@@ -377,6 +386,101 @@ private fun ResponseSuccess(success: RequestExecution.Success, isDark: Boolean) 
         keyLabel = stringResource(Res.string.variables_key),
         valueLabel = stringResource(Res.string.api_key_value),
         modifier = Modifier.weight(1f),
+      )
+
+      ResponseTab.COOKIES -> if (response.cookies.isEmpty()) {
+        ResponseCenteredMessage(
+          text = stringResource(Res.string.response_no_cookies),
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      } else {
+        CookieTable(cookies = response.cookies, modifier = Modifier.weight(1f))
+      }
+    }
+  }
+}
+
+private val cookieColumnWidths = listOf(140.dp, 220.dp, 140.dp, 100.dp, 180.dp, 80.dp, 80.dp)
+
+@Composable
+private fun CookieTable(cookies: List<HttpCookie>, modifier: Modifier = Modifier) {
+  val verticalScroll = rememberScrollState()
+  val horizontalScroll = rememberScrollState()
+
+  Box(modifier = modifier) {
+    SelectionContainer {
+      Column(
+        modifier = Modifier
+          .verticalScroll(verticalScroll)
+          .horizontalScroll(horizontalScroll),
+      ) {
+        CookieRow(
+          cells = listOf(
+            stringResource(Res.string.cookie_name),
+            stringResource(Res.string.cookie_value),
+            stringResource(Res.string.cookie_domain),
+            stringResource(Res.string.cookie_path),
+            stringResource(Res.string.cookie_expires),
+            stringResource(Res.string.cookie_http_only),
+            stringResource(Res.string.cookie_secure),
+          ),
+          isHeader = true,
+        )
+        cookies.forEach { cookie ->
+          CookieRow(
+            cells = listOf(
+              cookie.name,
+              cookie.value,
+              cookie.domain.orEmpty(),
+              cookie.path.orEmpty(),
+              cookie.expires.orEmpty(),
+              if (cookie.httpOnly) "✓" else "✗",
+              if (cookie.secure) "✓" else "✗",
+            ),
+            isHeader = false,
+          )
+        }
+      }
+    }
+
+    VerticalScrollbar(
+      modifier = Modifier.width(4.dp)
+        .align(Alignment.CenterEnd)
+        .fillMaxHeight(),
+      adapter = rememberScrollbarAdapter(scrollState = verticalScroll),
+      style = LocalScrollbarStyle.current.copy(
+        unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+        hoverColor = MaterialTheme.colorScheme.primary,
+      ),
+    )
+
+    HorizontalScrollbar(
+      modifier = Modifier.height(4.dp)
+        .align(Alignment.BottomCenter)
+        .fillMaxWidth(),
+      adapter = rememberScrollbarAdapter(scrollState = horizontalScroll),
+      style = LocalScrollbarStyle.current.copy(
+        unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+        hoverColor = MaterialTheme.colorScheme.primary,
+      ),
+    )
+  }
+}
+
+@Composable
+private fun CookieRow(cells: List<String>, isHeader: Boolean) {
+  Row(
+    verticalAlignment = if (isHeader) Alignment.CenterVertically else Alignment.Top,
+    modifier = Modifier
+      .padding(horizontal = 12.dp, vertical = if (isHeader) 6.dp else 4.dp),
+  ) {
+    cells.forEachIndexed { index, text ->
+      Text(
+        text = text,
+        style = if (isHeader) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodySmall,
+        fontWeight = if (isHeader) FontWeight.Bold else null,
+        color = if (isHeader) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.width(cookieColumnWidths[index]).padding(horizontal = 4.dp),
       )
     }
   }

@@ -5,9 +5,11 @@ import ba.fluxor.fetchapi.network.NetworkExecutor
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.plugins.compression.*
+import io.ktor.client.plugins.cookies.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.http.HttpMethod as KtorHttpMethod
 
 object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
@@ -17,9 +19,12 @@ object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
         engine {
             config {
                 executor(NetworkExecutor.executor)
-                followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+                // Let Ktor (not the JDK engine) follow redirects so the response pipeline —
+                // and the cookie jar below — can observe Set-Cookie on intermediate 3xx hops.
+                followRedirects(java.net.http.HttpClient.Redirect.NEVER)
             }
         }
+        install(HttpCookies)
         install(Logging) {
             level = LogLevel.NONE
         }
@@ -38,9 +43,24 @@ object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
             }
         }
 
+        // Read from the cookie jar (not the final response headers): it has accumulated every
+        // Set-Cookie across the redirect chain, whereas the final 200 may carry none.
+        val cookies = client.cookies(request.url).map { cookie ->
+            HttpCookie(
+                name = cookie.name,
+                value = cookie.value,
+                domain = cookie.domain,
+                path = cookie.path,
+                expires = cookie.expires?.toHttpDate(),
+                httpOnly = cookie.httpOnly,
+                secure = cookie.secure,
+            )
+        }
+
         return HttpResponse(
             statusCode = response.status.value,
             headers = response.headers.entries().associate { it.key to it.value },
+            cookies = cookies,
             body = response.bodyAsText(),
         )
     }
