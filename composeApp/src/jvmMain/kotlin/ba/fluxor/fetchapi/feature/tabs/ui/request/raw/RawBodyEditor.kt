@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.max
+import ba.fluxor.fetchapi.component.autoScrollOnEdgeDrag
 import ba.fluxor.fetchapi.component.highlightJson
 import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.RawLanguage
@@ -198,6 +199,22 @@ private fun HighlightedEditor(
     ) {
       val viewportHeight = maxHeight
 
+      // Keep the caret visible while typing: the external verticalScroll does not follow the
+      // cursor on its own, so scroll the minimal amount to bring the caret back into view.
+      LaunchedEffect(cursorOffset, textLayout) {
+        val layout = textLayout ?: return@LaunchedEffect
+        val caret = layout.getCursorRect(cursorOffset.coerceIn(0, contentLength))
+        val padTopPx = with(density) { vPad.toPx() }
+        val viewportPx = with(density) { viewportHeight.toPx() }
+        val top = padTopPx + caret.top
+        val bottom = padTopPx + caret.bottom
+        val current = scrollState.value
+        when {
+          bottom > current + viewportPx -> scrollState.scrollTo((bottom - viewportPx).toInt())
+          top < current -> scrollState.scrollTo(top.toInt())
+        }
+      }
+
       Row(modifier = Modifier.fillMaxSize()) {
         // Line-number gutter. Drawn at viewport size and offset by the shared scroll,
         // so only visible numbers are measured/drawn (cheap for large payloads).
@@ -292,6 +309,7 @@ private fun HighlightedEditor(
             onTextLayout = { textLayout = it },
             modifier = Modifier
               .fillMaxWidth()
+              .autoScrollOnEdgeDrag(scrollState)
               .verticalScroll(scrollState)
               .defaultMinSize(minHeight = viewportHeight) // make the whole area clickable
               .onFocusChanged { isFocused = it.isFocused }

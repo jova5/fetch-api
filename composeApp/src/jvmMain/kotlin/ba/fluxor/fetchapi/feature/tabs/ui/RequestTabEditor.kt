@@ -392,6 +392,7 @@ private fun ResponseScrollableText(text: AnnotatedString, modifier: Modifier = M
       Box(
         modifier = Modifier
           .fillMaxWidth()
+          .autoScrollOnEdgeDrag(verticalScrollState)
           .verticalScroll(verticalScrollState)
           .horizontalScroll(horizontalScrollState)
           .padding(12.dp)
