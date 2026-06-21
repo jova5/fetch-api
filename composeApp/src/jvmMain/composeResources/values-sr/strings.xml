@@ -146,4 +146,8 @@
   <string name="response_status">Status</string>
   <string name="response_time">Vreme</string>
   <string name="response_size">Veličina</string>
+  <string name="copy">Kopiraj</string>
+  <string name="cut">Isjeci</string>
+  <string name="paste">Nalijepi</string>
+  <string name="select_all">Izaberi sve</string>
 </resources>

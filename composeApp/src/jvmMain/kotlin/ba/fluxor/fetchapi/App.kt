@@ -24,6 +24,7 @@ import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.project.ui.ProjectDropdown
 import ba.fluxor.fetchapi.feature.settings.ui.SettingsModal
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
+import ba.fluxor.fetchapi.localization.AppTextContextMenu
 import ba.fluxor.fetchapi.localization.LocaleProvider
 import ba.fluxor.fetchapi.ui.getRobotoFontFamily
 import ba.fluxor.fetchapi.ui.getScaledTypography
@@ -158,7 +159,9 @@ fun App(
                 }
               }
               LocaleProvider(state.language) {
-                AppLayout()
+                AppTextContextMenu {
+                  AppLayout()
+                }
               }
             }
           }
