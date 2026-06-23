@@ -8,8 +8,13 @@ import io.ktor.client.plugins.compression.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import java.io.File
+import java.nio.file.Files
+import kotlinx.io.asSource
+import kotlinx.io.buffered
 import io.ktor.http.HttpMethod as KtorHttpMethod
 
 object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
@@ -38,8 +43,10 @@ object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
         val response = client.request(request.url) {
             method = KtorHttpMethod.parse(request.method.name)
             request.headers.forEach { (name, value) -> header(name, value) }
-            if (request.body != null) {
-                setBody(request.body)
+            when (val body = request.body) {
+                null -> Unit
+                is HttpBody.Text -> setBody(body.content)
+                is HttpBody.Multipart -> setBody(MultiPartFormDataContent(buildFormData(body.parts)))
             }
         }
 
@@ -66,20 +73,47 @@ object HttpEngine : NetworkEngine<HttpRequest, HttpResponse> {
     }
 }
 
+/** Maps the engine-agnostic multipart parts into Ktor's [formData] builder output. */
+private fun buildFormData(parts: List<MultipartPart>) = formData {
+    parts.forEach { part ->
+        when (part) {
+            is MultipartPart.Text -> append(part.name, part.value)
+            is MultipartPart.File -> part.paths.forEach { path ->
+                val file = File(path)
+                val contentType = runCatching { Files.probeContentType(file.toPath()) }
+                    .getOrNull()
+                    ?.let { ContentType.parse(it) }
+                    ?: ContentType.Application.OctetStream
+                append(
+                    part.name,
+                    InputProvider(file.length()) { file.inputStream().asSource().buffered() },
+                    Headers.build {
+                        append(HttpHeaders.ContentType, contentType.toString())
+                        append(
+                            HttpHeaders.ContentDisposition,
+                            "filename=\"${file.name}\"",
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
 suspend fun httpGet(url: String, headers: Map<String, String> = emptyMap()): HttpResponse =
     HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.GET, headers = headers))
 
 suspend fun httpPost(url: String, body: String? = null, headers: Map<String, String> = emptyMap()): HttpResponse =
-    HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.POST, headers = headers, body = body))
+    HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.POST, headers = headers, body = body?.let(HttpBody::Text)))
 
 suspend fun httpPut(url: String, body: String? = null, headers: Map<String, String> = emptyMap()): HttpResponse =
-    HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.PUT, headers = headers, body = body))
+    HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.PUT, headers = headers, body = body?.let(HttpBody::Text)))
 
 suspend fun httpPatch(url: String, body: String? = null, headers: Map<String, String> = emptyMap()): HttpResponse =
-    HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.PATCH, headers = headers, body = body))
+    HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.PATCH, headers = headers, body = body?.let(HttpBody::Text)))
 
 suspend fun httpDelete(url: String, body: String? = null, headers: Map<String, String> = emptyMap()): HttpResponse =
-    HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.DELETE, headers = headers, body = body))
+    HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.DELETE, headers = headers, body = body?.let(HttpBody::Text)))
 
 suspend fun httpHead(url: String, headers: Map<String, String> = emptyMap()): HttpResponse =
     HttpEngine.execute(HttpRequest(url = url, method = HttpMethod.HEAD, headers = headers))

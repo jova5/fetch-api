@@ -22,8 +22,10 @@ import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.RawBodyEditor
 import ba.fluxor.fetchapi.feature.tabs.viewmodel.BodyDrafts
 import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.RawToolbar
 import ba.fluxor.fetchapi.feature.tabs.ui.request.raw.format.formatter
+import ba.fluxor.fetchapi.ui.util.pickFiles
 import fetchapi.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
+import java.io.File
 
 private enum class BodyKind {
   NONE,
@@ -198,7 +200,9 @@ private fun formDataUpdateAt(
   next: FormDataEntry,
 ): List<FormDataEntry> {
   if (isTrailing) {
-    if (next.key.isBlank() && next.value.isBlank() && next.description.isBlank()) return current
+    val isEmpty = next.key.isBlank() && next.value.isBlank() && next.description.isBlank() &&
+      !next.isFile && next.filePaths.isEmpty()
+    if (isEmpty) return current
     return current + next
   }
   return current.toMutableList()
@@ -272,14 +276,24 @@ private fun FormDataRow(
         .padding(horizontal = 4.dp),
       placeholder = stringResource(Res.string.variables_key),
     )
-    CompactInput(
-      value = entry.value,
-      onValueChange = { onChange(entry.copy(value = it)) },
-      modifier = Modifier
-        .weight(1f)
-        .padding(horizontal = 4.dp),
-      placeholder = stringResource(Res.string.api_key_value),
-    )
+    if (entry.isFile) {
+      FormDataFileCell(
+        entry = entry,
+        onChange = onChange,
+        modifier = Modifier
+          .weight(1f)
+          .padding(horizontal = 4.dp),
+      )
+    } else {
+      CompactInput(
+        value = entry.value,
+        onValueChange = { onChange(entry.copy(value = it)) },
+        modifier = Modifier
+          .weight(1f)
+          .padding(horizontal = 4.dp),
+        placeholder = stringResource(Res.string.api_key_value),
+      )
+    }
     CompactInput(
       value = entry.description,
       onValueChange = { onChange(entry.copy(description = it)) },
@@ -294,6 +308,43 @@ private fun FormDataRow(
     Box(modifier = Modifier.width(40.dp), contentAlignment = Alignment.Center) {
       if (showDelete) {
         SquareIconButton(icon = Icons.Default.Close, onClick = onDelete, borderWidth = 0.dp)
+      }
+    }
+  }
+}
+
+@Composable
+private fun FormDataFileCell(
+  entry: FormDataEntry,
+  onChange: (FormDataEntry) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  Column(modifier = modifier) {
+    SquareOutlineButton(
+      text = stringResource(Res.string.choose_files),
+      onClick = {
+        val picked = pickFiles()
+        if (picked.isNotEmpty()) {
+          onChange(entry.copy(filePaths = (entry.filePaths + picked).distinct()))
+        }
+      },
+      modifier = Modifier.height(28.dp),
+    )
+    entry.filePaths.forEach { path ->
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = 2.dp),
+      ) {
+        SquareIconButton(
+          icon = Icons.Default.Close,
+          onClick = { onChange(entry.copy(filePaths = entry.filePaths - path)) },
+          borderWidth = 0.dp,
+        )
+        Text(
+          text = File(path).name,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          modifier = Modifier.padding(start = 2.dp),
+        )
       }
     }
   }

@@ -159,4 +159,5 @@
   <string name="cookie_expires">Expires</string>
   <string name="cookie_http_only">HttpOnly</string>
   <string name="cookie_secure">Secure</string>
+  <string name="choose_files">Choose files…</string>
 </resources>

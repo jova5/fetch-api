@@ -24,7 +24,7 @@ data class FormDataEntry(
   val description: String = "",
   val enabled: Boolean = true,
   val isFile: Boolean = false,
-  val filePath: String? = null,
+  val filePaths: List<String> = emptyList(),
 )
 
 @Serializable

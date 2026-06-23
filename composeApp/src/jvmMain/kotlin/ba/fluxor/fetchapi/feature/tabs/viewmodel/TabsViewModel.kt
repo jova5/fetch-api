@@ -6,6 +6,7 @@ import ba.fluxor.fetchapi.feature.folder.data.Folder
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvent
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderEvents
 import ba.fluxor.fetchapi.feature.folder.viewmodel.FolderViewModel
+import ba.fluxor.fetchapi.feature.request.data.BodyConfig
 import ba.fluxor.fetchapi.feature.request.data.Request
 import ba.fluxor.fetchapi.feature.request.data.RequestNetworkMapper
 import ba.fluxor.fetchapi.feature.request.viewmodel.RequestEvent
@@ -302,6 +303,11 @@ class TabsViewModel(
       setExecution(tabId, RequestExecution.Failure("URL is empty"))
       return
     }
+    val missingFile = firstMissingFormDataFile(buffer.body)
+    if (missingFile != null) {
+      setExecution(tabId, RequestExecution.Failure("File not found: $missingFile"))
+      return
+    }
     setExecution(tabId, RequestExecution.Loading)
     viewModelScope.launch {
       try {
@@ -330,6 +336,15 @@ class TabsViewModel(
         setExecution(tabId, RequestExecution.Failure(t.message ?: "Request failed"))
       }
     }
+  }
+
+  /** Returns the first selected form-data file that no longer exists on disk, or null. */
+  private fun firstMissingFormDataFile(body: BodyConfig): String? {
+    if (body !is BodyConfig.FormData) return null
+    return body.fields
+      .filter { it.enabled && it.isFile }
+      .flatMap { it.filePaths }
+      .firstOrNull { !java.io.File(it).exists() }
   }
 
   fun moveTab(fromIndex: Int, toIndex: Int) {
