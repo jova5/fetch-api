@@ -3,6 +3,7 @@ package ba.fluxor.fetchapi.feature.tabs.ui.request
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
@@ -292,6 +293,7 @@ private fun FormDataRow(
           .weight(1f)
           .padding(horizontal = 4.dp),
         placeholder = stringResource(Res.string.api_key_value),
+        singleLine = false,
       )
     }
     CompactInput(
@@ -319,33 +321,56 @@ private fun FormDataFileCell(
   onChange: (FormDataEntry) -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  val strip = rememberScrollState()
+
   Column(modifier = modifier) {
-    SquareOutlineButton(
-      text = stringResource(Res.string.choose_files),
-      onClick = {
-        val picked = pickFiles()
-        if (picked.isNotEmpty()) {
-          onChange(entry.copy(filePaths = (entry.filePaths + picked).distinct()))
-        }
-      },
-      modifier = Modifier.height(28.dp),
-    )
-    entry.filePaths.forEach { path ->
+    Row(verticalAlignment = Alignment.CenterVertically) {
       Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(top = 2.dp),
+        modifier = Modifier
+          .weight(1f)
+          .horizontalScroll(strip),
       ) {
-        SquareIconButton(
-          icon = Icons.Default.Close,
-          onClick = { onChange(entry.copy(filePaths = entry.filePaths - path)) },
-          borderWidth = 0.dp,
-        )
-        Text(
-          text = File(path).name,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-          modifier = Modifier.padding(start = 2.dp),
-        )
+        entry.filePaths.forEach { path ->
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(end = 4.dp),
+          ) {
+            Text(
+              text = File(path).name,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              maxLines = 1,
+            )
+            SquareIconButton(
+              icon = Icons.Default.Close,
+              onClick = { onChange(entry.copy(filePaths = entry.filePaths - path)) },
+              borderWidth = 0.dp,
+            )
+          }
+        }
       }
+      SquareIconButton(
+        icon = Icons.Default.AttachFile,
+        onClick = {
+          val picked = pickFiles()
+          if (picked.isNotEmpty()) {
+            onChange(entry.copy(filePaths = (entry.filePaths + picked).distinct()))
+          }
+        },
+      )
+    }
+    if (entry.filePaths.isNotEmpty()) {
+      HorizontalScrollbar(
+        adapter = rememberScrollbarAdapter(strip),
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(2.dp)
+          .padding(horizontal = 4.dp),
+        style = LocalScrollbarStyle.current.copy(
+          unhoverColor = MaterialTheme.colorScheme.outlineVariant,
+          hoverColor = MaterialTheme.colorScheme.primary,
+        ),
+      )
     }
   }
 }
