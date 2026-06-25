@@ -8,10 +8,13 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import ba.fluxor.fetchapi.configuration.DatabaseFactory
 import ba.fluxor.fetchapi.di.AppLifecycleOwner
 import ba.fluxor.fetchapi.di.appModule
+import ba.fluxor.fetchapi.ui.util.WindowsDarkMode
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 import org.koin.core.context.startKoin
 
 fun main() {
+
+  WindowsDarkMode.enable()
 
   DatabaseFactory.init()
 

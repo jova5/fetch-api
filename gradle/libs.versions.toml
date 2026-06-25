@@ -15,6 +15,7 @@ sqlite = "3.51.3.0"
 ktor = "3.2.2"
 koin = "4.0.3"
 jna = "5.14.0" # <- use latest version to corespond with jewel version
+lwjgl = "3.3.6"
 jewel = "0.34.0-253.32098.37"
 codeeditor = "3.1.1"
 jsoup = "1.18.1"
@@ -56,6 +57,9 @@ jewel-int-ui-decorated-window = { module = "org.jetbrains.jewel:jewel-int-ui-dec
 codeeditor = { module = "com.github.Qawaz.compose-code-editor:codeeditor-desktop", version.ref = "codeeditor" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+lwjgl-bom = { module = "org.lwjgl:lwjgl-bom", version.ref = "lwjgl" }
+lwjgl = { module = "org.lwjgl:lwjgl" }
+lwjgl-nfd = { module = "org.lwjgl:lwjgl-nfd" }
 
 [plugins]
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

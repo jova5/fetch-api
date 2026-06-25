@@ -52,6 +52,12 @@ kotlin {
       implementation(libs.ktor.client.encoding)
       implementation(libs.jna)
       implementation(libs.jna.platform)
+      implementation(project.dependencies.platform(libs.lwjgl.bom))
+      implementation(libs.lwjgl)
+      implementation(libs.lwjgl.nfd)
+      // Native binaries — Windows only (NFD is invoked only on Windows; other OSes fall back to AWT).
+      runtimeOnly("org.lwjgl:lwjgl:3.3.6:natives-windows")
+      runtimeOnly("org.lwjgl:lwjgl-nfd:3.3.6:natives-windows")
       implementation(libs.jewel.int.ui.decorated.window)
       implementation(libs.codeeditor)
       implementation(libs.jsoup)
