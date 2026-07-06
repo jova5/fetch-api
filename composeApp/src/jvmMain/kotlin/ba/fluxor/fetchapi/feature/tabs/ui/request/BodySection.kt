@@ -334,7 +334,7 @@ private fun FormDataFileCell(
         entry.filePaths.forEach { path ->
           Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(end = 4.dp),
+            modifier = Modifier.padding(top = 1.dp, end = 4.dp),
           ) {
             Text(
               text = File(path).name,
