@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
@@ -29,9 +30,10 @@ fun CompactInput(
   placeholder: String = "",
   enabled: Boolean = true,
   singleLine: Boolean = true,
+  masked: Boolean = false,
 ) {
   if (singleLine) {
-    SingleLineCompactInput(value, onValueChange, modifier, placeholder, enabled)
+    SingleLineCompactInput(value, onValueChange, modifier, placeholder, enabled, masked)
   } else {
     MultilineCompactInput(value, onValueChange, modifier, placeholder, enabled)
   }
@@ -45,9 +47,12 @@ private fun SingleLineCompactInput(
   modifier: Modifier,
   placeholder: String,
   enabled: Boolean,
+  masked: Boolean,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
   val isHovered by interactionSource.collectIsHoveredAsState()
+
+  val visualTransformation = if (masked) PasswordVisualTransformation() else VisualTransformation.None
 
   val textColor = if (enabled) {
     MaterialTheme.colorScheme.onSurface
@@ -67,6 +72,7 @@ private fun SingleLineCompactInput(
         overrideDescendants = true
       ),
     singleLine = true,
+    visualTransformation = visualTransformation,
     interactionSource = interactionSource,
     textStyle = LocalTextStyle.current.copy(
       fontSize = LocalTextStyle.current.fontSize * 0.9f,
@@ -79,7 +85,7 @@ private fun SingleLineCompactInput(
         innerTextField = innerTextField,
         enabled = enabled,
         singleLine = true,
-        visualTransformation = VisualTransformation.None,
+        visualTransformation = visualTransformation,
         interactionSource = interactionSource,
         placeholder = {
           Text(

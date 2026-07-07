@@ -10,7 +10,7 @@ private val oauth2ClientAuth = listOf("BODY", "HEADER")
 
 @Composable
 fun OAuth2Form(auth: Auth.OAuth2, emit: (Auth) -> Unit) {
-  FieldText(stringResource(Res.string.access_token), auth.accessToken) { emit(auth.copy(accessToken = it)) }
+  FieldText(stringResource(Res.string.access_token), auth.accessToken, masked = true) { emit(auth.copy(accessToken = it)) }
   FieldText(stringResource(Res.string.header_prefix), auth.headerPrefix) { emit(auth.copy(headerPrefix = it)) }
   EnumDropdown(
     label = stringResource(Res.string.grant_type),
@@ -23,7 +23,7 @@ fun OAuth2Form(auth: Auth.OAuth2, emit: (Auth) -> Unit) {
   FieldText(stringResource(Res.string.auth_url), auth.authUrl) { emit(auth.copy(authUrl = it)) }
   FieldText(stringResource(Res.string.access_token_url), auth.accessTokenUrl) { emit(auth.copy(accessTokenUrl = it)) }
   FieldText(stringResource(Res.string.client_id), auth.clientId) { emit(auth.copy(clientId = it)) }
-  FieldText(stringResource(Res.string.client_secret), auth.clientSecret) { emit(auth.copy(clientSecret = it)) }
+  FieldText(stringResource(Res.string.client_secret), auth.clientSecret, masked = true) { emit(auth.copy(clientSecret = it)) }
   FieldText(stringResource(Res.string.scope), auth.scope) { emit(auth.copy(scope = it)) }
   FieldText(stringResource(Res.string.state), auth.state) { emit(auth.copy(state = it)) }
   EnumDropdown(
@@ -35,7 +35,7 @@ fun OAuth2Form(auth: Auth.OAuth2, emit: (Auth) -> Unit) {
   )
   if (auth.grantType == "PASSWORD") {
     FieldText(stringResource(Res.string.username), auth.username) { emit(auth.copy(username = it)) }
-    FieldText(stringResource(Res.string.password), auth.password) { emit(auth.copy(password = it)) }
+    FieldText(stringResource(Res.string.password), auth.password, masked = true) { emit(auth.copy(password = it)) }
   }
   AddToDropdown(auth.addTo) { emit(auth.copy(addTo = it)) }
 }

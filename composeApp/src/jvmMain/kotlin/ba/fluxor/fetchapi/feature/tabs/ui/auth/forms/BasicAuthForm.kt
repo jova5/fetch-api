@@ -17,6 +17,7 @@ fun BasicAuthForm(auth: Auth.Basic, emit: (Auth) -> Unit) {
   FieldText(
     label = stringResource(Res.string.password),
     value = auth.password,
+    masked = true,
     onChange = { emit(auth.copy(password = it)) },
   )
 }

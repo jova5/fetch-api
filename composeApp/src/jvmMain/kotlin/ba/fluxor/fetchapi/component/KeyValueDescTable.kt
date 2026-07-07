@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ba.fluxor.fetchapi.feature.request.data.KeyValueEntry
 import fetchapi.composeapp.generated.resources.*
@@ -257,13 +258,15 @@ private fun ReadOnlyRow(
       textDecoration = decoration,
     )
     Text(
-      text = entry.value,
+      text = if (entry.masked) "•".repeat(entry.value.length) else entry.value,
       modifier = Modifier
         .weight(1f)
         .padding(horizontal = 8.dp)
         .alpha(textAlpha),
       color = MaterialTheme.colorScheme.onSurface,
       textDecoration = decoration,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
     )
     Text(
       text = entry.description,

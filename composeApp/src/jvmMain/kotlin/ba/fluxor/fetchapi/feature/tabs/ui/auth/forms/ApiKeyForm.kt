@@ -17,6 +17,7 @@ fun ApiKeyForm(auth: Auth.ApiKey, emit: (Auth) -> Unit) {
   FieldText(
     label = stringResource(Res.string.api_key_value),
     value = auth.value,
+    masked = true,
     onChange = { emit(auth.copy(value = it)) },
   )
   AddToDropdown(

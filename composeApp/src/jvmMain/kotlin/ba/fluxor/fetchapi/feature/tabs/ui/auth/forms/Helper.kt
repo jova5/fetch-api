@@ -183,6 +183,7 @@ fun FieldText(
   value: String,
   singleLine: Boolean = true,
   minHeight: androidx.compose.ui.unit.Dp = 0.dp,
+  masked: Boolean = false,
   onChange: (String) -> Unit,
 ) {
   Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -200,6 +201,7 @@ fun FieldText(
         onValueChange = onChange,
         modifier = Modifier.width(400.dp),
         placeholder = label,
+        masked = masked,
       )
     }
   }

@@ -20,6 +20,7 @@ fun JwtForm(auth: Auth.Jwt, emit: (Auth) -> Unit) {
   FieldText(
     label = stringResource(Res.string.secret),
     value = auth.secret,
+    masked = true,
     onChange = { emit(auth.copy(secret = it)) },
   )
   CheckboxRow(

@@ -28,6 +28,7 @@ fun computeAutoHeaders(
         description = "auth",
         enabled = k !in disabled,
         readOnly = true,
+        masked = true,
       ))
     }
 

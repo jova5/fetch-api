@@ -11,6 +11,7 @@ fun BearerForm(auth: Auth.Bearer, emit: (Auth) -> Unit) {
   FieldText(
     label = stringResource(Res.string.token),
     value = auth.token,
+    masked = true,
     onChange = { emit(auth.copy(token = it)) },
   )
 }

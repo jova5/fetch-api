@@ -10,7 +10,7 @@ private val digestAlgorithms = listOf("MD5", "MD5-sess", "SHA-256", "SHA-256-ses
 @Composable
 fun DigestForm(auth: Auth.Digest, emit: (Auth) -> Unit) {
   FieldText(stringResource(Res.string.username), auth.username) { emit(auth.copy(username = it)) }
-  FieldText(stringResource(Res.string.password), auth.password) { emit(auth.copy(password = it)) }
+  FieldText(stringResource(Res.string.password), auth.password, masked = true) { emit(auth.copy(password = it)) }
   FieldText(stringResource(Res.string.realm), auth.realm) { emit(auth.copy(realm = it)) }
   FieldText(stringResource(Res.string.nonce), auth.nonce) { emit(auth.copy(nonce = it)) }
   EnumDropdown(
