@@ -83,6 +83,7 @@ data class TabsUiState(
   val projectId: Long? = null,
   val tabs: List<TabItem> = emptyList(),
   val selectedTabId: Long? = null,
+  val pendingCloseTabId: Long? = null,
 ) {
   val selectedTab: TabItem? get() = tabs.find { it.id == selectedTabId }
 }

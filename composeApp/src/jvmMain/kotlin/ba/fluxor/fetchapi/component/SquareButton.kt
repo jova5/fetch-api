@@ -56,8 +56,7 @@ fun SquareButton(
   ) {
     Text(
       text = text,
-      color = contentColor,
-      style = MaterialTheme.typography.labelLarge,
+      color = contentColor
     )
   }
 }

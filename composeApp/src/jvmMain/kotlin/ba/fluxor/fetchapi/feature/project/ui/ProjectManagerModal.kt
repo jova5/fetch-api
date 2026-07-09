@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ba.fluxor.fetchapi.component.ConfirmDeleteDialog
 import ba.fluxor.fetchapi.component.SquareIconButton
 import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.project.data.Project
@@ -35,6 +36,7 @@ fun ProjectManagerModal(
 ) {
   val state by projectVm.state.collectAsStateWithLifecycle()
   var nameInput by remember { mutableStateOf("") }
+  var showDeleteConfirm by remember { mutableStateOf(false) }
 
   LaunchedEffect(state.selected?.id) {
     nameInput = state.selected?.name ?: ""
@@ -139,9 +141,17 @@ fun ProjectManagerModal(
               },
             ) { Text(stringResource(Res.string.save)) }
 
-            state.selected?.id?.let { id ->
-              OutlinedButton(onClick = { projectVm.delete(id) }) {
+            state.selected?.let { selected ->
+              OutlinedButton(onClick = { showDeleteConfirm = true }) {
                 Text(stringResource(Res.string.delete))
+              }
+
+              if (showDeleteConfirm) {
+                ConfirmDeleteDialog(
+                  entityName = selected.name,
+                  onConfirm = { selected.id?.let(projectVm::delete) },
+                  onDismiss = { showDeleteConfirm = false },
+                )
               }
             }
           }

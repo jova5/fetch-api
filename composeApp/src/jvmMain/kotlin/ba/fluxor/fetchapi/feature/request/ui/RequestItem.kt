@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ba.fluxor.fetchapi.component.ConfirmDeleteDialog
 import ba.fluxor.fetchapi.component.TooltipBelow
 import ba.fluxor.fetchapi.feature.request.data.Request
 import fetchapi.composeapp.generated.resources.*
@@ -30,6 +31,7 @@ fun RequestItem(
   onDelete: () -> Unit,
 ) {
   var showMenu by remember { mutableStateOf(false) }
+  var showDeleteConfirm by remember { mutableStateOf(false) }
 
   Row(
     verticalAlignment = Alignment.CenterVertically,
@@ -86,10 +88,18 @@ fun RequestItem(
         )
         DropdownMenuItem(
           text = { Text(stringResource(Res.string.delete)) },
-          onClick = { showMenu = false; onDropdownClose(); onDelete() }
+          onClick = { showMenu = false; onDropdownClose(); showDeleteConfirm = true }
         )
       }
     }
+  }
+
+  if (showDeleteConfirm) {
+    ConfirmDeleteDialog(
+      entityName = request.name,
+      onConfirm = onDelete,
+      onDismiss = { showDeleteConfirm = false },
+    )
   }
 }
 

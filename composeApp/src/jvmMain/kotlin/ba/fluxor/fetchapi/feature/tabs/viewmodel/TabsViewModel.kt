@@ -194,6 +194,35 @@ class TabsViewModel(
   }
 
   fun closeTab(tabId: Long) {
+    val tab = _state.value.tabs.find { it.id == tabId } ?: return
+    if (tab.isDirty) {
+      _state.update { it.copy(pendingCloseTabId = tabId) }
+    } else {
+      performClose(tabId)
+    }
+  }
+
+  fun cancelClose() {
+    _state.update { it.copy(pendingCloseTabId = null) }
+  }
+
+  fun discardAndClose(tabId: Long) {
+    performClose(tabId)
+  }
+
+  fun saveAndClose(tabId: Long) {
+    val tab = _state.value.tabs.find { it.id == tabId } ?: return
+    viewModelScope.launch {
+      if (performSave(tab)) {
+        performClose(tabId)
+      } else {
+        // Save failed validation — keep the tab open so edits aren't lost.
+        _state.update { it.copy(pendingCloseTabId = null) }
+      }
+    }
+  }
+
+  private fun performClose(tabId: Long) {
     viewModelScope.launch {
       tabRepository.delete(tabId)
       _state.update { s ->
@@ -205,7 +234,11 @@ class TabsViewModel(
           idx <= newTabs.lastIndex -> newTabs[idx].id
           else -> newTabs.last().id
         }
-        s.copy(tabs = newTabs, selectedTabId = newSelected)
+        s.copy(
+          tabs = newTabs,
+          selectedTabId = newSelected,
+          pendingCloseTabId = if (s.pendingCloseTabId == tabId) null else s.pendingCloseTabId,
+        )
       }
       persistSelectedTab(_state.value.selectedTabId)
 
@@ -222,78 +255,84 @@ class TabsViewModel(
   fun saveTab(tabId: Long) {
     val tab = _state.value.tabs.find { it.id == tabId } ?: return
     if (!tab.isDirty) return
-    viewModelScope.launch {
-      val savedBuffer: TabBuffer = when (val buffer = tab.buffer) {
-        is TabBuffer.SubProject -> {
-          var updated =
-            subProjectViewModel.updateSubProject(tab.entityId, buffer.name, buffer.authType,
-              buffer.authConfig)
-          val cleanedVariables = buffer.variables.filter { it.key.isNotBlank() }
-          subProjectViewModel.replaceAllBySubProjectId(
-            tab.entityId,
-            cleanedVariables.map {
-              SubProjectVariable(subProjectId = tab.entityId, key = it.key, value = it.value)
-            },
-          )
-          SubProjectEvents.triggerRefresh()
-          updated = updated ?: SubProject(projectId = -1, name = "", authType = "", authConfig = "")
-          TabBuffer.SubProject(updated.name, updated.authType, updated.authConfig, cleanedVariables)
-        }
+    viewModelScope.launch { performSave(tab) }
+  }
 
-        is TabBuffer.Folder -> {
-          var updated = folderViewModel.updateFolder(tab.entityId, buffer.name)
-          FolderEvents.triggerRefresh()
-          updated = updated ?: Folder(subProjectId = -1, name = "")
-          TabBuffer.Folder(updated.name)
-        }
-
-        is TabBuffer.Request -> {
-          val current = requestViewModel.getById(tab.entityId)
-          var updated = requestViewModel.updateRequest(
-            tab.entityId,
-            Request(
-              id = tab.entityId,
-              subProjectId = current?.subProjectId ?: -1,
-              folderId = current?.folderId,
-              name = buffer.name,
-              method = buffer.method,
-              url = buffer.url,
-              params = buffer.params,
-              headers = buffer.headers,
-              body = buffer.body,
-              authType = buffer.authType,
-              authConfig = buffer.authConfig,
-              excludedAutoHeaders = buffer.excludedAutoHeaders,
-            ),
-          )
-          RequestEvents.triggerRefresh()
-          updated = updated ?: Request(subProjectId = -1, name = "", method = "", url = "")
-          TabBuffer.Request(
-            name = updated.name,
-            method = updated.method,
-            url = updated.url,
-            params = updated.params,
-            headers = updated.headers,
-            body = updated.body,
-            bodyDrafts = buffer.bodyDrafts.stash(updated.body),
-            authType = updated.authType,
-            authConfig = updated.authConfig,
-            excludedAutoHeaders = updated.excludedAutoHeaders,
-            parentAuthType = buffer.parentAuthType,
-            parentAuthConfig = buffer.parentAuthConfig,
-          )
-        }
+  /**
+   * Persists the tab's buffer. Returns `false` when the underlying update fails validation
+   * (e.g. an empty name) — in that case the buffer/original are left untouched so the user's
+   * edits survive and the validation error surfaces through the feature's own state.
+   */
+  private suspend fun performSave(tab: TabItem): Boolean {
+    if (!tab.isDirty) return true
+    val savedBuffer: TabBuffer = when (val buffer = tab.buffer) {
+      is TabBuffer.SubProject -> {
+        val updated = subProjectViewModel.updateSubProject(
+          tab.entityId, buffer.name, buffer.authType, buffer.authConfig,
+        ) ?: return false
+        val cleanedVariables = buffer.variables.filter { it.key.isNotBlank() }
+        subProjectViewModel.replaceAllBySubProjectId(
+          tab.entityId,
+          cleanedVariables.map {
+            SubProjectVariable(subProjectId = tab.entityId, key = it.key, value = it.value)
+          },
+        )
+        SubProjectEvents.triggerRefresh()
+        TabBuffer.SubProject(updated.name, updated.authType, updated.authConfig, cleanedVariables)
       }
-      _state.update { s ->
-        s.copy(tabs = s.tabs.map {
-          if (it.id == tabId) it.copy(
-            buffer = savedBuffer,
-            original = savedBuffer,
-            title = titleOf(savedBuffer),
-          ) else it
-        })
+
+      is TabBuffer.Folder -> {
+        val updated = folderViewModel.updateFolder(tab.entityId, buffer.name) ?: return false
+        FolderEvents.triggerRefresh()
+        TabBuffer.Folder(updated.name)
+      }
+
+      is TabBuffer.Request -> {
+        val current = requestViewModel.getById(tab.entityId)
+        val updated = requestViewModel.updateRequest(
+          tab.entityId,
+          Request(
+            id = tab.entityId,
+            subProjectId = current?.subProjectId ?: -1,
+            folderId = current?.folderId,
+            name = buffer.name,
+            method = buffer.method,
+            url = buffer.url,
+            params = buffer.params,
+            headers = buffer.headers,
+            body = buffer.body,
+            authType = buffer.authType,
+            authConfig = buffer.authConfig,
+            excludedAutoHeaders = buffer.excludedAutoHeaders,
+          ),
+        ) ?: return false
+        RequestEvents.triggerRefresh()
+        TabBuffer.Request(
+          name = updated.name,
+          method = updated.method,
+          url = updated.url,
+          params = updated.params,
+          headers = updated.headers,
+          body = updated.body,
+          bodyDrafts = buffer.bodyDrafts.stash(updated.body),
+          authType = updated.authType,
+          authConfig = updated.authConfig,
+          excludedAutoHeaders = updated.excludedAutoHeaders,
+          parentAuthType = buffer.parentAuthType,
+          parentAuthConfig = buffer.parentAuthConfig,
+        )
       }
     }
+    _state.update { s ->
+      s.copy(tabs = s.tabs.map {
+        if (it.id == tab.id) it.copy(
+          buffer = savedBuffer,
+          original = savedBuffer,
+          title = titleOf(savedBuffer),
+        ) else it
+      })
+    }
+    return true
   }
 
   fun sendRequest(tabId: Long) {

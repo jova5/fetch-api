@@ -72,7 +72,10 @@ fun RequestTabEditor(
       .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
 
-      Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+      ) {
         CompactInput(
           value = buffer.name,
           onValueChange = { onChange(buffer.copy(name = it)) },
@@ -83,7 +86,7 @@ fun RequestTabEditor(
           onClick = onSave,
           enabled = isDirty,
           modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
           containerColor = MaterialTheme.colorScheme.tertiary,
           contentColor = MaterialTheme.colorScheme.onTertiary
         )
@@ -112,7 +115,7 @@ fun RequestTabEditor(
           text = stringResource(Res.string.send),
           onClick = onSend,
           enabled = execution !is RequestExecution.Loading,
-          modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+          modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
       }
 
@@ -125,7 +128,7 @@ fun RequestTabEditor(
           SquareOutlineButton(
             text = stringResource(tab.labelRes()),
             onClick = { selectedTab = tab },
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
             borderWidth = if (selectedTab == tab) 2.dp else 0.dp,
           )
         }

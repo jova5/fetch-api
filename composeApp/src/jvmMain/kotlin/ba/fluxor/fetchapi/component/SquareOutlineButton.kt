@@ -27,6 +27,7 @@ fun SquareOutlineButton(
   borderRadius: Dp = 4.dp,
   enabled: Boolean = true,
   borderWidth: Dp = 0.5.dp,
+  contentColor: Color = Color.Unspecified,
   contentAlignment: Alignment = Alignment.Center,
 ) {
   val shape = RoundedCornerShape(borderRadius)
@@ -58,7 +59,8 @@ fun SquareOutlineButton(
     contentAlignment = contentAlignment
   ) {
     Text(
-      text = text
+      text = text,
+      color = contentColor
     )
   }
 }

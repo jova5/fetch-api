@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ba.fluxor.fetchapi.component.UnsavedChangesDialog
 import ba.fluxor.fetchapi.feature.project.viewmodel.ProjectViewModel
 import ba.fluxor.fetchapi.feature.tabs.ui.TabBar
 import ba.fluxor.fetchapi.feature.tabs.ui.TabEditor
@@ -71,5 +72,15 @@ fun RightTabsPanel(
         )
       }
     }
+  }
+
+  val pending = state.tabs.find { it.id == state.pendingCloseTabId }
+  if (pending != null) {
+    UnsavedChangesDialog(
+      entityName = pending.title,
+      onSave = { tabsVm.saveAndClose(pending.id) },
+      onDiscard = { tabsVm.discardAndClose(pending.id) },
+      onCancel = tabsVm::cancelClose,
+    )
   }
 }
