@@ -555,5 +555,15 @@ private fun statusColor(code: Int): Color = when (code) {
 
 private fun formatSize(body: String): String {
   val bytes = body.toByteArray(Charsets.UTF_8).size
-  return if (bytes < 1024) "$bytes B" else "%.1f KB".format(bytes / 1024.0)
+  if (bytes < 1024) return "$bytes B"
+
+  val units = listOf("KB", "MB", "GB", "TB", "PB")
+  var size = bytes / 1024.0
+  var unitIndex = 0
+  while (size >= 1024.0 && unitIndex < units.lastIndex) {
+    size /= 1024.0
+    unitIndex++
+  }
+
+  return "%.1f %s".format(size, units[unitIndex])
 }
