@@ -121,8 +121,8 @@ fun SettingsModal(
               onValueChange = { newValue ->
                 settingsVm.setFontScale(newValue)
               },
-              valueRange = 0.8f..2.5f,
-              steps = 7,
+              valueRange = SettingsViewModel.MIN_FONT_SCALE..SettingsViewModel.MAX_FONT_SCALE,
+              steps = 4,
               modifier = Modifier.fillMaxWidth()
             )
             val formattedValue = "%.1f".format(state.fontScale)

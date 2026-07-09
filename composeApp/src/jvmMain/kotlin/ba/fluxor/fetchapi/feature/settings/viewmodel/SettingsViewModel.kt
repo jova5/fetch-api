@@ -16,6 +16,11 @@ class SettingsViewModel(
   private val repository: SettingRepository,
 ) : ViewModel() {
 
+  companion object {
+    const val MIN_FONT_SCALE = 1.0f
+    const val MAX_FONT_SCALE = 1.5f
+  }
+
   private val _state = MutableStateFlow(SettingsUiState())
   val state: StateFlow<SettingsUiState> = _state.asStateFlow()
 
@@ -32,7 +37,7 @@ class SettingsViewModel(
           themeMode = mode ?: ThemeMode.SYSTEM,
           colorScheme = scheme ?: AppColorScheme.BLUE,
           language = language ?: AppLanguage.ENGLISH,
-          fontScale = fontScale ?: 1f,
+          fontScale = (fontScale ?: 1f).coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE),
           loaded = true,
           dividerPercentage = dividerPercentage ?: 0f,
           requestDividerPercentage = requestDividerPercentage ?: 0f
@@ -57,8 +62,9 @@ class SettingsViewModel(
   }
 
   fun setFontScale(fontScale: Float) {
-    _state.update { it.copy(fontScale = fontScale) }
-    viewModelScope.launch { repository.setFontScale(fontScale) }
+    val clamped = fontScale.coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE)
+    _state.update { it.copy(fontScale = clamped) }
+    viewModelScope.launch { repository.setFontScale(clamped) }
   }
 
   fun setDividerPercentage(dividerPercentage: Float) {

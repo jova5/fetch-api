@@ -26,8 +26,8 @@ import ba.fluxor.fetchapi.feature.settings.ui.SettingsModal
 import ba.fluxor.fetchapi.feature.settings.viewmodel.SettingsViewModel
 import ba.fluxor.fetchapi.localization.AppTextContextMenu
 import ba.fluxor.fetchapi.localization.LocaleProvider
+import ba.fluxor.fetchapi.ui.getAppTypography
 import ba.fluxor.fetchapi.ui.getRobotoFontFamily
-import ba.fluxor.fetchapi.ui.getScaledTypography
 import ba.fluxor.fetchapi.ui.shell.AppLayout
 import ba.fluxor.fetchapi.ui.theme.AppTheme
 import ba.fluxor.fetchapi.ui.theme.ThemeMode
@@ -61,12 +61,12 @@ fun App(
   val baseStyle = if (isDark) TitleBarStyle.dark() else TitleBarStyle.light()
   val fontFamily = getRobotoFontFamily()
   val defaultTypography = Typography()
-  val scaledTypography = getScaledTypography(defaultTypography, state.fontScale, fontFamily)
+  val appTypography = getAppTypography(defaultTypography, fontFamily)
 
   AppTheme(
     mode = state.themeMode,
     scheme = state.colorScheme,
-    typography = scaledTypography
+    typography = appTypography
   ) {
 
     val background = MaterialTheme.colorScheme.surfaceContainerLow
@@ -119,8 +119,8 @@ fun App(
             LocalWindowWidth provides windowWidth,
             LocalWindowHeight provides windowHeight,
             LocalDensity provides Density(
-              density = LocalDensity.current.density,
-              fontScale = state.fontScale
+              density = LocalDensity.current.density * state.fontScale,
+              fontScale = 1f,
             )
           ) {
             Column(Modifier.fillMaxSize()) {
@@ -164,12 +164,12 @@ fun App(
                 }
               }
             }
+
+            if (showSettings) {
+              SettingsModal(onDismiss = { showSettings = false })
+            }
           }
 
-        }
-
-        if (showSettings) {
-          SettingsModal(onDismiss = { showSettings = false })
         }
       }
     }
